@@ -1,74 +1,176 @@
-# WorkOfHuman Appwrite Database Schema
+# WorkOfHuman Appwrite Schema
 
-The homepage reads only from Appwrite Database. It does not render hardcoded demo content.
+Database ID: `main_db`
 
-## Required env
+The frontend renders Appwrite documents and empty states. It does not use mock fallback content for feeds.
 
-Use `.env.example` as the template. The server-side app needs:
+## Required Environment
 
 - `APPWRITE_ENDPOINT`
 - `APPWRITE_PROJECT_ID`
 - `APPWRITE_API_KEY`
 - `APPWRITE_DATABASE_ID`
+- `NEXT_PUBLIC_APPWRITE_ENDPOINT`
+- `NEXT_PUBLIC_APPWRITE_PROJECT_ID`
 
 ## Collections
 
-All collections should include:
-
-- `isVisible` boolean, required
-- `sortOrder` integer, required
-
 ### `homepage`
 
-- `eyebrow` string, 220
-- `heading` string, 500
-- `subheading` string, 1000
-- `primaryCtaLabel` string, 120
-- `primaryCtaHref` string, 240
-- `secondaryCtaLabel` string, 120
-- `secondaryCtaHref` string, 240
-- `footerText` string, 500
+- `eyebrow` string, required, size 220
+- `heading` string, required, size 500
+- `subheading` string, required, size 1000
+- `primaryCtaLabel` string, required, size 120
+- `primaryCtaHref` string, required, size 240
+- `secondaryCtaLabel` string, required, size 120
+- `secondaryCtaHref` string, required, size 240
+- `footerText` string, required, size 500
 
-### `creations`
+### `profiles`
 
-- `title` string, 180
-- `creatorName` string, 160
-- `contentType` string, 120
-- `statLabel` string, 120
-- `thumbnailUrl` url
-- `accentColor` string, 32
-- `featured` boolean
+- `userId` string, required
+- `username` string, required
+- `displayName` string, size 160
+- `bio` string, size 500
+- `avatarUrl` string, size 500
+- `bannerUrl` string, size 500
+- `verified` boolean, default false
+- `categories` string array
+- `socialLinks` string, size 2000
+- `followersCount` integer, default 0
+- `viewsCount` integer, default 0
+- `createdAt` datetime
+- `updatedAt` datetime
 
-### `creators`
+Indexes:
 
-- `displayName` string, 160
-- `category` string, 160
-- `statLabel` string, 120
-- `avatarUrl` url
-- `verified` boolean
+- unique `username`
+- key `userId`
+- key `followersCount`, descending
 
-### `categories`
+### `projects`
 
-- `name` string, 120
-- `slug` string, 120
+- `title` string, required, size 180
+- `slug` string, required, size 160
+- `description` string, size 5000
+- `creatorId` string, required
+- `creatorName` string, size 160
+- `type` string, required, size 80
+- `mediaUrls` string array
+- `thumbnailUrl` string, size 500
+- `tags` string array
+- `aiGenerated` boolean, default false
+- `aiModel` string, size 160
+- `views` integer, default 0
+- `likesCount` integer, default 0
+- `savesCount` integer, default 0
+- `createdAt` datetime
+- `publishedAt` datetime
+
+Indexes:
+
+- unique `slug`
+- key `creatorId`
+- key `type`
+- key `aiGenerated`
+- key `publishedAt`, descending
+- key `views`, descending
+
+### `interactions`
+
+- `userId` string, required
+- `projectId` string, required
+- `type` string, required
+- `createdAt` datetime
+
+Indexes:
+
+- unique composite `userId`, `projectId`, `type`
+- key `projectId`
+
+### `comments`
+
+- `projectId` string, required
+- `userId` string, required
+- `parentId` string
+- `content` string, required, size 2000
+- `likesCount` integer, default 0
+- `createdAt` datetime
+
+Indexes:
+
+- key `projectId`
+- key `parentId`
+
+### `follows`
+
+- `followerId` string, required
+- `followingId` string, required
+- `createdAt` datetime
+
+Indexes:
+
+- unique composite `followerId`, `followingId`
+- key `followingId`
+
+### `trending_cache`
+
+- `period` string, required
+- `projectId` string, required
+- `score` float, required
+- `rank` integer, required
+- `updatedAt` datetime
+
+Indexes:
+
+- key composite `period`, `rank`
+- key `period`
 
 ### `communities`
 
-- `name` string, 160
-- `slug` string, 120
-- `memberCountLabel` string, 120
+- `name` string, required, size 160
+- `slug` string, required, size 120
+- `description` string, size 1000
+- `avatarUrl` string, size 500
+- `bannerUrl` string, size 500
+- `ownerId` string, required
+- `memberCount` integer, default 0
+- `isPrivate` boolean, default false
+- `featured` boolean, default false
+- `createdAt` datetime
 
-### `feed_items`
+Indexes:
 
-- `body` string, 700
-- `contentType` string, 120
+- unique `slug`
+- key `featured`
+- key `memberCount`, descending
 
-### `ai_spotlights`
+### `community_members`
 
-- `title` string, 160
-- `body` string, 500
+- `communityId` string, required
+- `userId` string, required
+- `role` string, required
+- `joinedAt` datetime
 
-### `metrics`
+Indexes:
 
-- `label` string, 160
-- `value` string, 80
+- unique composite `communityId`, `userId`
+- key `userId`
+
+### Future MVP Collections
+
+Create as features are implemented:
+
+- `ai_metadata`
+- `ai_generations`
+- `editor_picks`
+- `rising_creators`
+- `reports`
+- `moderation_queue`
+- `saves`
+- `reposts`
+- `subscriptions`
+- `memberships`
+- `marketplace_listings`
+- `tips`
+- `digital_sales`
