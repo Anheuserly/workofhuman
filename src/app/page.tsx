@@ -219,9 +219,9 @@ export default async function Home() {
 function EmptyContent() {
   return (
     <div className="surface p-8">
-      <h3 className="text-2xl font-semibold">Appwrite is connected, but no published projects were returned.</h3>
+      <h3 className="text-2xl font-semibold">Database is connected, but no published projects were returned.</h3>
       <p className="mt-3 max-w-2xl leading-7 text-[#6f6a61]">
-        The UI is ready for database content. Seed or publish projects in Appwrite to populate the discovery surfaces.
+        The UI is ready for database content. Publish projects in the studio or run database seeding to populate the discovery surfaces.
       </p>
     </div>
   );

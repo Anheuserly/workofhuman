@@ -14,7 +14,7 @@ export default async function ExplorePage() {
         <SectionIntro
           eyebrow="Explore"
           title="A living atlas of creative output."
-          body="Browse every medium with Appwrite-backed discovery, AI labels, creator metadata, and category paths."
+          body="Browse every medium with database-backed discovery, AI labels, creator metadata, and category paths."
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {data.projects.map((project) => (

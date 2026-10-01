@@ -34,6 +34,8 @@ export const contentTypes = [
   "experimental_projects",
 ] as const;
 
+export type ContentType = (typeof contentTypes)[number];
+
 export const platformRoutes = [
   { href: "/explore", label: "Explore" },
   { href: "/trending", label: "Trending" },

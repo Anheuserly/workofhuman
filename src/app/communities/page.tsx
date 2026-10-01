@@ -15,7 +15,7 @@ export default async function CommunitiesPage() {
         <SectionIntro
           eyebrow="Communities"
           title="Creative neighborhoods for every medium."
-          body="Communities are Appwrite documents with owners, member counts, featured states, and privacy flags."
+          body="Curated creative hubs with active member communities, featured showcases, and collaborative studios."
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {data.communities.map((community) => (

@@ -8,7 +8,7 @@ export default function UploadStudioPage() {
         <SectionIntro
           eyebrow="Upload studio"
           title="One studio for every creative medium."
-          body="The protected upload flow is structured for drag and drop, metadata, AI disclosure, tags, thumbnails, and Appwrite Storage."
+          body="The protected upload flow is structured for drag and drop, metadata, AI disclosure, tags, thumbnails, and high-performance media storage."
         />
         <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
           <div className="surface grid min-h-[420px] place-items-center border-dashed p-8 text-center">
