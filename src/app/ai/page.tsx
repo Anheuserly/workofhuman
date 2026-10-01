@@ -1,12 +1,12 @@
 import { ProjectCard } from "@/components/project-card";
-import { PageShell, SectionIntro } from "@/components/shell";
-import { getHomeData, getStarterHomeData } from "@/lib/home-data";
+import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
+import { getHomeData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function AiPage() {
   const homeData = await getHomeData();
-  const data = homeData.status === "ready" ? homeData : getStarterHomeData();
+  const aiProjects = homeData.status === "ready" ? homeData.aiProjects : [];
 
   return (
     <PageShell>
@@ -16,11 +16,18 @@ export default async function AiPage() {
           title="AI work, clearly labeled and discoverable."
           body="The AI hub surfaces generated and AI-assisted projects without hiding provenance from viewers."
         />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {data.aiProjects.map((project) => (
-            <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
-          ))}
-        </div>
+        {aiProjects.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {aiProjects.map((project) => (
+              <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No AI-tagged creations yet"
+            body="Transparently disclosed AI creations will be cataloged here once published."
+          />
+        )}
       </section>
     </PageShell>
   );

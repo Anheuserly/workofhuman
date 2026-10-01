@@ -86,147 +86,7 @@ export const defaultHomeSettings: HomeSettings = {
   footerText: "The digital home of imagination, originality, expression, and innovation.",
 };
 
-export function getStarterHomeData(): Extract<HomeData, { status: "ready" }> {
-  const projects: Project[] = [
-    {
-      title: "Field Notes in Motion",
-      slug: "field-notes-in-motion",
-      description: "A documentary-style visual journal pairing short film, photography, and production notes.",
-      creatorId: "creator_workofhuman_studio",
-      creatorName: "WorkOfHuman Studio",
-      type: "films",
-      thumbnailUrl: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80",
-      tags: ["film", "journal", "process"],
-      aiGenerated: false,
-      views: 12840,
-      likesCount: 920,
-      savesCount: 220,
-    },
-    {
-      title: "Midnight Signal EP",
-      slug: "midnight-signal-ep",
-      description: "A four-track electronic release with cover art, stems, lyrics, and production notes.",
-      creatorId: "creator_sound_archive",
-      creatorName: "Sound Archive",
-      type: "music",
-      thumbnailUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
-      tags: ["music", "electronic", "album"],
-      aiGenerated: false,
-      views: 11290,
-      likesCount: 860,
-      savesCount: 340,
-    },
-    {
-      title: "The City That Remembered",
-      slug: "the-city-that-remembered",
-      description: "A serialized short story collection with character notes, concept sketches, and reader discussion.",
-      creatorId: "creator_workofhuman_studio",
-      creatorName: "WorkOfHuman Studio",
-      type: "stories",
-      thumbnailUrl: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1200&q=80",
-      tags: ["fiction", "worldbuilding", "chapters"],
-      aiGenerated: false,
-      views: 7430,
-      likesCount: 540,
-      savesCount: 260,
-    },
-    {
-      title: "Interface Study 04",
-      slug: "interface-study-04",
-      description: "A product design case study with screens, interaction notes, and a compact design system.",
-      creatorId: "creator_design_index",
-      creatorName: "Design Index",
-      type: "ui_ux_design",
-      thumbnailUrl: "https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=80",
-      tags: ["product", "design", "systems"],
-      aiGenerated: false,
-      views: 9640,
-      likesCount: 730,
-      savesCount: 310,
-    },
-    {
-      title: "Future Craft Index",
-      slug: "future-craft-index",
-      description: "A maker portfolio documenting materials, sketches, prototypes, and field notes for useful objects.",
-      creatorId: "creator_global_makers",
-      creatorName: "Global Makers",
-      type: "inventions",
-      thumbnailUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-      tags: ["craft", "prototype", "invention"],
-      aiGenerated: false,
-      views: 510000,
-      likesCount: 28400,
-      savesCount: 8800,
-    },
-  ];
 
-  const creators: Profile[] = [
-    {
-      userId: "creator_workofhuman_studio",
-      username: "workofhumanstudio",
-      displayName: "WorkOfHuman Studio",
-      bio: "Cinematic storytelling, archive films, and visual essays about modern creativity.",
-      avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80",
-      bannerUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
-      verified: true,
-      categories: ["films", "cinematic_edits", "documentaries"],
-      followersCount: 182400,
-      viewsCount: 4200000,
-    },
-    {
-      userId: "creator_workofhuman_lab",
-      username: "workofhumanlab",
-      displayName: "WorkOfHuman Lab",
-      bio: "Transparent AI experiments across music, image, film, and creative tools.",
-      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-      bannerUrl: "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1600&q=80",
-      verified: true,
-      categories: ["ai_generated_art", "ai_music", "ai_films"],
-      followersCount: 146800,
-      viewsCount: 3500000,
-    },
-  ];
-
-  const communities: Community[] = [
-    {
-      name: "Indie Filmmakers",
-      slug: "indie-filmmakers",
-      description: "Short films, cinematic edits, documentaries, and process breakdowns.",
-      avatarUrl: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=400&q=80",
-      bannerUrl: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80",
-      memberCount: 42000,
-      featured: true,
-    },
-    {
-      name: "AI Experimenters",
-      slug: "ai-experimenters",
-      description: "Transparent AI art, music, film, writing, and creative tooling.",
-      avatarUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=400&q=80",
-      bannerUrl: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
-      memberCount: 58000,
-      featured: true,
-    },
-  ];
-
-  const trending: TrendingItem[] = projects.slice(0, 10).map((project, index) => ({
-    period: "week",
-    projectId: project.slug,
-    score: Number((98 - index * 4.7).toFixed(1)),
-    rank: index + 1,
-    project,
-  }));
-
-  return {
-    status: "ready",
-    settings: defaultHomeSettings,
-    projects,
-    aiProjects: projects.filter((project) => project.aiGenerated),
-    creators,
-    communities,
-    trending,
-    categories: [...contentTypes],
-  };
-}
 
 interface DbProjectRow {
   title: string;
@@ -379,44 +239,27 @@ export async function getHomeData(): Promise<HomeData> {
         : undefined,
     }));
 
-    // If database returned records, serve them!
-    if (projects.length > 0) {
-      return {
-        status: "ready",
-        settings,
-        projects,
-        aiProjects: aiProjects.length > 0 ? aiProjects : projects.filter((p) => p.aiGenerated),
-        creators,
-        communities,
-        trending,
-        categories: [...contentTypes],
-      };
-    }
-
-    // Fallback to starter data if database is empty
-    const starter = getStarterHomeData();
     return {
       status: "ready",
       settings,
-      projects: starter.projects,
-      aiProjects: starter.aiProjects,
-      creators: starter.creators,
-      communities: starter.communities,
-      trending: starter.trending,
+      projects,
+      aiProjects: aiProjects.length > 0 ? aiProjects : projects.filter((p) => p.aiGenerated),
+      creators,
+      communities,
+      trending,
       categories: [...contentTypes],
     };
   } catch (error) {
     console.error("[PostgreSQL getHomeData Error]:", error);
-    const starter = getStarterHomeData();
     return {
       status: "ready",
-      settings: starter.settings,
-      projects: starter.projects,
-      aiProjects: starter.aiProjects,
-      creators: starter.creators,
-      communities: starter.communities,
-      trending: starter.trending,
-      categories: starter.categories,
+      settings: defaultHomeSettings,
+      projects: [],
+      aiProjects: [],
+      creators: [],
+      communities: [],
+      trending: [],
+      categories: [...contentTypes],
     };
   }
 }

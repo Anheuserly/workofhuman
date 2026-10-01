@@ -1,12 +1,12 @@
 import { ProjectCard } from "@/components/project-card";
-import { PageShell, SectionIntro } from "@/components/shell";
-import { getHomeData, getStarterHomeData } from "@/lib/home-data";
+import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
+import { getHomeData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExplorePage() {
   const homeData = await getHomeData();
-  const data = homeData.status === "ready" ? homeData : getStarterHomeData();
+  const projects = homeData.status === "ready" ? homeData.projects : [];
 
   return (
     <PageShell>
@@ -16,11 +16,18 @@ export default async function ExplorePage() {
           title="A living atlas of creative output."
           body="Browse every medium with database-backed discovery, AI labels, creator metadata, and category paths."
         />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {data.projects.map((project) => (
-            <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {projects.map((project) => (
+              <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="No published creations yet"
+            body="No projects are currently published in the database. Creators can publish work through the upload studio."
+          />
+        )}
       </section>
     </PageShell>
   );

@@ -3,15 +3,32 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProjectCard } from "@/components/project-card";
 import { SectionIntro, SiteHeader } from "@/components/shell";
-import { defaultHomeSettings, getHomeData, getStarterHomeData } from "@/lib/home-data";
-import { featureMatrix } from "@/lib/platform";
+import { defaultHomeSettings, getHomeData } from "@/lib/home-data";
+import { contentTypes, featureMatrix } from "@/lib/platform";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const homeData = await getHomeData();
-  const data = homeData.status === "ready" ? homeData : getStarterHomeData();
+  const data =
+    homeData.status === "ready"
+      ? homeData
+      : {
+          status: "ready" as const,
+          settings: defaultHomeSettings,
+          projects: [],
+          aiProjects: [],
+          creators: [],
+          communities: [],
+          trending: [],
+          categories: [...contentTypes],
+        };
   const settings = data.settings ?? defaultHomeSettings;
+
+  const heroP0 = data.projects[0];
+  const heroP1 = data.projects[1];
+  const heroP2 = data.projects[2];
+  const heroP3 = data.projects[3];
 
   return (
     <main className="min-h-screen overflow-hidden text-[#151515]">
@@ -58,26 +75,76 @@ export default async function Home() {
           </div>
 
           <div className="grid min-h-[520px] grid-cols-12 grid-rows-6 gap-3 max-lg:min-h-[420px] max-sm:hidden">
-            <div className="media-tile col-span-7 row-span-4 rounded-[8px]">
-              <Image alt="Film production workspace" src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80" fill sizes="(min-width: 1024px) 38vw, 80vw" priority />
+            <div className="media-tile col-span-7 row-span-4 rounded-[8px] relative overflow-hidden bg-[#e6dfd1]">
+              {heroP0?.thumbnailUrl ? (
+                <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="(min-width: 1024px) 38vw, 80vw" priority className="object-cover" />
+              ) : (
+                <div className="flex h-full flex-col justify-between p-6">
+                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                    {heroP0?.type || "Creative Showcase"}
+                  </span>
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#151515]">{heroP0?.title || "WorkOfHuman Studio"}</h3>
+                    <p className="mt-2 text-sm text-[#5f5a52] line-clamp-2">{heroP0?.description || "Independent creative archive and verified works."}</p>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="media-tile col-span-5 row-span-3 rounded-[8px]">
-              <Image alt="Design desk with screens" src="https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=80" fill sizes="(min-width: 1024px) 28vw, 60vw" priority />
+
+            <div className="media-tile col-span-5 row-span-3 rounded-[8px] relative overflow-hidden bg-[#ded7c8]">
+              {heroP1?.thumbnailUrl ? (
+                <Image alt={heroP1.title} src={heroP1.thumbnailUrl} fill sizes="(min-width: 1024px) 28vw, 60vw" priority className="object-cover" />
+              ) : (
+                <div className="flex h-full flex-col justify-between p-5">
+                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                    {heroP1?.type || "Featured Study"}
+                  </span>
+                  <div>
+                    <h4 className="text-lg font-bold text-[#151515]">{heroP1?.title || "Design Index"}</h4>
+                    <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1?.creatorName || "Verified Creator"}</p>
+                  </div>
+                </div>
+              )}
             </div>
+
             <div className="col-span-5 row-span-2 rounded-[8px] border border-[#d8d2c7] bg-white p-5 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0f766e]">Live system</p>
               <p className="mt-3 text-3xl font-semibold">{data.categories.length}</p>
               <p className="mt-1 text-sm text-[#6f6a61]">creative formats indexed</p>
             </div>
-            <div className="media-tile col-span-4 row-span-2 rounded-[8px]">
-              <Image alt="Music studio equipment" src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80" fill sizes="24vw" priority />
+
+            <div className="media-tile col-span-4 row-span-2 rounded-[8px] relative overflow-hidden bg-[#e3ddd1]">
+              {heroP2?.thumbnailUrl ? (
+                <Image alt={heroP2.title} src={heroP2.thumbnailUrl} fill sizes="24vw" priority className="object-cover" />
+              ) : (
+                <div className="flex h-full flex-col justify-center p-4">
+                  <span className="text-xs font-semibold text-[#0f766e]">{heroP2?.type || "Audio & Media"}</span>
+                  <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP2?.title || "Sound Archive"}</p>
+                </div>
+              )}
             </div>
-            <div className="media-tile col-span-8 row-span-2 rounded-[8px]">
-              <Image alt="Prototype materials and objects" src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80" fill sizes="42vw" priority />
+
+            <div className="media-tile col-span-8 row-span-2 rounded-[8px] relative overflow-hidden bg-[#ede7dc]">
+              {heroP3?.thumbnailUrl ? (
+                <Image alt={heroP3.title} src={heroP3.thumbnailUrl} fill sizes="42vw" priority className="object-cover" />
+              ) : (
+                <div className="flex h-full flex-col justify-center p-5">
+                  <span className="text-xs font-semibold text-[#0f766e]">{heroP3?.type || "Global Makers"}</span>
+                  <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP3?.title || "Invention & Prototypes"}</p>
+                </div>
+              )}
             </div>
           </div>
-          <div className="media-tile h-72 rounded-[8px] sm:hidden">
-            <Image alt="Creative workspace" src="https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=1200&q=80" fill sizes="92vw" priority />
+
+          <div className="media-tile h-72 rounded-[8px] sm:hidden relative overflow-hidden bg-[#e6dfd1]">
+            {heroP0?.thumbnailUrl ? (
+              <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="92vw" priority className="object-cover" />
+            ) : (
+              <div className="flex h-full flex-col justify-center p-6 text-center">
+                <span className="text-xs font-semibold text-[#0f766e]">{heroP0?.type || "Creative Work"}</span>
+                <p className="mt-2 text-xl font-bold text-[#151515]">{heroP0?.title || "WorkOfHuman Platform"}</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
