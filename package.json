@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node -e \"fs.rmSync('.next/cache', { recursive: true, force: true })\"",
+    "build": "opennextjs-cloudflare build",
+    "build:local": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:init": "node scripts/init-db.mjs",
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1160.0",
+    "@opennextjs/cloudflare": "^1.20.14",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-popover": "^1.1.15",
