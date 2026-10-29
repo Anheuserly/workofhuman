@@ -7,8 +7,8 @@ const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: 
 const jetBrainsMono = JetBrains_Mono({ variable: "--font-jetbrains-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://workofhuman.com"),
-  title: "WorkOfHuman | The World's Creative Output",
+  metadataBase: new URL("https://theworkofhuman.com"),
+  title: "The Work of Human | The World's Creative Output",
   description:
     "A global creative expression platform for human and AI-made music, films, art, ideas, stories, apps, inventions, and design.",
 };

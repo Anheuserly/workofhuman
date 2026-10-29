@@ -5,9 +5,9 @@ import { platformRoutes } from "@/lib/platform";
 export function SiteHeader() {
   return (
     <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#ded9cf] bg-white/90 px-3 py-3 shadow-sm backdrop-blur-xl">
-      <Link href="/" className="flex items-center gap-3" aria-label="WorkOfHuman home">
+      <Link href="/" className="flex items-center gap-3" aria-label="The Work of Human home">
         <span className="grid size-9 place-items-center rounded-full bg-[#151515] text-sm font-black text-white">W</span>
-        <span className="hidden text-sm font-semibold tracking-[0.18em] text-[#151515] sm:inline">WORKOFHUMAN</span>
+        <span className="hidden text-sm font-semibold tracking-[0.18em] text-[#151515] sm:inline">THE WORK OF HUMAN</span>
       </Link>
       <nav className="hidden items-center gap-5 text-sm text-[#6f6a61] lg:flex">
         {platformRoutes.map((item) => (

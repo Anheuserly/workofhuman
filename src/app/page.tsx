@@ -84,7 +84,7 @@ export default async function Home() {
                     {heroP0?.type || "Creative Showcase"}
                   </span>
                   <div>
-                    <h3 className="text-2xl font-bold text-[#151515]">{heroP0?.title || "WorkOfHuman Studio"}</h3>
+                    <h3 className="text-2xl font-bold text-[#151515]">{heroP0?.title || "The Work of Human Studio"}</h3>
                     <p className="mt-2 text-sm text-[#5f5a52] line-clamp-2">{heroP0?.description || "Independent creative archive and verified works."}</p>
                   </div>
                 </div>
@@ -142,7 +142,7 @@ export default async function Home() {
             ) : (
               <div className="flex h-full flex-col justify-center p-6 text-center">
                 <span className="text-xs font-semibold text-[#0f766e]">{heroP0?.type || "Creative Work"}</span>
-                <p className="mt-2 text-xl font-bold text-[#151515]">{heroP0?.title || "WorkOfHuman Platform"}</p>
+                <p className="mt-2 text-xl font-bold text-[#151515]">{heroP0?.title || "The Work of Human Platform"}</p>
               </div>
             )}
           </div>
@@ -275,7 +275,7 @@ export default async function Home() {
 
       <footer className="border-t border-[#ded9cf] px-5 py-10 text-sm text-[#6f6a61] sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 sm:flex-row">
-          <p>WorkOfHuman.com</p>
+          <p>theworkofhuman.com</p>
           <p>{settings.footerText}</p>
         </div>
       </footer>
