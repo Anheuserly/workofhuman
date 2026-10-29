@@ -76,7 +76,7 @@ export function MobileMenu() {
   return (
     <>
       <button
-        className="icon-button lg:hidden cursor-pointer"
+        className="icon-button md:hidden cursor-pointer"
         type="button"
         aria-label="Toggle navigation menu"
         onClick={() => setOpen(!open)}
@@ -85,7 +85,7 @@ export function MobileMenu() {
       </button>
 
       {open && (
-        <div className="fixed inset-0 top-[72px] z-50 bg-black/40 backdrop-blur-xs lg:hidden animate-in fade-in">
+        <div className="fixed inset-0 top-[72px] z-50 bg-black/40 backdrop-blur-xs md:hidden animate-in fade-in">
           <div className="surface mx-4 mt-2 max-h-[calc(100vh-90px)] overflow-y-auto p-6 shadow-2xl animate-in slide-in-from-top-4">
             <div className="flex items-center justify-between border-b border-[#ded9cf] pb-4">
               <Logo size="sm" />

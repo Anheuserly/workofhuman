@@ -9,7 +9,7 @@ export function SiteHeader() {
   return (
     <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#ded9cf] bg-white/90 px-3 py-3 shadow-sm backdrop-blur-xl">
       <Logo size="md" />
-      <nav className="hidden items-center gap-5 text-sm text-[#6f6a61] lg:flex">
+      <nav className="hidden items-center gap-3.5 md:flex md:gap-5 text-sm text-[#6f6a61]">
         {platformRoutes.map((item) => (
           <Link className="transition hover:text-[#151515]" href={item.href} key={item.href}>
             {item.label}
@@ -24,7 +24,7 @@ export function SiteHeader() {
           <Bell size={17} />
         </Link>
         <HeaderUserNav />
-        <div className="ml-1 sm:ml-1.5">
+        <div className="ml-1 sm:ml-1.5 md:hidden">
           <MobileMenu />
         </div>
       </div>
