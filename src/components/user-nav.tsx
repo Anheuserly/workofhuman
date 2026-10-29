@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Plus, Settings, Sparkles, User, ChevronDown, Shield } from "lucide-react";
@@ -20,28 +20,48 @@ export interface ClientUser {
 export function HeaderUserNav() {
   const router = useRouter();
   const [user, setUser] = useState<ClientUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (res.ok && mounted) {
-          const data = await res.json();
-          setUser(data.user || null);
-        }
-      } catch (err) {
-        console.error("Failed to check auth status:", err);
+  const fetchUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user || null);
+      } else {
+        setUser(null);
       }
+    } catch (err) {
+      console.error("Failed to check auth status:", err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+
+    // Listen for auth change events (e.g., login, register, profile update)
+    function onAuthChange() {
+      fetchUser();
     }
 
-    fetchUser();
+    window.addEventListener("woh_auth_change", onAuthChange);
+    window.addEventListener("focus", onAuthChange);
+
     return () => {
-      mounted = false;
+      window.removeEventListener("woh_auth_change", onAuthChange);
+      window.removeEventListener("focus", onAuthChange);
     };
-  }, []);
+  }, [fetchUser]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -59,11 +79,21 @@ export function HeaderUserNav() {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setDropdownOpen(false);
+      window.dispatchEvent(new Event("woh_auth_change"));
       router.push("/");
       router.refresh();
     } catch (err) {
       console.error("Logout failed:", err);
     }
+  }
+
+  // Loading skeleton placeholder so it doesn't flash "Sign In / Join" to logged-in users
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="size-8 rounded-full bg-[#ded9cf]/50 animate-pulse" />
+      </div>
+    );
   }
 
   // If user is loaded and authenticated
@@ -155,7 +185,7 @@ export function HeaderUserNav() {
                 className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs text-[#151515] transition hover:bg-[#f6f4ef]"
               >
                 <Settings size={15} className="text-[#6f6a61]" />
-                Settings
+                Profile Settings
               </Link>
             </div>
 
@@ -175,7 +205,7 @@ export function HeaderUserNav() {
     );
   }
 
-  // Default unauthenticated state: Always render Sign in and Join buttons with proper spacing
+  // Default unauthenticated state
   return (
     <div className="flex items-center gap-1.5 sm:gap-2.5">
       <Link

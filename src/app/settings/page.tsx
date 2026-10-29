@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
   CheckCircle2,
+  FileUp,
   Loader2,
   Save,
   Settings,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import { PageShell, SectionIntro } from "@/components/shell";
 import { contentTypes } from "@/lib/platform";
@@ -60,11 +62,23 @@ export default function SettingsPage() {
     youtube: "",
   });
 
+  // Upload state
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [avatarMode, setAvatarMode] = useState<"upload" | "link">("upload");
+  const [bannerMode, setBannerMode] = useState<"upload" | "link">("upload");
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     async function loadProfile() {
       setLoading(true);
       try {
-        const res = await fetch("/api/user/profile");
+        const res = await fetch("/api/user/profile", {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
         if (!res.ok) {
           if (res.status === 401) {
             setUnauthenticated(true);
@@ -100,6 +114,40 @@ export default function SettingsPage() {
     loadProfile();
   }, []);
 
+  async function handleFileUpload(file: File, target: "avatar" | "banner") {
+    if (target === "avatar") setUploadingAvatar(true);
+    else setUploadingBanner(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload image.");
+      }
+
+      if (target === "avatar") {
+        setAvatarUrl(data.url);
+      } else {
+        setBannerUrl(data.url);
+      }
+    } catch (err: unknown) {
+      setFeedback({
+        type: "error",
+        text: err instanceof Error ? err.message : "Failed to upload file.",
+      });
+    } finally {
+      if (target === "avatar") setUploadingAvatar(false);
+      else setUploadingBanner(false);
+    }
+  }
+
   function toggleCategory(cat: string) {
     if (selectedCategories.includes(cat)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== cat));
@@ -133,6 +181,9 @@ export default function SettingsPage() {
       }
 
       setFeedback({ type: "success", text: "Studio profile updated successfully!" });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("woh_auth_change"));
+      }
       setTimeout(() => setFeedback(null), 4000);
     } catch (err) {
       setFeedback({
@@ -146,12 +197,24 @@ export default function SettingsPage() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-4xl py-12">
-        <SectionIntro
-          eyebrow="Creator Settings"
-          title="Studio &amp; Identity Control"
-          body="Customize how your work, discipline specializations, bio, and social channels appear to viewers."
-        />
+      <section className="mx-auto max-w-4xl py-8 sm:py-12">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+          <SectionIntro
+            eyebrow="Creator Settings"
+            title="Studio &amp; Identity Control"
+            body="Customize how your work, discipline specializations, bio, and social channels appear to viewers."
+          />
+          {username && (
+            <Link
+              href={`/${username}`}
+              target="_blank"
+              className="button-secondary text-xs w-fit shrink-0 mb-8 inline-flex items-center gap-1.5"
+            >
+              View Public Portfolio
+              <ExternalLink size={13} />
+            </Link>
+          )}
+        </div>
 
         {loading && (
           <div className="surface p-12 text-center max-w-md mx-auto">
@@ -199,24 +262,16 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Profile Overview Card */}
+            {/* Profile Identity */}
             <div className="surface p-6 sm:p-8 space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#ded9cf] pb-4">
+              <div className="border-b border-[#ded9cf] pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-[#151515]">Profile Details</h3>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="font-mono text-xs text-[#6f6a61]">@{username}</span>
-                    <RoleBadge role={role} verified={verified} size="sm" />
-                  </div>
+                  <h3 className="text-lg font-bold text-[#151515]">Identity &amp; Presence</h3>
+                  <p className="text-xs text-[#6f6a61] mt-0.5">
+                    Your handle is <span className="font-mono font-semibold text-[#151515]">@{username}</span>
+                  </p>
                 </div>
-                <Link
-                  href={`/${username}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0f766e] hover:underline"
-                >
-                  View Public Portfolio
-                  <ExternalLink size={12} />
-                </Link>
+                <RoleBadge role={role} verified={verified} size="md" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,46 +314,177 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                    Avatar Image URL
-                  </label>
-                  <input
-                    type="url"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/... or https://..."
-                    className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] focus:border-[#0f766e] focus:outline-none"
-                  />
-                  {avatarUrl && (
-                    <div className="mt-3 flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={avatarUrl}
-                        alt="Avatar preview"
-                        className="size-12 rounded-full object-cover border border-[#ded9cf]"
+              {/* Avatar & Banner Upload Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-[#ded9cf]">
+                {/* 1. Avatar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
+                      Profile Avatar
+                    </label>
+                    <div className="inline-flex rounded-lg bg-[#ded9cf]/40 p-0.5 text-[11px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setAvatarMode("upload")}
+                        className={`rounded px-2 py-0.5 cursor-pointer ${
+                          avatarMode === "upload" ? "bg-white text-[#151515] shadow-xs" : "text-[#6f6a61]"
+                        }`}
+                      >
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAvatarMode("link")}
+                        className={`rounded px-2 py-0.5 cursor-pointer ${
+                          avatarMode === "link" ? "bg-white text-[#151515] shadow-xs" : "text-[#6f6a61]"
+                        }`}
+                      >
+                        Link
+                      </button>
+                    </div>
+                  </div>
+
+                  {avatarMode === "upload" ? (
+                    <div>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, "avatar");
+                        }}
                       />
-                      <span className="text-xs text-[#8c857b]">Avatar preview</span>
+                      <button
+                        type="button"
+                        disabled={uploadingAvatar}
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
+                      >
+                        {uploadingAvatar ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin text-[#0f766e]" /> Saving avatar...
+                          </>
+                        ) : (
+                          <>
+                            <FileUp size={13} /> Choose Avatar Image
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      placeholder="Paste avatar URL..."
+                      className="w-full rounded-md border border-[#ded9cf] bg-white px-3 py-1.5 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    />
+                  )}
+
+                  {avatarUrl && (
+                    <div className="mt-2 flex items-center justify-between p-2 rounded bg-[#f6f4ef]">
+                      <div className="flex items-center gap-2.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={avatarUrl}
+                          alt="Avatar preview"
+                          className="size-9 rounded-full object-cover border border-[#ded9cf]"
+                        />
+                        <span className="text-[11px] text-[#6f6a61]">Avatar preview</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAvatarUrl("")}
+                        className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                        aria-label="Remove avatar"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                    Cover Banner Image URL
-                  </label>
-                  <input
-                    type="url"
-                    value={bannerUrl}
-                    onChange={(e) => setBannerUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/... or https://..."
-                    className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] focus:border-[#0f766e] focus:outline-none"
-                  />
+                {/* 2. Banner */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
+                      Studio Banner
+                    </label>
+                    <div className="inline-flex rounded-lg bg-[#ded9cf]/40 p-0.5 text-[11px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setBannerMode("upload")}
+                        className={`rounded px-2 py-0.5 cursor-pointer ${
+                          bannerMode === "upload" ? "bg-white text-[#151515] shadow-xs" : "text-[#6f6a61]"
+                        }`}
+                      >
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBannerMode("link")}
+                        className={`rounded px-2 py-0.5 cursor-pointer ${
+                          bannerMode === "link" ? "bg-white text-[#151515] shadow-xs" : "text-[#6f6a61]"
+                        }`}
+                      >
+                        Link
+                      </button>
+                    </div>
+                  </div>
+
+                  {bannerMode === "upload" ? (
+                    <div>
+                      <input
+                        ref={bannerInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, "banner");
+                        }}
+                      />
+                      <button
+                        type="button"
+                        disabled={uploadingBanner}
+                        onClick={() => bannerInputRef.current?.click()}
+                        className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
+                      >
+                        {uploadingBanner ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin text-[#0f766e]" /> Saving banner...
+                          </>
+                        ) : (
+                          <>
+                            <FileUp size={13} /> Choose Banner Image
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="url"
+                      value={bannerUrl}
+                      onChange={(e) => setBannerUrl(e.target.value)}
+                      placeholder="Paste banner URL..."
+                      className="w-full rounded-md border border-[#ded9cf] bg-white px-3 py-1.5 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    />
+                  )}
+
                   {bannerUrl && (
-                    <div className="mt-3 h-12 w-full rounded-md overflow-hidden border border-[#ded9cf]">
+                    <div className="mt-2 relative rounded overflow-hidden border border-[#ded9cf] h-12">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={bannerUrl} alt="Banner preview" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setBannerUrl("")}
+                        className="absolute top-1 right-1 rounded-full bg-black/70 hover:bg-black text-white p-1 cursor-pointer transition"
+                        aria-label="Remove banner"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -319,13 +505,13 @@ export default function SettingsPage() {
                   const active = selectedCategories.includes(cat);
                   return (
                     <button
-                      type="button"
                       key={cat}
+                      type="button"
                       onClick={() => toggleCategory(cat)}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${
+                      className={`rounded-full px-3.5 py-1 text-xs font-semibold transition cursor-pointer capitalize ${
                         active
-                          ? "bg-[#0f766e] text-white border border-[#0f766e]"
-                          : "bg-white text-[#6f6a61] border border-[#ded9cf] hover:border-[#151515]"
+                          ? "bg-[#0f766e] text-white shadow-xs"
+                          : "border border-[#ded9cf] bg-white text-[#6f6a61] hover:border-[#a09a90] hover:text-[#151515]"
                       }`}
                     >
                       {cat.replaceAll("_", " ")}
@@ -335,46 +521,46 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Social Channels */}
+            {/* Social Links */}
             <div className="surface p-6 sm:p-8 space-y-4">
               <div className="border-b border-[#ded9cf] pb-3">
-                <h3 className="text-lg font-bold text-[#151515]">Connected Channels</h3>
+                <h3 className="text-lg font-bold text-[#151515]">External Links &amp; Profiles</h3>
                 <p className="text-xs text-[#6f6a61] mt-0.5">
-                  Link your primary studio websites, social handles, or code repositories.
+                  Connect your web presence across networks and repositories.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-semibold text-[#4d4942]">Website / Studio Portfolio</label>
+                  <label className="block text-xs font-semibold text-[#4d4942]">Personal Website / Domain</label>
                   <input
                     type="url"
                     value={socials.website || ""}
                     onChange={(e) => setSocials({ ...socials, website: e.target.value })}
-                    placeholder="https://yourstudio.com"
-                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    placeholder="https://yourdomain.com"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#4d4942]">X / Twitter Handle</label>
+                  <label className="block text-xs font-semibold text-[#4d4942]">X / Twitter</label>
                   <input
                     type="text"
                     value={socials.twitter || ""}
                     onChange={(e) => setSocials({ ...socials, twitter: e.target.value })}
-                    placeholder="@handle"
-                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    placeholder="https://x.com/username or @handle"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#4d4942]">GitHub / Code Repo</label>
+                  <label className="block text-xs font-semibold text-[#4d4942]">GitHub / GitLab</label>
                   <input
                     type="text"
                     value={socials.github || ""}
                     onChange={(e) => setSocials({ ...socials, github: e.target.value })}
-                    placeholder="https://github.com/..."
-                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    placeholder="https://github.com/username"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
                   />
                 </div>
 
@@ -384,29 +570,43 @@ export default function SettingsPage() {
                     type="text"
                     value={socials.instagram || ""}
                     onChange={(e) => setSocials({ ...socials, instagram: e.target.value })}
-                    placeholder="@handle"
-                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                    placeholder="https://instagram.com/username"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#4d4942]">YouTube / Vimeo</label>
+                  <input
+                    type="text"
+                    value={socials.youtube || ""}
+                    onChange={(e) => setSocials({ ...socials, youtube: e.target.value })}
+                    placeholder="https://youtube.com/@channel"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Save Action */}
-            <div className="flex justify-end pt-2">
+            {/* Save Button */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Link href={`/${username}`} className="button-secondary text-xs">
+                Cancel
+              </Link>
               <button
                 type="submit"
                 disabled={saving}
-                className="button-primary cursor-pointer disabled:opacity-60 !px-8"
+                className="button-primary text-xs cursor-pointer !px-6 !py-2.5 disabled:opacity-60 font-bold"
               >
                 {saving ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Saving Changes...
+                    <Loader2 size={14} className="animate-spin" />
+                    Saving Preferences...
                   </>
                 ) : (
                   <>
-                    <Save size={16} />
-                    Save Preferences
+                    <Save size={14} />
+                    Save Changes
                   </>
                 )}
               </button>

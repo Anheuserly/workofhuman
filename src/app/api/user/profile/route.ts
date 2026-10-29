@@ -3,11 +3,14 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { query } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const UpdateProfileSchema = z.object({
   displayName: z.string().trim().max(160).optional(),
   bio: z.string().max(2000).optional(),
-  avatarUrl: z.string().trim().url().optional().or(z.literal("")),
-  bannerUrl: z.string().trim().url().optional().or(z.literal("")),
+  avatarUrl: z.string().trim().optional().or(z.literal("")),
+  bannerUrl: z.string().trim().optional().or(z.literal("")),
   categories: z.array(z.string()).default([]),
   socialLinks: z
     .object({
@@ -41,22 +44,29 @@ export async function GET() {
     }
 
     const row = res.rows[0];
-    return NextResponse.json({
-      profile: {
-        id: row.id,
-        userId: row.user_id,
-        username: row.username,
-        email: row.email,
-        displayName: row.display_name,
-        bio: row.bio,
-        avatarUrl: row.avatar_url,
-        bannerUrl: row.banner_url,
-        verified: row.verified,
-        role: row.role,
-        categories: Array.isArray(row.categories) ? row.categories : [],
-        socialLinks: row.social_links || {},
+    return NextResponse.json(
+      {
+        profile: {
+          id: row.id,
+          userId: row.user_id,
+          username: row.username,
+          email: row.email,
+          displayName: row.display_name,
+          bio: row.bio,
+          avatarUrl: row.avatar_url,
+          bannerUrl: row.banner_url,
+          verified: row.verified,
+          role: row.role,
+          categories: Array.isArray(row.categories) ? row.categories : [],
+          socialLinks: row.social_links || {},
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
+    );
   } catch (err) {
     console.error("[Get Profile Error]:", err);
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
@@ -103,9 +113,13 @@ export async function PATCH(request: Request) {
       ]
     );
 
-    return NextResponse.json({ success: true, message: "Profile updated successfully." });
-  } catch (err) {
+    return NextResponse.json({
+      success: true,
+      message: "Studio profile updated successfully.",
+    });
+  } catch (err: unknown) {
     console.error("[Update Profile Error]:", err);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

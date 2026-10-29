@@ -5,13 +5,20 @@ import { getCurrentUser } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { contentTypes } from "@/lib/platform";
 
+export const dynamic = "force-dynamic";
+
+const isValidMediaUrl = (val: string) => {
+  if (!val) return true;
+  return val.startsWith("/") || val.startsWith("http://") || val.startsWith("https://");
+};
+
 const UploadProjectSchema = z.object({
   title: z.string().trim().min(2, "Title must be at least 2 characters long.").max(200),
   slug: z.string().trim().max(180).optional(),
   type: z.enum(contentTypes as unknown as [string, ...string[]]),
   description: z.string().max(10000).optional(),
-  thumbnailUrl: z.string().trim().url("Please enter a valid thumbnail URL.").optional().or(z.literal("")),
-  mediaUrls: z.array(z.string().trim().url()).default([]),
+  thumbnailUrl: z.string().trim().refine(isValidMediaUrl, "Invalid thumbnail URL or file path.").optional().or(z.literal("")),
+  mediaUrls: z.array(z.string().trim().refine(isValidMediaUrl, "Invalid media URL or file path.")).default([]),
   tags: z.array(z.string().trim().max(50)).default([]),
   aiGenerated: z.boolean().default(false),
   aiModel: z.string().trim().max(160).optional(),

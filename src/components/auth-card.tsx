@@ -110,10 +110,13 @@ export function AuthCard({ initialMode = "register" }: AuthCardProps) {
       }
 
       setSuccess("Signed in successfully! Redirecting...");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("woh_auth_change"));
+      }
       setTimeout(() => {
         router.push(nextUrl);
         router.refresh();
-      }, 700);
+      }, 500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign in.");
     } finally {
@@ -162,10 +165,13 @@ export function AuthCard({ initialMode = "register" }: AuthCardProps) {
       }
 
       setSuccess("Creator account registered! Redirecting to studio...");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("woh_auth_change"));
+      }
       setTimeout(() => {
         router.push(nextUrl);
         router.refresh();
-      }, 1000);
+      }, 500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to register.");
     } finally {
