@@ -10,13 +10,14 @@ export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString,
+      options: "-c search_path=workofhuman,public",
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 6000,
     });
 
     pool.on("connect", (client: PoolClient) => {
-      // Ensure all queries check workofhuman schema first, then public
+      // Redundant safeguard to ensure all queries check workofhuman schema first
       client.query("SET search_path TO workofhuman, public;").catch(() => {});
     });
 

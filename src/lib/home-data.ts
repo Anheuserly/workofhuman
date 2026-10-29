@@ -194,14 +194,14 @@ export async function getHomeData(): Promise<HomeData> {
   try {
     const [settingsRes, projectsRes, aiProjectsRes, creatorsRes, communitiesRes, trendingRes] =
       await Promise.all([
-        query(`SELECT * FROM homepage_settings WHERE id = 'default' LIMIT 1`),
-        query<DbProjectRow>(`SELECT * FROM projects ORDER BY published_at DESC LIMIT 24`),
-        query<DbProjectRow>(`SELECT * FROM projects WHERE ai_generated = true ORDER BY views DESC LIMIT 6`),
-        query<DbProfileRow>(`SELECT * FROM profiles ORDER BY followers_count DESC LIMIT 8`),
-        query<DbCommunityRow>(`SELECT * FROM communities WHERE featured = true ORDER BY member_count DESC LIMIT 6`),
+        query(`SELECT * FROM workofhuman.homepage_settings WHERE id = 'default' LIMIT 1`),
+        query<DbProjectRow>(`SELECT * FROM workofhuman.projects ORDER BY published_at DESC LIMIT 24`),
+        query<DbProjectRow>(`SELECT * FROM workofhuman.projects WHERE ai_generated = true ORDER BY views DESC LIMIT 6`),
+        query<DbProfileRow>(`SELECT * FROM workofhuman.profiles ORDER BY followers_count DESC LIMIT 8`),
+        query<DbCommunityRow>(`SELECT * FROM workofhuman.communities WHERE featured = true ORDER BY member_count DESC LIMIT 6`),
         query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type
-               FROM trending_cache t
-               LEFT JOIN projects p ON p.slug = t.project_id
+               FROM workofhuman.trending_cache t
+               LEFT JOIN workofhuman.projects p ON p.slug = t.project_id
                WHERE t.period = 'week'
                ORDER BY t.rank ASC LIMIT 12`),
       ]);
@@ -270,7 +270,7 @@ export async function getHomeData(): Promise<HomeData> {
 export async function getProjectsByCategory(categorySlug: string): Promise<Project[]> {
   try {
     const res = await query<DbProjectRow>(
-      `SELECT * FROM projects WHERE type = $1 OR type = $2 ORDER BY published_at DESC LIMIT 50`,
+      `SELECT * FROM workofhuman.projects WHERE type = $1 OR type = $2 ORDER BY published_at DESC LIMIT 50`,
       [categorySlug, categorySlug.replaceAll("-", "_")]
     );
     return res.rows.map(mapProject);
@@ -282,7 +282,7 @@ export async function getProjectsByCategory(categorySlug: string): Promise<Proje
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const res = await query<DbProjectRow>(`SELECT * FROM projects WHERE slug = $1 LIMIT 1`, [slug]);
+    const res = await query<DbProjectRow>(`SELECT * FROM workofhuman.projects WHERE slug = $1 LIMIT 1`, [slug]);
     if (res.rows.length === 0) return null;
     return mapProject(res.rows[0]);
   } catch (err) {
@@ -296,14 +296,14 @@ export async function getProfileByUsername(
 ): Promise<{ profile: Profile | null; projects: Project[] }> {
   try {
     const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
-    const profRes = await query<DbProfileRow>(`SELECT * FROM profiles WHERE LOWER(username) = $1 LIMIT 1`, [
+    const profRes = await query<DbProfileRow>(`SELECT * FROM workofhuman.profiles WHERE LOWER(username) = $1 LIMIT 1`, [
       cleanUsername,
     ]);
     if (profRes.rows.length === 0) return { profile: null, projects: [] };
 
     const profile = mapProfile(profRes.rows[0]);
     const projRes = await query<DbProjectRow>(
-      `SELECT * FROM projects WHERE creator_id = $1 ORDER BY published_at DESC LIMIT 30`,
+      `SELECT * FROM workofhuman.projects WHERE creator_id = $1 ORDER BY published_at DESC LIMIT 30`,
       [profile.userId]
     );
 
@@ -319,7 +319,7 @@ export async function getProfileByUsername(
 
 export async function getCommunityBySlug(slug: string): Promise<Community | null> {
   try {
-    const res = await query<DbCommunityRow>(`SELECT * FROM communities WHERE slug = $1 LIMIT 1`, [slug]);
+    const res = await query<DbCommunityRow>(`SELECT * FROM workofhuman.communities WHERE slug = $1 LIMIT 1`, [slug]);
     if (res.rows.length === 0) return null;
     return mapCommunity(res.rows[0]);
   } catch (err) {
