@@ -188,7 +188,7 @@ export default function UploadStudioPage() {
             reject(new Error(data.error || `Upload failed with status ${xhr.status}`));
           }
         } catch {
-          reject(new Error(`Server returned status ${xhr.status}`));
+          reject(new Error(xhr.responseText || `Server returned status ${xhr.status}`));
         }
       };
 
@@ -196,7 +196,10 @@ export default function UploadStudioPage() {
         reject(new Error("Network connection error during upload. Please check your connection."));
       };
 
-      xhr.open("POST", "/api/upload");
+      const vpsBase = (process.env.NEXT_PUBLIC_VPS_MEDIA_URL || "").replace(/\/$/, "");
+      const uploadTarget = vpsBase ? `${vpsBase}/upload` : "/api/upload";
+
+      xhr.open("POST", uploadTarget);
       xhr.send(formData);
     });
   }

@@ -1,0 +1,18 @@
+[Unit]
+Description=WorkOfHuman Media Upload & Streaming Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/workofhuman/services/media-server
+ExecStart=/usr/bin/node server.mjs
+Restart=always
+RestartSec=5
+Environment=PORT=8080
+Environment=UPLOAD_DIR=/var/www/workofhuman/uploads
+Environment=PUBLIC_MEDIA_URL=http://vps.amcmep.in:8080
+Environment=MAX_UPLOAD_SIZE_MB=500
+
+[Install]
+WantedBy=multi-user.target
