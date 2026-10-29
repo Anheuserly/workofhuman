@@ -1,8 +1,9 @@
-import { ArrowRight, Bell, Menu, Search } from "lucide-react";
+import { ArrowRight, Bell, Search } from "lucide-react";
 import Link from "next/link";
 import { platformRoutes } from "@/lib/platform";
 import { HeaderUserNav } from "@/components/user-nav";
 import { Logo } from "@/components/logo";
+import { MobileMenu } from "@/components/mobile-menu";
 
 export function SiteHeader() {
   return (
@@ -23,9 +24,7 @@ export function SiteHeader() {
           <Bell size={18} />
         </Link>
         <HeaderUserNav />
-        <button className="icon-button lg:hidden" type="button" aria-label="Open menu">
-          <Menu size={18} />
-        </button>
+        <MobileMenu />
       </div>
     </header>
   );

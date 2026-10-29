@@ -273,10 +273,20 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-[#ded9cf] px-5 py-10 text-sm text-[#6f6a61] sm:px-8 lg:px-12">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 sm:flex-row">
-          <p>theworkofhuman.com</p>
-          <p>{settings.footerText}</p>
+      <footer className="border-t border-[#ded9cf] px-5 py-12 text-sm text-[#6f6a61] sm:px-8 lg:px-12 bg-white/40">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-bold tracking-tight text-[#151515]">THE WORK OF HUMAN</p>
+            <p className="text-xs text-[#8c857b] mt-1">{settings.footerText}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-5 text-xs font-semibold text-[#5f5a52]">
+            <Link className="hover:text-[#151515] transition" href="/explore">Explore</Link>
+            <Link className="hover:text-[#151515] transition" href="/categories">All Categories</Link>
+            <Link className="hover:text-[#151515] transition" href="/studio/upload">Upload Work</Link>
+            <span className="text-[#d8d2c7]">|</span>
+            <Link className="hover:text-[#0f766e] transition font-bold" href="/login">Sign In</Link>
+            <Link className="hover:text-[#0f766e] transition font-bold" href="/register">Join Platform</Link>
+          </div>
         </div>
       </footer>
     </main>
