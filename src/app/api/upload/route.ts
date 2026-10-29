@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { uploadMedia, isBucketConfigured, getUploadDirectory, getMediaBaseUrl } from "@/lib/storage";
+import { uploadMedia, isMinIOConfigured, getUploadDirectory, getMediaBaseUrl } from "@/lib/storage";
 
 // Configurable Max upload size (defaults to 250MB for video/audio)
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_SIZE_MB || "250");
@@ -16,10 +16,14 @@ export async function GET() {
     status: "ready",
     authenticated: Boolean(user),
     user: user ? { userId: user.userId, username: user.username, role: user.role } : null,
-    storageEngine: isWindows ? "windows_server_disk" : "local_filesystem",
+    storageEngine: isMinIOConfigured
+      ? "minio_self_hosted"
+      : isWindows
+      ? "windows_server_disk"
+      : "local_filesystem",
+    minIOConfigured: isMinIOConfigured,
     uploadDirectory: getUploadDirectory(),
     mediaBaseUrl: getMediaBaseUrl(),
-    bucketConfigured: isBucketConfigured,
     supportsVideoStreaming: true,
     supportsAudioStreaming: true,
     maxFileSizeMB: MAX_UPLOAD_MB,
