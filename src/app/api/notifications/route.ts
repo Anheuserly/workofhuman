@@ -20,10 +20,21 @@ export async function GET() {
       is_read: boolean;
       created_at: string;
     }>(
-      `SELECT id, type, title, message, link, is_read, created_at
-       FROM workofhuman.notifications
-       WHERE user_id = $1
-       ORDER BY created_at DESC LIMIT 50`,
+      `SELECT n.id, n.type,
+              CASE
+                WHEN n.type = 'like' THEN 'New Appreciation'
+                WHEN n.type = 'follow' THEN 'New Follower'
+                WHEN n.type = 'comment' THEN 'New Comment'
+                WHEN n.type = 'message' THEN 'New Message'
+                ELSE 'Notification'
+              END as title,
+              n.content as message,
+              COALESCE(n.entity_id, '/') as link,
+              n.read as is_read,
+              n.created_at
+       FROM workofhuman.notifications n
+       WHERE n.user_id = $1
+       ORDER BY n.created_at DESC LIMIT 50`,
       [user.userId]
     );
 
@@ -45,20 +56,20 @@ export async function PATCH(request: Request) {
 
     if (body.notificationId) {
       await query(
-        `UPDATE workofhuman.notifications SET is_read = true WHERE id = $1 AND user_id = $2`,
+        `UPDATE workofhuman.notifications SET read = true WHERE id = $1 AND user_id = $2`,
         [body.notificationId, user.userId]
       );
     } else {
       // Mark all as read
       await query(
-        `UPDATE workofhuman.notifications SET is_read = true WHERE user_id = $1`,
+        `UPDATE workofhuman.notifications SET read = true WHERE user_id = $1`,
         [user.userId]
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    console.error("[Mark Notifications Error]:", err);
+    console.error("[Update Notifications Error]:", err);
     return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
   }
 }

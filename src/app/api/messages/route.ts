@@ -23,15 +23,15 @@ export async function GET() {
       receiver_username: string;
       receiver_name: string;
     }>(
-      `SELECT m.id, m.sender_id, m.receiver_id, m.content, m.is_read, m.created_at,
+      `SELECT m.id, m.sender_id, m.recipient_id as receiver_id, m.content, m.read as is_read, m.created_at,
               COALESCE(sp.username, 'member') as sender_username,
               COALESCE(sp.display_name, 'Creative Member') as sender_name,
               COALESCE(rp.username, 'member') as receiver_username,
               COALESCE(rp.display_name, 'Creative Member') as receiver_name
        FROM workofhuman.messages m
        LEFT JOIN workofhuman.profiles sp ON sp.user_id = m.sender_id
-       LEFT JOIN workofhuman.profiles rp ON rp.user_id = m.receiver_id
-       WHERE m.sender_id = $1 OR m.receiver_id = $1
+       LEFT JOIN workofhuman.profiles rp ON rp.user_id = m.recipient_id
+       WHERE m.sender_id = $1 OR m.recipient_id = $1
        ORDER BY m.created_at DESC LIMIT 100`,
       [user.userId]
     );
@@ -88,19 +88,30 @@ export async function POST(request: Request) {
     }
 
     const receiverId = recRes.rows[0].user_id;
-    const msgId = `msg_${
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID().replace(/-/g, "")
-        : Math.random().toString(36).substring(2, 12)
-    }`;
+    const conversationId = [user.userId, receiverId].sort().join(":");
 
-    await query(
-      `INSERT INTO workofhuman.messages (id, sender_id, receiver_id, content, is_read, created_at)
-       VALUES ($1, $2, $3, $4, false, NOW())`,
-      [msgId, user.userId, receiverId, content.trim()]
+    const insertRes = await query<{ id: string }>(
+      `INSERT INTO workofhuman.messages (sender_id, recipient_id, conversation_id, content, read, created_at)
+       VALUES ($1, $2, $3, $4, false, NOW())
+       RETURNING id`,
+      [user.userId, receiverId, conversationId, content.trim()]
     );
 
-    return NextResponse.json({ success: true, messageId: msgId }, { status: 201 });
+    // Notify recipient
+    await query(
+      `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
+       VALUES ($1, $2, 'message', '/messages', $3, false, NOW())`,
+      [
+        receiverId,
+        user.userId,
+        `@${user.username} sent you a message: "${content.trim().slice(0, 50)}${content.trim().length > 50 ? "..." : ""}"`,
+      ]
+    ).catch(() => {});
+
+    return NextResponse.json(
+      { success: true, messageId: insertRes.rows[0]?.id },
+      { status: 201 }
+    );
   } catch (err: unknown) {
     console.error("[Send Message Error]:", err);
     return NextResponse.json(

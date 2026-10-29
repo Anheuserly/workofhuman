@@ -60,29 +60,47 @@ export async function POST(
     }
 
     const { slug } = await params;
-    const commentId = `cm_${
-      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-        ? crypto.randomUUID().replace(/-/g, "")
-        : Math.random().toString(36).substring(2, 12)
-    }`;
 
-    await query(
-      `INSERT INTO workofhuman.comments (id, project_id, user_id, content, likes_count, created_at)
-       VALUES ($1, $2, $3, $4, 0, NOW())`,
-      [commentId, slug, user.userId, content.trim()]
+    // Look up project creator
+    const projRes = await query<{ id: string; creator_id: string; title: string }>(
+      `SELECT id, creator_id, title FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
+      [slug]
     );
+
+    const insertRes = await query<{ id: string; created_at: string }>(
+      `INSERT INTO workofhuman.comments (project_id, user_id, content, created_at)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING id, created_at`,
+      [slug, user.userId, content.trim()]
+    );
+
+    const newComment = insertRes.rows[0];
+
+    // Notify project creator if not commenting on own work
+    if (projRes.rows.length > 0 && projRes.rows[0].creator_id !== user.userId) {
+      await query(
+        `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
+         VALUES ($1, $2, 'comment', $3, $4, false, NOW())`,
+        [
+          projRes.rows[0].creator_id,
+          user.userId,
+          `/@${user.username}/${slug}`,
+          `@${user.username} commented on your creation "${projRes.rows[0].title}".`,
+        ]
+      ).catch(() => {});
+    }
 
     return NextResponse.json(
       {
         success: true,
         comment: {
-          id: commentId,
+          id: newComment.id,
           content: content.trim(),
           likes_count: 0,
-          created_at: new Date().toISOString(),
+          created_at: newComment.created_at,
           username: user.username,
           display_name: user.displayName || user.username,
-          avatar_url: null,
+          avatar_url: user.avatarUrl || null,
         },
       },
       { status: 201 }

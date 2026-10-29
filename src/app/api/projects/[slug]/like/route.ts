@@ -26,7 +26,7 @@ export async function GET(
 
     if (user) {
       const likeCheck = await query(
-        `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND type = 'like' LIMIT 1`,
+        `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND action = 'like' LIMIT 1`,
         [user.userId, project.id]
       );
       liked = likeCheck.rows.length > 0;
@@ -70,7 +70,7 @@ export async function POST(
 
     // Check if already liked
     const existing = await query<{ id: string }>(
-      `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND type = 'like' LIMIT 1`,
+      `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND action = 'like' LIMIT 1`,
       [user.userId, project.id]
     );
 
@@ -87,16 +87,10 @@ export async function POST(
       liked = false;
     } else {
       // Like
-      const intId = `int_${
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID().replace(/-/g, "")
-          : Math.random().toString(36).substring(2, 12)
-      }`;
-
       await query(
-        `INSERT INTO workofhuman.interactions (id, user_id, project_id, type, created_at)
-         VALUES ($1, $2, $3, 'like', NOW())`,
-        [intId, user.userId, project.id]
+        `INSERT INTO workofhuman.interactions (user_id, project_id, action, created_at)
+         VALUES ($1, $2, 'like', NOW())`,
+        [user.userId, project.id]
       );
 
       newCount += 1;
@@ -104,20 +98,14 @@ export async function POST(
 
       // Notify project creator if not liking own work
       if (project.creator_id !== user.userId) {
-        const notifId = `notif_${
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID().replace(/-/g, "")
-            : Math.random().toString(36).substring(2, 12)
-        }`;
         await query(
-          `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
-           VALUES ($1, $2, 'like', $3, $4, $5, false, NOW())`,
+          `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
+           VALUES ($1, $2, 'like', $3, $4, false, NOW())`,
           [
-            notifId,
             project.creator_id,
-            "New Appreciation",
-            `@${user.username} appreciated your creation "${project.title}".`,
+            user.userId,
             `/@${user.username}/${slug}`,
+            `@${user.username} appreciated your creation "${project.title}".`,
           ]
         ).catch(() => {});
       }

@@ -78,8 +78,8 @@ export async function PATCH(
       values.push(body.type);
     }
     if (Array.isArray(body.tags)) {
-      updates.push(`tags = $${idx++}::jsonb`);
-      values.push(JSON.stringify(body.tags));
+      updates.push(`tags = $${idx++}`);
+      values.push(body.tags);
     }
     if (typeof body.aiGenerated === "boolean") {
       updates.push(`ai_generated = $${idx++}`);
