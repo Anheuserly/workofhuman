@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Plus, Settings, Sparkles, User, ChevronDown } from "lucide-react";
+import { LogOut, Plus, Settings, Sparkles, User, ChevronDown, Shield } from "lucide-react";
+import { RoleBadge } from "@/components/role-badge";
 
 export interface ClientUser {
   userId: string;
@@ -133,13 +134,27 @@ export function HeaderUserNav() {
       {dropdownOpen && (
         <div className="surface absolute right-0 top-12 z-50 w-56 p-1.5 shadow-xl animate-in fade-in zoom-in-95">
           <div className="border-b border-[#ded9cf] px-3 py-2.5">
-            <p className="text-xs font-bold text-[#151515]">
-              {user.displayName || user.username}
-            </p>
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-xs font-bold text-[#151515] truncate">
+                {user.displayName || user.username}
+              </p>
+              <RoleBadge role={user.role} verified={user.verified} size="sm" />
+            </div>
             <p className="text-[11px] text-[#6f6a61] font-mono">@{user.username}</p>
           </div>
 
           <div className="py-1">
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-semibold text-amber-900 bg-amber-50/70 hover:bg-amber-100/70 transition"
+              >
+                <Shield size={15} className="text-amber-600" />
+                Admin Dashboard
+              </Link>
+            )}
+
             <Link
               href={`/${user.username}`}
               onClick={() => setDropdownOpen(false)}

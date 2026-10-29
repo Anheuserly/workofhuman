@@ -22,6 +22,7 @@ export type Project = {
 export type Profile = {
   userId: string;
   username: string;
+  role?: string;
   displayName?: string;
   bio?: string;
   avatarUrl?: string;
@@ -109,6 +110,7 @@ interface DbProjectRow {
 interface DbProfileRow {
   user_id: string;
   username: string;
+  role?: string | null;
   display_name?: string | null;
   bio?: string | null;
   avatar_url?: string | null;
@@ -164,6 +166,7 @@ function mapProfile(r: DbProfileRow): Profile {
   return {
     userId: r.user_id,
     username: r.username,
+    role: r.role || "creator",
     displayName: r.display_name || undefined,
     bio: r.bio || undefined,
     avatarUrl: r.avatar_url || undefined,

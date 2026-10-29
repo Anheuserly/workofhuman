@@ -1,7 +1,8 @@
 import { PageShell, SectionIntro } from "@/components/shell";
 import { ProjectCard } from "@/components/project-card";
 import { getProfileByUsername } from "@/lib/home-data";
-import { Users, Eye, BadgeCheck } from "lucide-react";
+import { Users, Eye } from "lucide-react";
+import { RoleBadge } from "@/components/role-badge";
 
 export default async function CreatorProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -12,20 +13,19 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
   return (
     <PageShell>
       <section className="mx-auto max-w-7xl py-16">
-        <SectionIntro
-          eyebrow="Creator Profile"
-          title={profile?.displayName || `@${cleanHandle}`}
-          body={profile?.bio || `Independent portfolio and creative archive of @${cleanHandle}.`}
-        />
+        <div className="mb-4">
+          <SectionIntro
+            eyebrow="Creator Profile"
+            title={profile?.displayName || `@${cleanHandle}`}
+            body={profile?.bio || `Independent portfolio and creative archive of @${cleanHandle}.`}
+          />
+        </div>
 
         {profile && (
-          <div className="mb-10 flex flex-wrap items-center gap-6 border-b border-[#ded9cf] pb-6 text-sm text-[#5f5a52]">
-            {profile.verified && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0f766e]/10 px-3 py-1 font-semibold text-[#0f766e]">
-                <BadgeCheck size={16} /> Verified Creator
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5 font-medium">
+          <div className="mb-10 flex flex-wrap items-center gap-4 border-b border-[#ded9cf] pb-6 text-sm text-[#5f5a52]">
+            <RoleBadge role={profile.role} verified={profile.verified} size="md" />
+
+            <span className="inline-flex items-center gap-1.5 font-medium ml-2">
               <Users size={16} className="text-[#6f6a61]" />
               <strong>{profile.followersCount?.toLocaleString() || 0}</strong> followers
             </span>
