@@ -19,8 +19,27 @@ export interface ClientUser {
 
 export function HeaderUserNav() {
   const router = useRouter();
-  const [user, setUser] = useState<ClientUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<ClientUser | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("woh_cached_user");
+        if (cached) return JSON.parse(cached);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return !localStorage.getItem("woh_cached_user");
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -34,13 +53,35 @@ export function HeaderUserNav() {
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user || null);
-      } else {
+        if (data.user) {
+          setUser(data.user);
+          try {
+            localStorage.setItem("woh_cached_user", JSON.stringify(data.user));
+          } catch {
+            // ignore
+          }
+        } else {
+          // Explicit null from server
+          setUser(null);
+          try {
+            localStorage.removeItem("woh_cached_user");
+          } catch {
+            // ignore
+          }
+        }
+      } else if (res.status === 401) {
+        // Definitely unauthenticated
         setUser(null);
+        try {
+          localStorage.removeItem("woh_cached_user");
+        } catch {
+          // ignore
+        }
       }
+      // Note: If 500 or network timeout, retain cached user to prevent flickering!
     } catch (err) {
-      console.error("Failed to check auth status:", err);
-      setUser(null);
+      console.warn("[Auth Check]: network error, retaining cached session:", err);
+      // Retain cached user so login doesn't disappear on connection blips!
     } finally {
       setLoading(false);
     }
@@ -79,6 +120,11 @@ export function HeaderUserNav() {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setDropdownOpen(false);
+      try {
+        localStorage.removeItem("woh_cached_user");
+      } catch {
+        // ignore
+      }
       window.dispatchEvent(new Event("woh_auth_change"));
       router.push("/");
       router.refresh();

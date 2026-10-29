@@ -34,8 +34,27 @@ interface AuthUser {
 
 export default function UploadStudioPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("woh_cached_user");
+        if (cached) return JSON.parse(cached);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+  const [authLoading, setAuthLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return !localStorage.getItem("woh_cached_user");
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
 
   // Active studio section tab
   const [activeSection, setActiveSection] = useState<"media" | "details" | "ai" | "tags" | "preview">("media");
@@ -96,13 +115,31 @@ export default function UploadStudioPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCurrentUser(data.user || null);
-      } else {
+        if (data.user) {
+          setCurrentUser(data.user);
+          try {
+            localStorage.setItem("woh_cached_user", JSON.stringify(data.user));
+          } catch {
+            // ignore
+          }
+        } else {
+          setCurrentUser(null);
+          try {
+            localStorage.removeItem("woh_cached_user");
+          } catch {
+            // ignore
+          }
+        }
+      } else if (res.status === 401) {
         setCurrentUser(null);
+        try {
+          localStorage.removeItem("woh_cached_user");
+        } catch {
+          // ignore
+        }
       }
     } catch (err) {
-      console.error("Auth check failed:", err);
-      setCurrentUser(null);
+      console.warn("[Upload Studio Auth]: retaining cached session:", err);
     } finally {
       setAuthLoading(false);
     }

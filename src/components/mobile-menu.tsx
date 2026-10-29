@@ -31,7 +31,17 @@ interface MobileUser {
 export function MobileMenu() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<MobileUser | null>(null);
+  const [user, setUser] = useState<MobileUser | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("woh_cached_user");
+        if (cached) return JSON.parse(cached);
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
 
   const fetchUser = useCallback(async () => {
     try {
@@ -41,12 +51,31 @@ export function MobileMenu() {
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user || null);
-      } else {
+        if (data.user) {
+          setUser(data.user);
+          try {
+            localStorage.setItem("woh_cached_user", JSON.stringify(data.user));
+          } catch {
+            // ignore
+          }
+        } else {
+          setUser(null);
+          try {
+            localStorage.removeItem("woh_cached_user");
+          } catch {
+            // ignore
+          }
+        }
+      } else if (res.status === 401) {
         setUser(null);
+        try {
+          localStorage.removeItem("woh_cached_user");
+        } catch {
+          // ignore
+        }
       }
     } catch {
-      setUser(null);
+      // Retain cached session on network error
     }
   }, []);
 
@@ -65,6 +94,11 @@ export function MobileMenu() {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setOpen(false);
+      try {
+        localStorage.removeItem("woh_cached_user");
+      } catch {
+        // ignore
+      }
       window.dispatchEvent(new Event("woh_auth_change"));
       router.push("/");
       router.refresh();

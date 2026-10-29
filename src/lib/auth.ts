@@ -105,6 +105,7 @@ export async function createSession(userId: string, profileId: string): Promise<
     sameSite: "lax",
     path: "/",
     expires: expiresAt,
+    maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
   });
 
   return sessionId;
