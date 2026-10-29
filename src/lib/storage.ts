@@ -85,7 +85,10 @@ export async function uploadMedia(
   contentType: string
 ): Promise<UploadResult> {
   const ext = path.extname(originalFilename).toLowerCase() || getExtensionFromMime(contentType);
-  const randomSuffix = crypto.randomBytes(12).toString("hex");
+  const randomSuffix =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID().replace(/-/g, "").slice(0, 16)
+      : Math.random().toString(36).substring(2, 12);
   const filename = `${Date.now()}-${randomSuffix}${ext}`;
 
   // OPTION A: Self-Hosted MinIO on VPS / Windows Server

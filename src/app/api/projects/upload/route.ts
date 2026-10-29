@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -30,7 +29,16 @@ function slugify(text: string): string {
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .trim();
+}
+
+function generateId(prefix: string): string {
+  const uuid =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID().replace(/-/g, "")
+      : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  return `${prefix}_${uuid}`;
 }
 
 export async function POST(request: Request) {
@@ -76,10 +84,14 @@ export async function POST(request: Request) {
       [finalSlug]
     );
     if (existingSlug.rows.length > 0) {
-      finalSlug = `${baseSlug}-${crypto.randomBytes(3).toString("hex")}`;
+      const shortSuffix =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID().replace(/-/g, "").slice(0, 6)
+          : Math.random().toString(36).substring(2, 8);
+      finalSlug = `${baseSlug}-${shortSuffix}`;
     }
 
-    const projectId = `proj_${crypto.randomUUID().replace(/-/g, "")}`;
+    const projectId = generateId("proj");
     const cleanMediaUrls = mediaUrls.filter((url) => Boolean(url && url.length > 0));
     const cleanTags = tags.filter((t) => Boolean(t && t.length > 0));
 
@@ -109,9 +121,13 @@ export async function POST(request: Request) {
       ]
     );
 
+    const redirectPath = `/@${user.username}/${finalSlug}`;
+
     return NextResponse.json(
       {
         success: true,
+        slug: finalSlug,
+        redirectUrl: redirectPath,
         project: {
           id: projectId,
           slug: finalSlug,

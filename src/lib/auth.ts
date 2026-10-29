@@ -89,7 +89,10 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
  * Creates a persistent database session and assigns an HTTP-only cookie.
  */
 export async function createSession(userId: string, profileId: string): Promise<string> {
-  const sessionId = crypto.randomBytes(32).toString("hex");
+  const sessionId =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? `${crypto.randomUUID().replace(/-/g, "")}${crypto.randomUUID().replace(/-/g, "")}`
+      : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   const expiresAt = new Date(Date.now() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000);
 
   await query(

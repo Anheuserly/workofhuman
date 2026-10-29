@@ -322,15 +322,36 @@ export default function UploadStudioPage() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data: {
+        success?: boolean;
+        error?: string;
+        slug?: string;
+        redirectUrl?: string;
+        project?: { id?: string; slug?: string; creatorUsername?: string };
+      } | null = null;
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to publish project.");
+        throw new Error(data?.error || `Failed to publish project (Server returned ${res.status}).`);
       }
 
       setSuccess(true);
+      const targetSlug = data?.slug || data?.project?.slug;
+      const targetUsername = data?.project?.creatorUsername || currentUser?.username;
+      const targetUrl =
+        data?.redirectUrl ||
+        (targetSlug && targetUsername ? `/@${targetUsername}/${targetSlug}` : `/@${currentUser?.username}`);
+
       setTimeout(() => {
-        router.push(data.redirectUrl || `/@${currentUser?.username}/${data.slug}`);
+        router.push(targetUrl);
       }, 1000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to publish creation.");
