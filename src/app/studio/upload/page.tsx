@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  FileUp,
+  Film,
+  Image as ImageIcon,
   Loader2,
+  Music,
   Plus,
   Sparkles,
   Trash2,
@@ -34,10 +38,19 @@ export default function UploadStudioPage() {
   const [type, setType] = useState<string>("digital_art");
   const [description, setDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
-  const [mediaUrls, setMediaUrls] = useState<string[]>([""]);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [aiGenerated, setAiGenerated] = useState(false);
   const [aiModel, setAiModel] = useState("");
+
+  // Upload progress state
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Hidden file inputs
+  const thumbFileInputRef = useRef<HTMLInputElement>(null);
+  const mediaFileInputRef = useRef<HTMLInputElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +72,38 @@ export default function UploadStudioPage() {
     }
     checkAuth();
   }, []);
+
+  async function handleFileUpload(file: File, target: "thumbnail" | "media") {
+    setUploadError(null);
+    if (target === "thumbnail") setUploadingThumb(true);
+    else setUploadingMedia(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload file.");
+      }
+
+      if (target === "thumbnail") {
+        setThumbnailUrl(data.url);
+      } else {
+        setMediaUrls((prev) => [...prev, data.url]);
+      }
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      if (target === "thumbnail") setUploadingThumb(false);
+      else setUploadingMedia(false);
+    }
+  }
 
   function handleAddMediaUrl() {
     setMediaUrls([...mediaUrls, ""]);
@@ -116,9 +161,10 @@ export default function UploadStudioPage() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push(`/${currentUser?.username || "explore"}`);
+        const finalSlug = data.project?.slug || slug;
+        router.push(`/${currentUser?.username || "explore"}/${finalSlug}`);
         router.refresh();
-      }, 1200);
+      }, 1000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -186,7 +232,7 @@ export default function UploadStudioPage() {
               {success && (
                 <div className="flex items-start gap-2.5 rounded-md border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
                   <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-                  <span>Creation published successfully! Redirecting to your portfolio...</span>
+                  <span>Creation published successfully! Opening project showcase...</span>
                 </div>
               )}
 
@@ -308,25 +354,64 @@ export default function UploadStudioPage() {
               </div>
             </div>
 
-            {/* Right Column: Media Assets & Preview */}
+            {/* Right Column: Media Uploads, Files & Preview */}
             <div className="space-y-6">
-              <div className="surface p-6 sm:p-8 space-y-4">
-                <h3 className="text-lg font-bold text-[#151515]">Media &amp; Assets</h3>
+              <div className="surface p-6 sm:p-8 space-y-5">
+                <div className="border-b border-[#ded9cf] pb-3 flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-[#151515]">Media &amp; Assets</h3>
+                  <span className="text-[11px] font-bold text-[#0f766e] bg-[#0f766e]/10 px-2.5 py-0.5 rounded-full">
+                    Upload Photos, Videos, Audio
+                  </span>
+                </div>
 
+                {uploadError && (
+                  <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
+                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
+                {/* 1. Cover Thumbnail File Upload */}
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                    Cover Thumbnail URL
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
+                      Cover Thumbnail Image
+                    </label>
+                    <button
+                      type="button"
+                      disabled={uploadingThumb}
+                      onClick={() => thumbFileInputRef.current?.click()}
+                      className="text-xs font-bold text-[#0f766e] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-60"
+                    >
+                      {uploadingThumb ? (
+                        <>
+                          <Loader2 size={12} className="animate-spin" /> Uploading image...
+                        </>
+                      ) : (
+                        <>
+                          <FileUp size={12} /> Upload from device
+                        </>
+                      )}
+                    </button>
+                    <input
+                      ref={thumbFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, "thumbnail");
+                      }}
+                    />
+                  </div>
+
                   <input
                     type="url"
                     value={thumbnailUrl}
                     onChange={(e) => setThumbnailUrl(e.target.value)}
-                    placeholder="https://images.unsplash.com/... or https://..."
+                    placeholder="Upload image above or paste image URL..."
                     className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
                   />
-                  <p className="text-[11px] text-[#8c857b] mt-1">
-                    Image preview shown across discovery grids, search, and home feed.
-                  </p>
                 </div>
 
                 {thumbnailUrl && (
@@ -336,47 +421,108 @@ export default function UploadStudioPage() {
                       src={thumbnailUrl}
                       alt="Thumbnail preview"
                       className="h-full w-full object-cover"
-                      onError={() => setError("Could not render thumbnail image from the provided URL.")}
                     />
                   </div>
                 )}
 
-                <div>
+                {/* 2. Additional Media Files (Video, Audio, Photos, Assets) */}
+                <div className="pt-2 border-t border-[#ded9cf]">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Full-Resolution Media / Audio / Asset URLs
+                      Full Media Assets ({mediaUrls.length})
                     </label>
-                    <button
-                      type="button"
-                      onClick={handleAddMediaUrl}
-                      className="text-xs font-bold text-[#0f766e] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus size={13} /> Add URL
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        disabled={uploadingMedia}
+                        onClick={() => mediaFileInputRef.current?.click()}
+                        className="text-xs font-bold text-[#0f766e] hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-60"
+                      >
+                        {uploadingMedia ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin" /> Uploading media...
+                          </>
+                        ) : (
+                          <>
+                            <FileUp size={12} /> Upload Video/Audio/Photo
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddMediaUrl}
+                        className="text-xs font-bold text-[#151515] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus size={12} /> Add Link
+                      </button>
+                    </div>
+
+                    <input
+                      ref={mediaFileInputRef}
+                      type="file"
+                      accept="image/*,video/*,audio/*,.pdf,.glb,.gltf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, "media");
+                      }}
+                    />
                   </div>
 
-                  <div className="mt-2 space-y-2">
-                    {mediaUrls.map((url, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="url"
-                          value={url}
-                          onChange={(e) => handleMediaUrlChange(idx, e.target.value)}
-                          placeholder="https://... (asset link, SoundCloud, Vimeo, GitHub)"
-                          className="flex-1 rounded-md border border-[#ded9cf] bg-white px-3 py-1.5 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
-                        />
-                        {mediaUrls.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMediaUrl(idx)}
-                            className="text-red-500 hover:text-red-700 p-1"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {mediaUrls.length === 0 ? (
+                    <div className="mt-3 rounded-lg border border-dashed border-[#ded9cf] p-4 text-center">
+                      <p className="text-xs text-[#8c857b]">
+                        Upload video clips, songs, audio stems, high-res photos, or external embed links.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      {mediaUrls.map((url, idx) => {
+                        const isVid = /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(url);
+                        const isAud = /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(url);
+                        const isImg = /\.(jpg|jpeg|png|webp|gif|svg|avif)(\?.*)?$/i.test(url);
+
+                        return (
+                          <div key={idx} className="rounded-md border border-[#ded9cf] bg-[#fcfbfa] p-2.5 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="shrink-0 text-[#0f766e]">
+                                {isVid ? <Film size={15} /> : isAud ? <Music size={15} /> : isImg ? <ImageIcon size={15} /> : <FileUp size={15} />}
+                              </span>
+                              <input
+                                type="text"
+                                value={url}
+                                onChange={(e) => handleMediaUrlChange(idx, e.target.value)}
+                                placeholder="Media URL or uploaded asset link..."
+                                className="flex-1 rounded border border-[#ded9cf] bg-white px-2.5 py-1 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMediaUrl(idx)}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer shrink-0"
+                                aria-label="Remove asset"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+
+                            {/* Mini preview */}
+                            {url && (
+                              <div className="rounded overflow-hidden bg-black/5 max-h-32">
+                                {isVid ? (
+                                  <video src={url} controls className="w-full max-h-32 bg-black" />
+                                ) : isAud ? (
+                                  <audio src={url} controls className="w-full p-2" />
+                                ) : isImg ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img src={url} alt={`Asset ${idx + 1}`} className="w-full max-h-32 object-contain bg-white" />
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-[#ded9cf]">
