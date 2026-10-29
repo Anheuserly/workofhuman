@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS profiles (
     id VARCHAR(64) PRIMARY KEY,
     user_id VARCHAR(120) UNIQUE NOT NULL,
     username VARCHAR(80) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    password_hash TEXT,
+    role VARCHAR(32) DEFAULT 'creator',
     display_name VARCHAR(160),
     bio TEXT,
     avatar_url TEXT,
@@ -37,7 +40,20 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
 CREATE INDEX IF NOT EXISTS idx_profiles_followers ON profiles(followers_count DESC);
+
+-- 2b. Sessions (Secure HTTP-only Cookie Auth)
+CREATE TABLE IF NOT EXISTS sessions (
+    id VARCHAR(128) PRIMARY KEY,
+    user_id VARCHAR(120) NOT NULL,
+    profile_id VARCHAR(64) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 
 -- 3. Projects & Creative Works
 CREATE TABLE IF NOT EXISTS projects (

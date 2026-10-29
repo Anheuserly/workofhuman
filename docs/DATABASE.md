@@ -53,13 +53,16 @@ Stores dynamic homepage headline copy, call-to-action buttons, and footer descri
 ---
 
 ### 2.2 `profiles`
-Represents creator identities, bios, verification status, and discipline classifications.
+Represents creator identities, bios, verification status, discipline classifications, and authentication credentials.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
 | `id` | `VARCHAR(64)` | `PRIMARY KEY` | Internal profile ID. |
 | `user_id` | `VARCHAR(120)`| `UNIQUE NOT NULL` | Auth provider or user account identifier. |
 | `username` | `VARCHAR(80)` | `UNIQUE NOT NULL` | URL handle (e.g., `shubham` for `/shubham`). |
+| `email` | `VARCHAR(255)`| `UNIQUE` | User email address for authentication. |
+| `password_hash` | `TEXT` | Nullable | Bcrypt hashed password. |
+| `role` | `VARCHAR(32)` | Default `'creator'` | User role (`creator`, `admin`). |
 | `display_name` | `VARCHAR(160)`| Nullable | Full name or studio title. |
 | `bio` | `TEXT` | Nullable | Creator biography and discipline summary. |
 | `avatar_url` | `TEXT` | Nullable | Profile avatar image URL. |
@@ -74,7 +77,25 @@ Represents creator identities, bios, verification status, and discipline classif
 
 **Indexes**:
 - `idx_profiles_username ON profiles(username)`
+- `idx_profiles_email ON profiles(email)`
 - `idx_profiles_followers ON profiles(followers_count DESC)`
+
+---
+
+### 2.2b `sessions`
+Secure server-side session registry for HTTP-only cookie-based authentication.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `VARCHAR(128)`| `PRIMARY KEY` | Cryptographically random session token ID. |
+| `user_id` | `VARCHAR(120)`| `NOT NULL` | Associated user ID. |
+| `profile_id` | `VARCHAR(64)` | `NOT NULL` | Associated profile ID. |
+| `expires_at` | `TIMESTAMPTZ` | `NOT NULL` | Session expiration timestamp. |
+| `created_at` | `TIMESTAMPTZ` | Default `NOW()` | Session creation timestamp. |
+
+**Indexes**:
+- `idx_sessions_user_id ON sessions(user_id)`
+- `idx_sessions_expires_at ON sessions(expires_at)`
 
 ---
 

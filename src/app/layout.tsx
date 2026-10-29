@@ -11,6 +11,14 @@ export const metadata: Metadata = {
   title: "The Work of Human | The World's Creative Output",
   description:
     "A global creative expression platform for human and AI-made music, films, art, ideas, stories, apps, inventions, and design.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

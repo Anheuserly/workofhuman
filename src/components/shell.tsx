@@ -1,14 +1,13 @@
-import { ArrowRight, Bell, Menu, Search, UploadCloud } from "lucide-react";
+import { ArrowRight, Bell, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { platformRoutes } from "@/lib/platform";
+import { HeaderUserNav } from "@/components/user-nav";
+import { Logo } from "@/components/logo";
 
 export function SiteHeader() {
   return (
     <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#ded9cf] bg-white/90 px-3 py-3 shadow-sm backdrop-blur-xl">
-      <Link href="/" className="flex items-center gap-3" aria-label="The Work of Human home">
-        <span className="grid size-9 place-items-center rounded-full bg-[#151515] text-sm font-black text-white">W</span>
-        <span className="hidden text-sm font-semibold tracking-[0.18em] text-[#151515] sm:inline">THE WORK OF HUMAN</span>
-      </Link>
+      <Logo size="md" />
       <nav className="hidden items-center gap-5 text-sm text-[#6f6a61] lg:flex">
         {platformRoutes.map((item) => (
           <Link className="transition hover:text-[#151515]" href={item.href} key={item.href}>
@@ -23,10 +22,7 @@ export function SiteHeader() {
         <Link className="icon-button hidden sm:inline-flex" href="/notifications" aria-label="Notifications">
           <Bell size={18} />
         </Link>
-        <Link className="button-primary hidden px-4 sm:inline-flex" href="/studio/upload">
-          <UploadCloud size={17} />
-          Create
-        </Link>
+        <HeaderUserNav />
         <button className="icon-button lg:hidden" type="button" aria-label="Open menu">
           <Menu size={18} />
         </button>
