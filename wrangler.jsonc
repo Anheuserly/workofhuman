@@ -5,6 +5,9 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "assets": {
+    "directory": ".next"
+  },
   "vars": {
     "DATABASE_URL": "postgresql://postgres:AnheVps2022@vps.amcmep.in:5432/workofhuman"
   }
