@@ -64,12 +64,60 @@ export default function SettingsPage() {
 
   // Upload state
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarProgress, setAvatarProgress] = useState<{ percent: number; loaded: string; total: string } | null>(null);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerProgress, setBannerProgress] = useState<{ percent: number; loaded: string; total: string } | null>(null);
   const [avatarMode, setAvatarMode] = useState<"upload" | "link">("upload");
   const [bannerMode, setBannerMode] = useState<"upload" | "link">("upload");
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  function formatBytes(bytes: number) {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+  }
+
+  function uploadFileWithProgress(
+    file: File,
+    onProgress: (percent: number, loadedFormatted: string, totalFormatted: string) => void
+  ): Promise<{ url: string; filename: string }> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+          onProgress(percent, formatBytes(event.loaded), formatBytes(event.total));
+        }
+      };
+
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || `Upload failed with status ${xhr.status}`));
+          }
+        } catch {
+          reject(new Error(`Server returned status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Network connection error during upload. Please check your connection."));
+      };
+
+      xhr.open("POST", "/api/upload");
+      xhr.send(formData);
+    });
+  }
 
   useEffect(() => {
     async function loadProfile() {
@@ -115,22 +163,22 @@ export default function SettingsPage() {
   }, []);
 
   async function handleFileUpload(file: File, target: "avatar" | "banner") {
-    if (target === "avatar") setUploadingAvatar(true);
-    else setUploadingBanner(true);
+    if (target === "avatar") {
+      setUploadingAvatar(true);
+      setAvatarProgress({ percent: 0, loaded: "0 B", total: formatBytes(file.size) });
+    } else {
+      setUploadingBanner(true);
+      setBannerProgress({ percent: 0, loaded: "0 B", total: formatBytes(file.size) });
+    }
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
+        if (target === "avatar") {
+          setAvatarProgress({ percent, loaded: loadedFormatted, total: totalFormatted });
+        } else {
+          setBannerProgress({ percent, loaded: loadedFormatted, total: totalFormatted });
+        }
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to upload image.");
-      }
 
       if (target === "avatar") {
         setAvatarUrl(data.url);
@@ -143,8 +191,13 @@ export default function SettingsPage() {
         text: err instanceof Error ? err.message : "Failed to upload file.",
       });
     } finally {
-      if (target === "avatar") setUploadingAvatar(false);
-      else setUploadingBanner(false);
+      if (target === "avatar") {
+        setUploadingAvatar(false);
+        setAvatarProgress(null);
+      } else {
+        setUploadingBanner(false);
+        setBannerProgress(null);
+      }
     }
   }
 
@@ -356,22 +409,33 @@ export default function SettingsPage() {
                           if (file) handleFileUpload(file, "avatar");
                         }}
                       />
-                      <button
-                        type="button"
-                        disabled={uploadingAvatar}
-                        onClick={() => avatarInputRef.current?.click()}
-                        className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
-                      >
-                        {uploadingAvatar ? (
-                          <>
-                            <Loader2 size={13} className="animate-spin text-[#0f766e]" /> Saving avatar...
-                          </>
-                        ) : (
-                          <>
-                            <FileUp size={13} /> Choose Avatar Image
-                          </>
-                        )}
-                      </button>
+                      {uploadingAvatar && avatarProgress ? (
+                        <div className="w-full border border-[#0f766e] bg-[#0f766e]/5 rounded-md p-2.5 space-y-1.5 animate-in fade-in">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-[#151515]">Uploading Avatar...</span>
+                            <span className="font-mono font-bold text-[#0f766e]">{avatarProgress.percent}%</span>
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-[#ded9cf]/50">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 rounded-full"
+                              style={{ width: `${Math.max(5, avatarProgress.percent)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-[#8c857b]">
+                            <span>{avatarProgress.loaded} of {avatarProgress.total}</span>
+                            <span>{avatarProgress.percent === 100 ? "Saving..." : "Uploading"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={uploadingAvatar}
+                          onClick={() => avatarInputRef.current?.click()}
+                          className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
+                        >
+                          <FileUp size={13} /> Choose Avatar Image
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <input
@@ -446,22 +510,33 @@ export default function SettingsPage() {
                           if (file) handleFileUpload(file, "banner");
                         }}
                       />
-                      <button
-                        type="button"
-                        disabled={uploadingBanner}
-                        onClick={() => bannerInputRef.current?.click()}
-                        className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
-                      >
-                        {uploadingBanner ? (
-                          <>
-                            <Loader2 size={13} className="animate-spin text-[#0f766e]" /> Saving banner...
-                          </>
-                        ) : (
-                          <>
-                            <FileUp size={13} /> Choose Banner Image
-                          </>
-                        )}
-                      </button>
+                      {uploadingBanner && bannerProgress ? (
+                        <div className="w-full border border-[#0f766e] bg-[#0f766e]/5 rounded-md p-2.5 space-y-1.5 animate-in fade-in">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-[#151515]">Uploading Banner...</span>
+                            <span className="font-mono font-bold text-[#0f766e]">{bannerProgress.percent}%</span>
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-[#ded9cf]/50">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 rounded-full"
+                              style={{ width: `${Math.max(5, bannerProgress.percent)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-[#8c857b]">
+                            <span>{bannerProgress.loaded} of {bannerProgress.total}</span>
+                            <span>{bannerProgress.percent === 100 ? "Saving..." : "Uploading"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={uploadingBanner}
+                          onClick={() => bannerInputRef.current?.click()}
+                          className="w-full border border-dashed border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] rounded-md p-3 text-center cursor-pointer transition text-xs font-semibold text-[#151515] flex items-center justify-center gap-1.5"
+                        >
+                          <FileUp size={13} /> Choose Banner Image
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <input

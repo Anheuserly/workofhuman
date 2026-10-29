@@ -60,8 +60,23 @@ export default function UploadStudioPage() {
 
   // Upload progress states
   const [uploadingThumb, setUploadingThumb] = useState(false);
+  const [thumbProgress, setThumbProgress] = useState<{
+    filename: string;
+    percent: number;
+    loadedFormatted: string;
+    totalFormatted: string;
+  } | null>(null);
+
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [uploadProgressText, setUploadProgressText] = useState<string | null>(null);
+  const [mediaProgress, setMediaProgress] = useState<{
+    filename: string;
+    percent: number;
+    loadedFormatted: string;
+    totalFormatted: string;
+    index: number;
+    totalFiles: number;
+  } | null>(null);
+
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Hidden file inputs
@@ -103,7 +118,53 @@ export default function UploadStudioPage() {
     return () => window.removeEventListener("woh_auth_change", onAuthChange);
   }, [checkAuth]);
 
-  // Upload helper for single or multiple files
+  function formatBytes(bytes: number) {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+  }
+
+  function uploadFileWithProgress(
+    file: File,
+    onProgress: (percent: number, loadedFormatted: string, totalFormatted: string) => void
+  ): Promise<{ url: string; filename: string }> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+          onProgress(percent, formatBytes(event.loaded), formatBytes(event.total));
+        }
+      };
+
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+          } else {
+            reject(new Error(data.error || `Upload failed with status ${xhr.status}`));
+          }
+        } catch {
+          reject(new Error(`Server returned status ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Network connection error during upload. Please check your connection."));
+      };
+
+      xhr.open("POST", "/api/upload");
+      xhr.send(formData);
+    });
+  }
+
+  // Upload helper for single or multiple files with accurate progress %
   async function handleFileUpload(files: FileList | File[], target: "thumbnail" | "media") {
     setUploadError(null);
     const fileList = Array.from(files);
@@ -112,40 +173,53 @@ export default function UploadStudioPage() {
     if (target === "thumbnail") {
       setUploadingThumb(true);
       const file = fileList[0];
+      setThumbProgress({
+        filename: file.name,
+        percent: 0,
+        loadedFormatted: "0 B",
+        totalFormatted: formatBytes(file.size),
+      });
+
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
+          setThumbProgress({
+            filename: file.name,
+            percent,
+            loadedFormatted,
+            totalFormatted,
+          });
         });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to upload cover image.");
         setThumbnailUrl(data.url);
       } catch (err: unknown) {
         setUploadError(err instanceof Error ? err.message : "Cover upload failed.");
       } finally {
         setUploadingThumb(false);
+        setThumbProgress(null);
       }
     } else {
       setUploadingMedia(true);
       try {
         for (let i = 0; i < fileList.length; i++) {
           const file = fileList[i];
-          setUploadProgressText(`Uploading ${i + 1} of ${fileList.length}: ${file.name}...`);
-
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
+          setMediaProgress({
+            filename: file.name,
+            percent: 0,
+            loadedFormatted: "0 B",
+            totalFormatted: formatBytes(file.size),
+            index: i + 1,
+            totalFiles: fileList.length,
           });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || `Failed to upload ${file.name}`);
+          const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
+            setMediaProgress({
+              filename: file.name,
+              percent,
+              loadedFormatted,
+              totalFormatted,
+              index: i + 1,
+              totalFiles: fileList.length,
+            });
+          });
 
           setMediaUrls((prev) => [...prev, data.url]);
         }
@@ -153,7 +227,7 @@ export default function UploadStudioPage() {
         setUploadError(err instanceof Error ? err.message : "Media upload failed.");
       } finally {
         setUploadingMedia(false);
-        setUploadProgressText(null);
+        setMediaProgress(null);
       }
     }
   }
@@ -583,11 +657,34 @@ export default function UploadStudioPage() {
                           }}
                         />
 
-                        {uploadingThumb ? (
+                        {uploadingThumb && thumbProgress ? (
+                          <div className="w-full max-w-sm mx-auto space-y-2 p-2 animate-in fade-in">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-[#151515] truncate max-w-[190px]">
+                                {thumbProgress.filename}
+                              </span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
+                                {thumbProgress.percent}%
+                              </span>
+                            </div>
+                            <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
+                              <div
+                                className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
+                                style={{ width: `${Math.max(4, thumbProgress.percent)}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
+                              <span>{thumbProgress.loadedFormatted} of {thumbProgress.totalFormatted}</span>
+                              <span className="font-semibold text-[#0f766e]">
+                                {thumbProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
+                              </span>
+                            </div>
+                          </div>
+                        ) : uploadingThumb ? (
                           <div className="flex flex-col items-center gap-2">
                             <Loader2 size={24} className="animate-spin text-[#0f766e]" />
                             <span className="text-xs font-bold text-[#151515]">
-                              Uploading Cover Image to Server...
+                              Connecting to server storage...
                             </span>
                           </div>
                         ) : (
@@ -692,11 +789,39 @@ export default function UploadStudioPage() {
                         }}
                       />
 
-                      {uploadingMedia ? (
+                      {uploadingMedia && mediaProgress ? (
+                        <div className="w-full max-w-md mx-auto space-y-2.5 p-2 animate-in fade-in">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2 truncate max-w-[240px]">
+                              <span className="rounded bg-[#0f766e]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#0f766e]">
+                                {mediaProgress.index} of {mediaProgress.totalFiles}
+                              </span>
+                              <span className="font-bold text-[#151515] truncate">
+                                {mediaProgress.filename}
+                              </span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
+                              {mediaProgress.percent}%
+                            </span>
+                          </div>
+                          <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
+                              style={{ width: `${Math.max(3, mediaProgress.percent)}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
+                            <span>{mediaProgress.loadedFormatted} of {mediaProgress.totalFormatted}</span>
+                            <span className="font-semibold text-[#0f766e]">
+                              {mediaProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
+                            </span>
+                          </div>
+                        </div>
+                      ) : uploadingMedia ? (
                         <div className="flex flex-col items-center gap-2">
                           <Loader2 size={26} className="animate-spin text-[#0f766e]" />
                           <p className="text-xs font-bold text-[#151515]">
-                            {uploadProgressText || "Saving media files to server storage..."}
+                            Connecting to server storage...
                           </p>
                         </div>
                       ) : (

@@ -120,19 +120,22 @@ export async function uploadMedia(
 
   // OPTION B: Dedicated PostgreSQL Media Table (Primary for Cloudflare & VPS)
   let savedToDb = false;
+  let lastDbError = "";
   try {
+    const hexData = buffer.toString("hex");
     await query(
       `INSERT INTO workofhuman.media_files (filename, content_type, size, data)
-       VALUES ($1, $2, $3, $4)
+       VALUES ($1, $2, $3, decode($4, 'hex'))
        ON CONFLICT (filename) DO UPDATE SET
          content_type = EXCLUDED.content_type,
          size = EXCLUDED.size,
          data = EXCLUDED.data`,
-      [filename, contentType, buffer.length, buffer]
+      [filename, contentType, buffer.length, hexData]
     );
     savedToDb = true;
   } catch (dbErr) {
-    console.error("[PostgreSQL Media Storage Error]:", dbErr);
+    lastDbError = dbErr instanceof Error ? dbErr.message : String(dbErr);
+    console.error("[PostgreSQL Media Storage Error]:", lastDbError);
   }
 
   // OPTION C: Local Disk Mirror (If writable Node.js filesystem is available)
@@ -152,7 +155,7 @@ export async function uploadMedia(
   }
 
   if (!savedToDb && !localPath) {
-    throw new Error("Failed to persist media file to storage engine.");
+    throw new Error(lastDbError || "Failed to persist media file to storage engine.");
   }
 
   const baseUrl = getMediaBaseUrl();

@@ -160,8 +160,8 @@ export async function GET(
 
   // 2. Query PostgreSQL media table (Universal for Cloudflare Workers & VPS)
   try {
-    const dbRes = await query<{ content_type: string; size: string; data: Buffer }>(
-      "SELECT content_type, size, data FROM workofhuman.media_files WHERE filename = $1",
+    const dbRes = await query<{ content_type: string; size: string; hex_data: string }>(
+      "SELECT content_type, size, encode(data, 'hex') as hex_data FROM workofhuman.media_files WHERE filename = $1",
       [safeFilename]
     );
 
@@ -170,9 +170,7 @@ export async function GET(
     }
 
     const fileRow = dbRes.rows[0];
-    const fileBuffer = Buffer.isBuffer(fileRow.data)
-      ? fileRow.data
-      : Buffer.from(fileRow.data);
+    const fileBuffer = Buffer.from(fileRow.hex_data, "hex");
     const fileSize = fileBuffer.length;
     const contentType = fileRow.content_type || getMimeTypeFromExt(path.extname(filename));
 
