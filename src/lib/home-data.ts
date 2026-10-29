@@ -30,6 +30,7 @@ export type Profile = {
   bannerUrl?: string;
   verified?: boolean;
   categories?: string[];
+  socialLinks?: Record<string, string>;
   followersCount?: number;
   viewsCount?: number;
 };
@@ -119,6 +120,7 @@ interface DbProfileRow {
   banner_url?: string | null;
   verified?: boolean | null;
   categories?: string[] | null;
+  social_links?: Record<string, string> | null;
   followers_count?: number | string | null;
   views_count?: number | string | null;
 }
@@ -176,6 +178,7 @@ function mapProfile(r: DbProfileRow): Profile {
     bannerUrl: r.banner_url || undefined,
     verified: Boolean(r.verified),
     categories: Array.isArray(r.categories) ? r.categories : [],
+    socialLinks: r.social_links && typeof r.social_links === "object" ? r.social_links : undefined,
     followersCount: Number(r.followers_count || 0),
     viewsCount: Number(r.views_count || 0),
   };

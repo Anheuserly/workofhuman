@@ -1,33 +1,30 @@
-import { ProjectCard } from "@/components/project-card";
-import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
+import { PageShell, SectionIntro } from "@/components/shell";
 import { getHomeData } from "@/lib/home-data";
+import { ExploreFeed } from "@/components/explore-feed";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExplorePage() {
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tag?: string }>;
+}) {
   const homeData = await getHomeData();
   const projects = homeData.status === "ready" ? homeData.projects : [];
+  const params = searchParams ? await searchParams : {};
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl py-16">
-        <SectionIntro
-          eyebrow="Explore"
-          title="A living atlas of creative output."
-          body="Browse every medium with database-backed discovery, AI labels, creator metadata, and category paths."
-        />
-        {projects.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {projects.map((project) => (
-              <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No published creations yet"
-            body="No projects are currently published in the database. Creators can publish work through the upload studio."
+      <section className="mx-auto max-w-7xl py-12 sm:py-16">
+        <div className="mb-8">
+          <SectionIntro
+            eyebrow="Explore Directory"
+            title="A living atlas of creative output"
+            body="Discover independent cinema, original music, digital art, stories, and transparent AI-assisted experiments."
           />
-        )}
+        </div>
+
+        <ExploreFeed initialProjects={projects} initialTag={params?.tag} />
       </section>
     </PageShell>
   );

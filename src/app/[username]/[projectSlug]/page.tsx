@@ -3,16 +3,20 @@ import {
   ArrowLeft,
   Calendar,
   Eye,
-  Heart,
   Sparkles,
   ExternalLink,
-  Music,
 } from "lucide-react";
 import { PageShell } from "@/components/shell";
 import { getProjectBySlug, getProfileByUsername } from "@/lib/home-data";
+import { getCurrentUser } from "@/lib/auth";
 import { RoleBadge } from "@/components/role-badge";
 import { MessageCreatorModal } from "@/components/message-creator-modal";
 import { ProjectComments } from "@/components/project-comments";
+import { AppreciateButton } from "@/components/appreciate-button";
+import { FollowButton } from "@/components/follow-button";
+import { ProjectManageMenu } from "@/components/project-manage-menu";
+import { MediaLightbox } from "@/components/media-lightbox";
+import { AudioTrackPlayer } from "@/components/audio-track-player";
 
 export default async function ProjectDetailPage({
   params,
@@ -22,7 +26,10 @@ export default async function ProjectDetailPage({
   const { username, projectSlug } = await params;
   const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
 
-  const project = await getProjectBySlug(projectSlug);
+  const [project, currentUser] = await Promise.all([
+    getProjectBySlug(projectSlug),
+    getCurrentUser(),
+  ]);
 
   // Gracefully handle missing or undefined project slugs
   if (!project) {
@@ -83,6 +90,8 @@ export default async function ProjectDetailPage({
     (url) => url !== videoAsset && url !== audioAsset && url !== primaryImage
   );
 
+  const isOwner = currentUser?.userId === project.creatorId || currentUser?.role === "admin";
+
   return (
     <PageShell>
       <article className="mx-auto max-w-5xl py-8">
@@ -95,6 +104,15 @@ export default async function ProjectDetailPage({
             <ArrowLeft size={14} />
             Back to @{cleanUsername}&apos;s Portfolio
           </Link>
+
+          {isOwner && (
+            <ProjectManageMenu
+              projectSlug={project.slug}
+              initialTitle={project.title}
+              initialDescription={project.description}
+              creatorUsername={cleanUsername}
+            />
+          )}
         </div>
 
         {/* Project Header */}
@@ -118,7 +136,7 @@ export default async function ProjectDetailPage({
 
           {/* Author info & communication metrics */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#6f6a61]">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
                 href={`/@${cleanUsername}`}
                 className="flex items-center gap-2.5 hover:text-[#151515] transition group"
@@ -144,14 +162,19 @@ export default async function ProjectDetailPage({
                 <RoleBadge role={profile?.role} verified={profile?.verified} size="sm" />
               </Link>
 
-              {/* Direct Communication Action */}
+              {/* Direct Follow & Message Buttons */}
+              <FollowButton
+                username={cleanUsername}
+                initialFollowers={profile?.followersCount || 0}
+              />
               <MessageCreatorModal
                 recipientUsername={cleanUsername}
                 recipientName={profile?.displayName || project.creatorName}
               />
             </div>
 
-            <div className="flex items-center gap-4 text-[#8c857b]">
+            {/* Metrics & Appreciate Button */}
+            <div className="flex items-center gap-3 sm:gap-4 text-[#8c857b]">
               {project.publishedAt && (
                 <span className="inline-flex items-center gap-1">
                   <Calendar size={13} />
@@ -162,15 +185,17 @@ export default async function ProjectDetailPage({
                 <Eye size={13} />
                 {(project.views || 0).toLocaleString()} views
               </span>
-              <span className="inline-flex items-center gap-1">
-                <Heart size={13} />
-                {(project.likesCount || 0).toLocaleString()} appreciates
-              </span>
+
+              {/* Interactive Like / Appreciate Button */}
+              <AppreciateButton
+                projectSlug={project.slug}
+                initialCount={project.likesCount || 0}
+              />
             </div>
           </div>
         </header>
 
-        {/* Primary Media Display (Full Video / Audio / High-Res Image) */}
+        {/* Primary Media Display (Full Video / Audio Waveform / High-Res Image Lightbox) */}
         <section className="mb-10">
           <div className="surface overflow-hidden rounded-2xl border border-[#ded9cf] shadow-sm">
             {videoAsset ? (
@@ -187,20 +212,14 @@ export default async function ProjectDetailPage({
                 </video>
               </div>
             ) : audioAsset ? (
-              <div className="p-8 sm:p-12 bg-gradient-to-br from-[#151515] to-[#252220] text-white text-center rounded-lg">
-                <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#0f766e] text-white mb-6">
-                  <Music size={32} />
-                </div>
-                <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                <p className="text-xs text-white/60 mb-6">
-                  Audio Track • {project.type.replaceAll("_", " ")}
-                </p>
-                <audio src={audioAsset} controls className="w-full max-w-lg mx-auto" />
-              </div>
+              <AudioTrackPlayer
+                src={audioAsset}
+                title={project.title}
+                subtitle={`${project.type.replaceAll("_", " ")} • by ${project.creatorName || `@${cleanUsername}`}`}
+              />
             ) : primaryImage ? (
               <div className="relative w-full max-h-[720px] bg-[#e9e4da] flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <MediaLightbox
                   src={primaryImage}
                   alt={project.title}
                   className="h-auto max-h-[720px] w-full object-contain"
@@ -214,7 +233,7 @@ export default async function ProjectDetailPage({
           </div>
         </section>
 
-        {/* Additional Assets / Media Reel */}
+        {/* Additional Assets / Media Reel Gallery with Lightbox */}
         {additionalAssets.length > 0 && (
           <section className="mb-10">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61] mb-4">
@@ -230,8 +249,11 @@ export default async function ProjectDetailPage({
                       <audio src={assetUrl} controls className="w-full" />
                     </div>
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={assetUrl} alt={`Asset ${i + 1}`} className="w-full h-64 object-cover" />
+                    <MediaLightbox
+                      src={assetUrl}
+                      alt={`Asset ${i + 1}`}
+                      className="w-full h-64 object-cover"
+                    />
                   )}
                   <div className="p-3 text-right border-t border-[#ded9cf]">
                     <a
@@ -283,12 +305,13 @@ export default async function ProjectDetailPage({
           <section className="mb-10 flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#8c857b] mr-2">Tags:</span>
             {project.tags.map((tag) => (
-              <span
+              <Link
                 key={tag}
-                className="rounded-full bg-[#f6f4ef] border border-[#ded9cf] px-3 py-1 text-xs text-[#504b44]"
+                href={`/explore?tag=${encodeURIComponent(tag)}`}
+                className="rounded-full bg-[#f6f4ef] border border-[#ded9cf] px-3 py-1 text-xs text-[#504b44] hover:bg-[#151515] hover:text-white transition"
               >
                 #{tag}
-              </span>
+              </Link>
             ))}
           </section>
         )}
