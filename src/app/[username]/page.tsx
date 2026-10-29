@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageShell } from "@/components/shell";
 import { ProjectCard } from "@/components/project-card";
 import { getProfileByUsername } from "@/lib/home-data";
@@ -14,8 +15,35 @@ export default async function CreatorProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const cleanHandle = username.replace(/^[@%40]+/, "");
+  const decoded = decodeURIComponent(username || "");
+  const cleanHandle = decoded.replace(/^[@%40]+/, "").trim().toLowerCase();
   const { profile, projects } = await getProfileByUsername(cleanHandle);
+
+  if (!profile && projects.length === 0) {
+    return (
+      <PageShell>
+        <section className="mx-auto max-w-2xl py-20 text-center">
+          <div className="surface p-8 sm:p-12 space-y-4 rounded-2xl border border-[#ded9cf]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
+              Creator Directory
+            </span>
+            <h1 className="text-2xl font-bold text-[#151515]">Creator Not Found</h1>
+            <p className="text-xs text-[#6f6a61] leading-relaxed">
+              We couldn&apos;t find a creator profile for &ldquo;@{cleanHandle}&rdquo;.
+            </p>
+            <div className="pt-4 flex items-center justify-center gap-3">
+              <Link
+                href="/explore"
+                className="button-primary text-xs font-semibold !px-4 !py-2"
+              >
+                Explore All Creators &amp; Works
+              </Link>
+            </div>
+          </div>
+        </section>
+      </PageShell>
+    );
+  }
 
   const socials = profile?.socialLinks || {};
 

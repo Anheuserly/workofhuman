@@ -3,9 +3,8 @@ import { Eye, Heart, ImageIcon, Play, Sparkles } from "lucide-react";
 import type { Project } from "@/lib/home-data";
 
 export function ProjectCard({ project }: { project: Project }) {
-  const creatorHandle = (project.creatorUsername || project.creatorName || project.creatorId)
-    .replace(/^@+/, "")
-    .trim();
+  const rawCreator = project.creatorUsername || project.creatorName || project.creatorId || "creator";
+  const creatorHandle = String(rawCreator).replace(/^@+/, "").trim() || "creator";
   const projectHref = `/@${creatorHandle}/${project.slug}`;
   const profileHref = `/@${creatorHandle}`;
 
