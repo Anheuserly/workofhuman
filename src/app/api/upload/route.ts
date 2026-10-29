@@ -80,6 +80,32 @@ export async function POST(request: Request) {
       );
     }
 
+    // 1. Primary Engine: Direct VPS Media Microservice (Streams straight to VPS SSD disk)
+    try {
+      const vpsUploadUrl = process.env.VPS_MEDIA_SERVER_URL || "http://vps.amcmep.in:8080/upload";
+      const vpsFormData = new FormData();
+      vpsFormData.append("file", file);
+
+      const vpsRes = await fetch(vpsUploadUrl, {
+        method: "POST",
+        body: vpsFormData,
+      });
+
+      if (vpsRes.ok) {
+        const vpsData = (await vpsRes.json()) as { filename: string; size: number };
+        return NextResponse.json({
+          success: true,
+          url: `/api/media/${vpsData.filename}`,
+          filename: vpsData.filename,
+          storageType: "vps_ssd_disk",
+          size: vpsData.size,
+        });
+      }
+    } catch (vpsErr) {
+      console.warn("[VPS Media Server Upload Fallback]:", vpsErr);
+    }
+
+    // 2. Secondary Fallback: Storage Engine (PostgreSQL / Local Disk)
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

@@ -35,7 +35,25 @@ export async function HEAD(
   const { filename } = await params;
   const safeFilename = path.basename(filename);
 
-  // 1. Try local filesystem if available
+  // 1. Primary: Windows Server Media Service
+  try {
+    const vpsUrl = `http://vps.amcmep.in:8080/media/${safeFilename}`;
+    const vpsRes = await fetch(vpsUrl, { method: "HEAD" });
+    if (vpsRes.ok) {
+      const responseHeaders = new Headers();
+      responseHeaders.set("Content-Type", vpsRes.headers.get("content-type") || getMimeTypeFromExt(path.extname(filename)));
+      responseHeaders.set("Accept-Ranges", "bytes");
+      responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (vpsRes.headers.get("content-length")) {
+        responseHeaders.set("Content-Length", vpsRes.headers.get("content-length")!);
+      }
+      return new NextResponse(null, { status: 200, headers: responseHeaders });
+    }
+  } catch {
+    // Fall through
+  }
+
+  // 2. Try local filesystem if available
   const { filePath, exists } = resolveLocalFile(filename);
   if (exists) {
     try {
@@ -90,7 +108,40 @@ export async function GET(
   const { filename } = await params;
   const safeFilename = path.basename(filename);
 
-  // 1. Try local filesystem if available
+  // 1. Primary: Stream from Windows Server VPS Media Service
+  try {
+    const vpsUrl = `http://vps.amcmep.in:8080/media/${safeFilename}`;
+    const headers: Record<string, string> = {};
+    const range = request.headers.get("range");
+    if (range) headers["Range"] = range;
+
+    const vpsRes = await fetch(vpsUrl, {
+      method: "GET",
+      headers,
+    });
+
+    if (vpsRes.ok || vpsRes.status === 206) {
+      const responseHeaders = new Headers();
+      responseHeaders.set("Content-Type", vpsRes.headers.get("content-type") || getMimeTypeFromExt(path.extname(filename)));
+      responseHeaders.set("Accept-Ranges", "bytes");
+      responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (vpsRes.headers.get("content-length")) {
+        responseHeaders.set("Content-Length", vpsRes.headers.get("content-length")!);
+      }
+      if (vpsRes.headers.get("content-range")) {
+        responseHeaders.set("Content-Range", vpsRes.headers.get("content-range")!);
+      }
+
+      return new NextResponse(vpsRes.body, {
+        status: vpsRes.status,
+        headers: responseHeaders,
+      });
+    }
+  } catch {
+    // Fall through
+  }
+
+  // 2. Try local filesystem if available
   const { filePath, exists } = resolveLocalFile(filename);
   if (exists) {
     try {
