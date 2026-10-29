@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { uploadMedia, isMinIOConfigured, getUploadDirectory, getMediaBaseUrl } from "@/lib/storage";
+import { isMinIOConfigured, getUploadDirectory, getMediaBaseUrl } from "@/lib/storage";
 
 // Configurable Max upload size (defaults to 250MB for video/audio)
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_SIZE_MB || "250");
@@ -80,44 +80,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Primary Engine: Direct VPS Media Microservice (Streams straight to VPS SSD disk)
-    try {
-      const vpsUploadUrl = process.env.VPS_MEDIA_SERVER_URL || "http://vps.amcmep.in:8080/upload";
-      const vpsFormData = new FormData();
-      vpsFormData.append("file", file);
+    // Primary Engine: Direct Windows Server Media Microservice (Streams straight to C:\WorkOfHuman\uploads)
+    const vpsUploadUrl = process.env.VPS_MEDIA_SERVER_URL || "http://vps.amcmep.in:8080/upload";
+    const vpsFormData = new FormData();
+    vpsFormData.append("file", file);
 
-      const vpsRes = await fetch(vpsUploadUrl, {
-        method: "POST",
-        body: vpsFormData,
-      });
+    const vpsRes = await fetch(vpsUploadUrl, {
+      method: "POST",
+      body: vpsFormData,
+    });
 
-      if (vpsRes.ok) {
-        const vpsData = (await vpsRes.json()) as { filename: string; size: number };
-        return NextResponse.json({
-          success: true,
-          url: `/api/media/${vpsData.filename}`,
-          filename: vpsData.filename,
-          storageType: "vps_ssd_disk",
-          size: vpsData.size,
-        });
-      }
-    } catch (vpsErr) {
-      console.warn("[VPS Media Server Upload Fallback]:", vpsErr);
+    if (!vpsRes.ok) {
+      const errText = await vpsRes.text();
+      throw new Error(`VPS Media Server on port 8080 returned ${vpsRes.status}: ${errText}`);
     }
 
-    // 2. Secondary Fallback: Storage Engine (PostgreSQL / Local Disk)
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const result = await uploadMedia(buffer, file.name, file.type);
-
+    const vpsData = (await vpsRes.json()) as { filename: string; size: number };
     return NextResponse.json({
       success: true,
-      url: result.url,
-      filename: result.filename,
-      storageType: result.storageType,
-      size: result.size,
-      localPath: result.localPath,
+      url: `/api/media/${vpsData.filename}`,
+      filename: vpsData.filename,
+      storageType: "vps_ssd_disk",
+      size: vpsData.size,
     });
   } catch (err: unknown) {
     console.error("[Upload API Error]:", err);
