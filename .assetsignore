@@ -1,0 +1,6 @@
+cache/
+cache/**
+*.pack
+*.nft.json
+trace
+diagnostics/
