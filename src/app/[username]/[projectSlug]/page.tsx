@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -12,6 +11,8 @@ import {
 import { PageShell } from "@/components/shell";
 import { getProjectBySlug, getProfileByUsername } from "@/lib/home-data";
 import { RoleBadge } from "@/components/role-badge";
+import { MessageCreatorModal } from "@/components/message-creator-modal";
+import { ProjectComments } from "@/components/project-comments";
 
 export default async function ProjectDetailPage({
   params,
@@ -22,8 +23,38 @@ export default async function ProjectDetailPage({
   const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
 
   const project = await getProjectBySlug(projectSlug);
+
+  // Gracefully handle missing or undefined project slugs
   if (!project) {
-    notFound();
+    return (
+      <PageShell>
+        <section className="mx-auto max-w-2xl py-20 text-center">
+          <div className="surface p-8 sm:p-12 space-y-4 rounded-2xl border border-[#ded9cf]">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
+              Creation Directory
+            </span>
+            <h1 className="text-2xl font-bold text-[#151515]">Creation Not Found</h1>
+            <p className="text-xs text-[#6f6a61] leading-relaxed">
+              The project &ldquo;{projectSlug}&rdquo; could not be located or may have been renamed.
+            </p>
+            <div className="pt-4 flex items-center justify-center gap-3">
+              <Link
+                href={`/@${cleanUsername}`}
+                className="button-primary text-xs font-semibold !px-4 !py-2"
+              >
+                View @{cleanUsername}&apos;s Portfolio
+              </Link>
+              <Link
+                href="/explore"
+                className="button-secondary text-xs font-semibold !px-4 !py-2"
+              >
+                Explore All Creations
+              </Link>
+            </div>
+          </div>
+        </section>
+      </PageShell>
+    );
   }
 
   const { profile } = await getProfileByUsername(cleanUsername);
@@ -39,18 +70,26 @@ export default async function ProjectDetailPage({
     return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(url);
   }
 
-  const primaryAsset = project.mediaUrls?.[0] || project.thumbnailUrl;
-  const additionalAssets = project.mediaUrls && project.mediaUrls.length > 1
-    ? project.mediaUrls.slice(1)
-    : [];
+  // Determine main video or primary visual asset
+  const videoAsset =
+    project.mediaUrls?.find(isVideo) || (isVideo(project.thumbnailUrl) ? project.thumbnailUrl : undefined);
+  const audioAsset =
+    project.mediaUrls?.find(isAudio) || (isAudio(project.thumbnailUrl) ? project.thumbnailUrl : undefined);
+  const primaryImage =
+    project.thumbnailUrl || project.mediaUrls?.find((u) => !isVideo(u) && !isAudio(u));
+
+  // Additional media reel (excluding main playback asset)
+  const additionalAssets = (project.mediaUrls || []).filter(
+    (url) => url !== videoAsset && url !== audioAsset && url !== primaryImage
+  );
 
   return (
     <PageShell>
       <article className="mx-auto max-w-5xl py-8">
-        {/* Back Link */}
-        <div className="mb-6">
+        {/* Back Link & Navigation Bar */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <Link
-            href={`/${cleanUsername}`}
+            href={`/@${cleanUsername}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6f6a61] hover:text-[#151515] transition"
           >
             <ArrowLeft size={14} />
@@ -77,32 +116,40 @@ export default async function ProjectDetailPage({
             {project.title}
           </h1>
 
-          {/* Author info & metrics */}
+          {/* Author info & communication metrics */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#6f6a61]">
-            <Link
-              href={`/${cleanUsername}`}
-              className="flex items-center gap-2.5 hover:text-[#151515] transition"
-            >
-              {profile?.avatarUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.displayName || cleanUsername}
-                  className="size-8 rounded-full object-cover border border-[#ded9cf]"
-                />
-              ) : (
-                <div className="grid size-8 place-items-center rounded-full bg-[#0f766e] text-white font-bold text-xs">
-                  {(profile?.displayName || cleanUsername).slice(0, 2).toUpperCase()}
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/@${cleanUsername}`}
+                className="flex items-center gap-2.5 hover:text-[#151515] transition group"
+              >
+                {profile?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.displayName || cleanUsername}
+                    className="size-9 rounded-full object-cover border border-[#ded9cf] group-hover:scale-105 transition"
+                  />
+                ) : (
+                  <div className="grid size-9 place-items-center rounded-full bg-[#0f766e] text-white font-bold text-xs uppercase group-hover:scale-105 transition">
+                    {(profile?.displayName || cleanUsername).slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="font-bold text-[#151515] group-hover:text-[#0f766e] transition">
+                    {project.creatorName || profile?.displayName || `@${cleanUsername}`}
+                  </p>
+                  <p className="font-mono text-[11px] text-[#8c857b]">@{cleanUsername}</p>
                 </div>
-              )}
-              <div>
-                <p className="font-bold text-[#151515]">
-                  {project.creatorName || profile?.displayName || `@${cleanUsername}`}
-                </p>
-                <p className="font-mono text-[11px] text-[#8c857b]">@{cleanUsername}</p>
-              </div>
-              <RoleBadge role={profile?.role} verified={profile?.verified} size="sm" />
-            </Link>
+                <RoleBadge role={profile?.role} verified={profile?.verified} size="sm" />
+              </Link>
+
+              {/* Direct Communication Action */}
+              <MessageCreatorModal
+                recipientUsername={cleanUsername}
+                recipientName={profile?.displayName || project.creatorName}
+              />
+            </div>
 
             <div className="flex items-center gap-4 text-[#8c857b]">
               {project.publishedAt && (
@@ -123,57 +170,59 @@ export default async function ProjectDetailPage({
           </div>
         </header>
 
-        {/* Primary Media Display */}
+        {/* Primary Media Display (Full Video / Audio / High-Res Image) */}
         <section className="mb-10">
-          {primaryAsset ? (
-            <div className="surface overflow-hidden shadow-sm">
-              {isVideo(primaryAsset) ? (
-                <div className="relative aspect-video w-full bg-black">
-                  <video
-                    src={primaryAsset}
-                    controls
-                    playsInline
-                    className="h-full w-full object-contain"
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+          <div className="surface overflow-hidden rounded-2xl border border-[#ded9cf] shadow-sm">
+            {videoAsset ? (
+              <div className="relative aspect-video w-full bg-black">
+                <video
+                  src={videoAsset}
+                  poster={project.thumbnailUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain"
+                >
+                  Your browser does not support HTML5 video playback.
+                </video>
+              </div>
+            ) : audioAsset ? (
+              <div className="p-8 sm:p-12 bg-gradient-to-br from-[#151515] to-[#252220] text-white text-center rounded-lg">
+                <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#0f766e] text-white mb-6">
+                  <Music size={32} />
                 </div>
-              ) : isAudio(primaryAsset) ? (
-                <div className="p-8 sm:p-12 bg-gradient-to-br from-[#151515] to-[#252220] text-white text-center rounded-lg">
-                  <div className="mx-auto grid size-16 place-items-center rounded-full bg-[#0f766e] text-white mb-6">
-                    <Music size={32} />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                  <p className="text-xs text-white/60 mb-6">Audio Track • {project.type.replaceAll("_", " ")}</p>
-                  <audio src={primaryAsset} controls className="w-full max-w-lg mx-auto" />
-                </div>
-              ) : (
-                <div className="relative w-full max-h-[720px] bg-[#e9e4da] flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={primaryAsset}
-                    alt={project.title}
-                    className="h-auto max-h-[720px] w-full object-contain"
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="surface p-12 text-center text-[#6f6a61]">
-              <p className="text-sm font-semibold">No visual media uploaded for this creation.</p>
-            </div>
-          )}
+                <h3 className="text-xl font-bold mb-2">{project.title}</h3>
+                <p className="text-xs text-white/60 mb-6">
+                  Audio Track • {project.type.replaceAll("_", " ")}
+                </p>
+                <audio src={audioAsset} controls className="w-full max-w-lg mx-auto" />
+              </div>
+            ) : primaryImage ? (
+              <div className="relative w-full max-h-[720px] bg-[#e9e4da] flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={primaryImage}
+                  alt={project.title}
+                  className="h-auto max-h-[720px] w-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="surface p-12 text-center text-[#6f6a61]">
+                <p className="text-sm font-semibold">No visual media uploaded for this creation.</p>
+              </div>
+            )}
+          </div>
         </section>
 
-        {/* Additional Assets / Media Gallery */}
+        {/* Additional Assets / Media Reel */}
         {additionalAssets.length > 0 && (
           <section className="mb-10">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-[#6f6a61] mb-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61] mb-4">
               Additional Works &amp; Process Assets ({additionalAssets.length})
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {additionalAssets.map((assetUrl, i) => (
-                <div key={i} className="surface overflow-hidden">
+                <div key={i} className="surface overflow-hidden rounded-xl border border-[#ded9cf]">
                   {isVideo(assetUrl) ? (
                     <video src={assetUrl} controls playsInline className="w-full aspect-video bg-black" />
                   ) : isAudio(assetUrl) ? (
@@ -181,10 +230,10 @@ export default async function ProjectDetailPage({
                       <audio src={assetUrl} controls className="w-full" />
                     </div>
                   ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={assetUrl} alt={`Asset ${i + 1}`} className="w-full h-64 object-cover" />
                   )}
-                  <div className="p-3 text-right">
+                  <div className="p-3 text-right border-t border-[#ded9cf]">
                     <a
                       href={assetUrl}
                       target="_blank"
@@ -203,8 +252,8 @@ export default async function ProjectDetailPage({
 
         {/* Project Description & Narrative */}
         {project.description && (
-          <section className="surface p-6 sm:p-8 mb-8 space-y-4">
-            <h2 className="text-lg font-bold text-[#151515]">Project Notes &amp; Statement</h2>
+          <section className="surface p-6 sm:p-8 mb-8 space-y-4 rounded-xl border border-[#ded9cf]">
+            <h2 className="text-base font-bold text-[#151515]">Project Notes &amp; Statement</h2>
             <div className="prose prose-sm max-w-none text-[#4d4942] leading-relaxed whitespace-pre-wrap">
               {project.description}
             </div>
@@ -213,7 +262,7 @@ export default async function ProjectDetailPage({
 
         {/* AI Provenance Disclosure Details */}
         {project.aiGenerated && (
-          <section className="rounded-lg border border-[#0f766e]/30 bg-[#0f766e]/5 p-5 mb-8">
+          <section className="rounded-xl border border-[#0f766e]/30 bg-[#0f766e]/5 p-5 mb-8">
             <div className="flex items-center gap-2 text-[#0f766e] font-bold text-xs uppercase tracking-wider mb-2">
               <Sparkles size={16} />
               Transparent AI Disclosure
@@ -243,6 +292,9 @@ export default async function ProjectDetailPage({
             ))}
           </section>
         )}
+
+        {/* Interactive Comments & Community Feedback */}
+        <ProjectComments projectSlug={project.slug} />
       </article>
     </PageShell>
   );

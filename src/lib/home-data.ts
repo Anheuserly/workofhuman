@@ -7,6 +7,7 @@ export type Project = {
   description: string;
   creatorId: string;
   creatorName?: string;
+  creatorUsername?: string;
   type: string;
   mediaUrls?: string[];
   thumbnailUrl?: string;
@@ -95,6 +96,7 @@ interface DbProjectRow {
   description?: string | null;
   creator_id: string;
   creator_name?: string | null;
+  creator_username?: string | null;
   type: ContentType | string;
   media_urls?: string[] | null;
   thumbnail_url?: string | null;
@@ -149,6 +151,7 @@ function mapProject(r: DbProjectRow): Project {
     description: r.description || "",
     creatorId: r.creator_id,
     creatorName: r.creator_name || undefined,
+    creatorUsername: r.creator_username || undefined,
     type: r.type,
     mediaUrls: Array.isArray(r.media_urls) ? r.media_urls : [],
     thumbnailUrl: r.thumbnail_url || undefined,
@@ -195,13 +198,21 @@ export async function getHomeData(): Promise<HomeData> {
     const [settingsRes, projectsRes, aiProjectsRes, creatorsRes, communitiesRes, trendingRes] =
       await Promise.all([
         query(`SELECT * FROM workofhuman.homepage_settings WHERE id = 'default' LIMIT 1`),
-        query<DbProjectRow>(`SELECT * FROM workofhuman.projects ORDER BY published_at DESC LIMIT 24`),
-        query<DbProjectRow>(`SELECT * FROM workofhuman.projects WHERE ai_generated = true ORDER BY views DESC LIMIT 6`),
+        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
+               FROM workofhuman.projects p
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+               ORDER BY p.published_at DESC LIMIT 24`),
+        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
+               FROM workofhuman.projects p
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+               WHERE p.ai_generated = true
+               ORDER BY p.views DESC LIMIT 6`),
         query<DbProfileRow>(`SELECT * FROM workofhuman.profiles ORDER BY followers_count DESC LIMIT 8`),
         query<DbCommunityRow>(`SELECT * FROM workofhuman.communities WHERE featured = true ORDER BY member_count DESC LIMIT 6`),
-        query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type
+        query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type, pr.username as creator_username
                FROM workofhuman.trending_cache t
                LEFT JOIN workofhuman.projects p ON p.slug = t.project_id
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
                WHERE t.period = 'week'
                ORDER BY t.rank ASC LIMIT 12`),
       ]);
@@ -270,7 +281,11 @@ export async function getHomeData(): Promise<HomeData> {
 export async function getProjectsByCategory(categorySlug: string): Promise<Project[]> {
   try {
     const res = await query<DbProjectRow>(
-      `SELECT * FROM workofhuman.projects WHERE type = $1 OR type = $2 ORDER BY published_at DESC LIMIT 50`,
+      `SELECT p.*, pr.username as creator_username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       WHERE p.type = $1 OR p.type = $2
+       ORDER BY p.published_at DESC LIMIT 50`,
       [categorySlug, categorySlug.replaceAll("-", "_")]
     );
     return res.rows.map(mapProject);
@@ -282,7 +297,13 @@ export async function getProjectsByCategory(categorySlug: string): Promise<Proje
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const res = await query<DbProjectRow>(`SELECT * FROM workofhuman.projects WHERE slug = $1 LIMIT 1`, [slug]);
+    const res = await query<DbProjectRow>(
+      `SELECT p.*, pr.username as creator_username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       WHERE p.slug = $1 LIMIT 1`,
+      [slug]
+    );
     if (res.rows.length === 0) return null;
     return mapProject(res.rows[0]);
   } catch (err) {
@@ -296,15 +317,20 @@ export async function getProfileByUsername(
 ): Promise<{ profile: Profile | null; projects: Project[] }> {
   try {
     const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
-    const profRes = await query<DbProfileRow>(`SELECT * FROM workofhuman.profiles WHERE LOWER(username) = $1 LIMIT 1`, [
-      cleanUsername,
-    ]);
+    const profRes = await query<DbProfileRow>(
+      `SELECT * FROM workofhuman.profiles WHERE LOWER(username) = $1 LIMIT 1`,
+      [cleanUsername]
+    );
     if (profRes.rows.length === 0) return { profile: null, projects: [] };
 
     const profile = mapProfile(profRes.rows[0]);
     const projRes = await query<DbProjectRow>(
-      `SELECT * FROM workofhuman.projects WHERE creator_id = $1 ORDER BY published_at DESC LIMIT 30`,
-      [profile.userId]
+      `SELECT p.*, pr.username as creator_username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       WHERE p.creator_id = $1 OR pr.username = $2
+       ORDER BY p.published_at DESC LIMIT 30`,
+      [profile.userId, cleanUsername]
     );
 
     return {
