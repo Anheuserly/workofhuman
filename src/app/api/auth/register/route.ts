@@ -1,12 +1,12 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSession, hashPassword, validateUsername } from "@/lib/auth";
+import { createSession, hashPassword, validateUsername, SESSION_COOKIE_NAME, SESSION_DURATION_DAYS } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 const RegisterSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address."),
-  username: z.string().trim().min(3).max(30),
+  username: z.string().trim().min(3, "Username must be at least 3 characters.").max(30),
   password: z.string().min(8, "Password must be at least 8 characters long."),
   displayName: z.string().trim().max(160).optional(),
 });
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     );
     if (existingEmail.rows.length > 0) {
       return NextResponse.json(
-        { error: "An account with this email address already exists." },
+        { error: "An account with this email address already exists. Please sign in instead." },
         { status: 409 }
       );
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     );
     if (existingUsername.rows.length > 0) {
       return NextResponse.json(
-        { error: "This username handle is already taken. Please choose another." },
+        { error: `The handle @${normalizedUsername} is already taken. Please choose another.` },
         { status: 409 }
       );
     }
@@ -77,10 +77,10 @@ export async function POST(request: Request) {
       [profileId, userId, normalizedUsername, normalizedEmail, passwordHash, cleanDisplayName]
     );
 
-    // Create persistent session and set HTTP-only cookie
-    await createSession(userId, profileId);
+    // Create session in database and on cookie
+    const sessionId = await createSession(userId, profileId);
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         user: {
@@ -95,10 +95,22 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (err) {
+
+    // Explicitly set cookie header on response for maximum compatibility across all runtimes
+    response.cookies.set(SESSION_COOKIE_NAME, sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
+    });
+
+    return response;
+  } catch (err: unknown) {
     console.error("[Register Error]:", err);
+    const errorMsg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Failed to create account. Please try again later." },
+      { error: `Registration failed: ${errorMsg}` },
       { status: 500 }
     );
   }

@@ -175,18 +175,18 @@ export function HeaderUserNav() {
     );
   }
 
-  // Default: Always render Sign in and Join buttons (zero gray skeleton delay!)
+  // Default unauthenticated state: Always render Sign in and Join buttons with proper spacing
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2.5">
       <Link
         href="/login"
-        className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-[#151515] transition hover:bg-[#ebe7df]"
+        className="rounded-full px-2.5 sm:px-3.5 py-1.5 text-xs font-semibold text-[#151515] transition hover:bg-[#ebe7df]"
       >
         Sign in
       </Link>
       <Link
         href="/register"
-        className="button-primary !min-h-[2.25rem] !px-3.5 !py-1 text-xs"
+        className="button-primary !min-h-[2.25rem] !px-3.5 sm:!px-4 !py-1 text-xs shrink-0"
       >
         Join
       </Link>

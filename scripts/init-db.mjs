@@ -171,6 +171,11 @@ async function init() {
     ]);
   }
 
+  // Placeholder sample projects disabled. Only real creator projects are preserved.
+  console.log("Database initialized successfully!");
+  await client.end();
+  return;
+
   // Seed Projects
   console.log("Seeding projects...");
   const projects = [

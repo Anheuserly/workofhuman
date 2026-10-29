@@ -16,15 +16,17 @@ export function SiteHeader() {
           </Link>
         ))}
       </nav>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Link className="icon-button" href="/explore" aria-label="Search">
-          <Search size={18} />
+          <Search size={17} />
         </Link>
-        <Link className="icon-button hidden sm:inline-flex" href="/notifications" aria-label="Notifications">
-          <Bell size={18} />
+        <Link className="icon-button hidden md:inline-flex" href="/notifications" aria-label="Notifications">
+          <Bell size={17} />
         </Link>
         <HeaderUserNav />
-        <MobileMenu />
+        <div className="ml-1 sm:ml-1.5">
+          <MobileMenu />
+        </div>
       </div>
     </header>
   );
@@ -57,11 +59,29 @@ export function SectionIntro({ eyebrow, title, body, href }: { eyebrow: string; 
   );
 }
 
-export function EmptyState({ title, body }: { title: string; body: string }) {
+export function EmptyState({
+  title,
+  body,
+  href = "/studio/upload",
+  actionLabel = "Publish a Creation",
+}: {
+  title: string;
+  body: string;
+  href?: string;
+  actionLabel?: string;
+}) {
   return (
-    <section className="mx-auto mt-16 max-w-2xl surface p-8">
-      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-      <p className="mt-4 leading-7 text-[#6f6a61]">{body}</p>
+    <section className="mx-auto mt-12 max-w-xl surface p-8 sm:p-12 text-center">
+      <h3 className="text-2xl font-bold tracking-tight text-[#151515]">{title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-[#6f6a61]">{body}</p>
+      {href && actionLabel && (
+        <div className="mt-6">
+          <Link href={href} className="button-primary text-xs">
+            {actionLabel}
+            <ArrowRight size={15} />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

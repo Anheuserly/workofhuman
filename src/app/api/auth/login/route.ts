@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSession, verifyPassword } from "@/lib/auth";
+import { createSession, verifyPassword, SESSION_COOKIE_NAME, SESSION_DURATION_DAYS } from "@/lib/auth";
 import { query } from "@/lib/db";
 
 const LoginSchema = z.object({
@@ -53,10 +53,10 @@ export async function POST(request: Request) {
 
     const profile = result.rows[0];
 
-    // If account was created without a password (e.g. mock seed profile), notify user
+    // If account was created without a password, notify user
     if (!profile.password_hash) {
       return NextResponse.json(
-        { error: "This profile was initialized without a password. Please sign up or reset password." },
+        { error: "This profile was initialized without a password. Please register with this email to set up access." },
         { status: 401 }
       );
     }
@@ -70,9 +70,9 @@ export async function POST(request: Request) {
     }
 
     // Create session and set HTTP-only cookie
-    await createSession(profile.user_id, profile.id);
+    const sessionId = await createSession(profile.user_id, profile.id);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         userId: profile.user_id,
@@ -85,10 +85,21 @@ export async function POST(request: Request) {
         verified: profile.verified,
       },
     });
-  } catch (err) {
+
+    response.cookies.set(SESSION_COOKIE_NAME, sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_DURATION_DAYS * 24 * 60 * 60,
+    });
+
+    return response;
+  } catch (err: unknown) {
     console.error("[Login Error]:", err);
+    const errorMsg = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      { error: "Failed to sign in. Please try again later." },
+      { error: `Login failed: ${errorMsg}` },
       { status: 500 }
     );
   }

@@ -74,75 +74,112 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="grid min-h-[520px] grid-cols-12 grid-rows-6 gap-3 max-lg:min-h-[420px] max-sm:hidden">
-            <div className="media-tile col-span-7 row-span-4 rounded-[8px] relative overflow-hidden bg-[#e6dfd1]">
-              {heroP0?.thumbnailUrl ? (
-                <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="(min-width: 1024px) 38vw, 80vw" priority className="object-cover" />
-              ) : (
-                <div className="flex h-full flex-col justify-between p-6">
-                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
-                    {heroP0?.type || "Creative Showcase"}
-                  </span>
-                  <div>
-                    <h3 className="text-2xl font-bold text-[#151515]">{heroP0?.title || "The Work of Human Studio"}</h3>
-                    <p className="mt-2 text-sm text-[#5f5a52] line-clamp-2">{heroP0?.description || "Independent creative archive and verified works."}</p>
+          {data.projects.length > 0 ? (
+            <div className="grid min-h-[520px] grid-cols-12 grid-rows-6 gap-3 max-lg:min-h-[420px] max-sm:hidden">
+              <div className="media-tile col-span-7 row-span-4 rounded-[8px] relative overflow-hidden bg-[#e6dfd1]">
+                {heroP0?.thumbnailUrl ? (
+                  <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="(min-width: 1024px) 38vw, 80vw" priority className="object-cover" />
+                ) : (
+                  <div className="flex h-full flex-col justify-between p-6">
+                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                      {heroP0?.type || "Creative Showcase"}
+                    </span>
+                    <div>
+                      <h3 className="text-2xl font-bold text-[#151515]">{heroP0?.title}</h3>
+                      <p className="mt-2 text-sm text-[#5f5a52] line-clamp-2">{heroP0?.description}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="media-tile col-span-5 row-span-3 rounded-[8px] relative overflow-hidden bg-[#ded7c8]">
-              {heroP1?.thumbnailUrl ? (
-                <Image alt={heroP1.title} src={heroP1.thumbnailUrl} fill sizes="(min-width: 1024px) 28vw, 60vw" priority className="object-cover" />
-              ) : (
-                <div className="flex h-full flex-col justify-between p-5">
-                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
-                    {heroP1?.type || "Featured Study"}
-                  </span>
-                  <div>
-                    <h4 className="text-lg font-bold text-[#151515]">{heroP1?.title || "Design Index"}</h4>
-                    <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1?.creatorName || "Verified Creator"}</p>
+              <div className="media-tile col-span-5 row-span-3 rounded-[8px] relative overflow-hidden bg-[#ded7c8]">
+                {heroP1?.thumbnailUrl ? (
+                  <Image alt={heroP1.title} src={heroP1.thumbnailUrl} fill sizes="(min-width: 1024px) 28vw, 60vw" priority className="object-cover" />
+                ) : (
+                  <div className="flex h-full flex-col justify-between p-5">
+                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                      {heroP1?.type || "Featured Study"}
+                    </span>
+                    <div>
+                      <h4 className="text-lg font-bold text-[#151515]">{heroP1?.title}</h4>
+                      <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1?.creatorName}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="col-span-5 row-span-2 rounded-[8px] border border-[#d8d2c7] bg-white p-5 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0f766e]">Live system</p>
-              <p className="mt-3 text-3xl font-semibold">{data.categories.length}</p>
-              <p className="mt-1 text-sm text-[#6f6a61]">creative formats indexed</p>
-            </div>
+              <div className="col-span-5 row-span-2 rounded-[8px] border border-[#d8d2c7] bg-white p-5 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0f766e]">Indexed Mediums</p>
+                <p className="mt-3 text-3xl font-semibold">{data.categories.length}</p>
+                <p className="mt-1 text-sm text-[#6f6a61]">creative formats</p>
+              </div>
 
-            <div className="media-tile col-span-4 row-span-2 rounded-[8px] relative overflow-hidden bg-[#e3ddd1]">
-              {heroP2?.thumbnailUrl ? (
-                <Image alt={heroP2.title} src={heroP2.thumbnailUrl} fill sizes="24vw" priority className="object-cover" />
-              ) : (
-                <div className="flex h-full flex-col justify-center p-4">
-                  <span className="text-xs font-semibold text-[#0f766e]">{heroP2?.type || "Audio & Media"}</span>
-                  <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP2?.title || "Sound Archive"}</p>
-                </div>
-              )}
-            </div>
+              <div className="media-tile col-span-4 row-span-2 rounded-[8px] relative overflow-hidden bg-[#e3ddd1]">
+                {heroP2?.thumbnailUrl ? (
+                  <Image alt={heroP2.title} src={heroP2.thumbnailUrl} fill sizes="24vw" priority className="object-cover" />
+                ) : (
+                  <div className="flex h-full flex-col justify-center p-4">
+                    <span className="text-xs font-semibold text-[#0f766e]">{heroP2?.type}</span>
+                    <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP2?.title}</p>
+                  </div>
+                )}
+              </div>
 
-            <div className="media-tile col-span-8 row-span-2 rounded-[8px] relative overflow-hidden bg-[#ede7dc]">
-              {heroP3?.thumbnailUrl ? (
-                <Image alt={heroP3.title} src={heroP3.thumbnailUrl} fill sizes="42vw" priority className="object-cover" />
-              ) : (
-                <div className="flex h-full flex-col justify-center p-5">
-                  <span className="text-xs font-semibold text-[#0f766e]">{heroP3?.type || "Global Makers"}</span>
-                  <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP3?.title || "Invention & Prototypes"}</p>
-                </div>
-              )}
+              <div className="media-tile col-span-8 row-span-2 rounded-[8px] relative overflow-hidden bg-[#ede7dc]">
+                {heroP3?.thumbnailUrl ? (
+                  <Image alt={heroP3.title} src={heroP3.thumbnailUrl} fill sizes="42vw" priority className="object-cover" />
+                ) : (
+                  <div className="flex h-full flex-col justify-center p-5">
+                    <span className="text-xs font-semibold text-[#0f766e]">{heroP3?.type}</span>
+                    <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1">{heroP3?.title}</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="surface p-8 sm:p-10 flex flex-col justify-between shadow-xs max-sm:hidden min-h-[480px]">
+              <div>
+                <span className="section-eyebrow text-[#0f766e]">Platform Manifesto</span>
+                <h3 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-[#151515] leading-tight">
+                  Independent work across every creative discipline.
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-[#6f6a61] max-w-lg">
+                  No sample or placeholder projects are displayed. The stage is live for real creators to publish works with transparent AI disclosure and attribution.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-2">
+                  {data.categories.slice(0, 10).map((cat) => (
+                    <span
+                      key={cat}
+                      className="rounded-full bg-[#f6f4ef] px-3 py-1 text-xs font-semibold text-[#504b44] border border-[#ded9cf]"
+                    >
+                      {cat.replaceAll("_", " ")}
+                    </span>
+                  ))}
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0f766e] border border-[#0f766e]/30">
+                    +23 more disciplines
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-[#ded9cf] flex items-center justify-between">
+                <p className="text-xs text-[#8c857b]">Database connected: PostgreSQL</p>
+                <Link href="/studio/upload" className="button-primary !py-2 text-xs">
+                  <UploadCloud size={15} />
+                  Publish First Creation
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="media-tile h-72 rounded-[8px] sm:hidden relative overflow-hidden bg-[#e6dfd1]">
             {heroP0?.thumbnailUrl ? (
               <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="92vw" priority className="object-cover" />
             ) : (
               <div className="flex h-full flex-col justify-center p-6 text-center">
-                <span className="text-xs font-semibold text-[#0f766e]">{heroP0?.type || "Creative Work"}</span>
-                <p className="mt-2 text-xl font-bold text-[#151515]">{heroP0?.title || "The Work of Human Platform"}</p>
+                <span className="text-xs font-semibold text-[#0f766e]">33 Creative Disciplines</span>
+                <p className="mt-2 text-xl font-bold text-[#151515]">A home for serious creative work.</p>
+                <p className="mt-2 text-xs text-[#6f6a61]">The global stage for authentic craftsmanship and transparent AI experiments.</p>
               </div>
             )}
           </div>
@@ -295,11 +332,18 @@ export default async function Home() {
 
 function EmptyContent() {
   return (
-    <div className="surface p-8">
-      <h3 className="text-2xl font-semibold">Database is connected, but no published projects were returned.</h3>
-      <p className="mt-3 max-w-2xl leading-7 text-[#6f6a61]">
-        The UI is ready for database content. Publish projects in the studio or run database seeding to populate the discovery surfaces.
+    <div className="surface p-8 sm:p-12 text-center max-w-xl mx-auto my-8">
+      <div className="mx-auto grid size-12 place-items-center rounded-full bg-[#0f766e]/10 text-[#0f766e]">
+        <Sparkles size={24} />
+      </div>
+      <h3 className="mt-4 text-xl font-bold text-[#151515]">No published creations yet</h3>
+      <p className="mt-2 text-sm leading-relaxed text-[#6f6a61]">
+        Be the first creator to share your work with the world. Publish authentic human craftsmanship or transparent AI experiments across 33 creative mediums.
       </p>
+      <Link href="/studio/upload" className="button-primary mt-6 inline-flex text-xs">
+        <UploadCloud size={15} />
+        Publish First Creation
+      </Link>
     </div>
   );
 }
