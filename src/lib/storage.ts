@@ -2,28 +2,35 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { query } from "./db/index";
 
 /**
  * The Work of Human - Media Storage System
  *
- * Supports two self-hosted architectures:
+ * Supports three self-hosted storage tiers:
  *
- * MODE 1: Direct Windows Server Disk (Default - Zero extra software needed)
- *   - Only Node.js required.
- *   - Saves files directly to Windows local disk (e.g. D:\workofhuman\uploads or public/uploads).
- *   - Serves files via /api/media/[filename] with HTTP 206 Range seeking support.
+ * TIER 1: Dedicated PostgreSQL Binary Storage on VPS (Universal - works in Cloudflare Workers, VPS, Docker, Dev)
+ *   - Directly persists binary buffers into `workofhuman.media_files` on VPS PostgreSQL.
+ *   - Completely immune to serverless read-only filesystems ([unenv] fs.mkdirSync errors).
+ *   - Serves high-speed media via `/api/media/[filename]` with full HTTP 206 partial range streaming.
  *
- * MODE 2: Self-Hosted MinIO (S3-Compatible Object Storage on VPS or Windows Server)
- *   - Set MINIO_ENDPOINT (e.g. http://vps.amcmep.in:9000 or http://localhost:9000).
- *   - Self-hosted on your own hardware, NOT Cloudflare.
+ * TIER 2: Self-Hosted MinIO / S3 Object Storage (Optional)
+ *   - If MINIO_ENDPOINT / S3_ENDPOINT is configured in environment variables.
+ *
+ * TIER 3: Local Windows Server PC Disk Mirror (Node.js runtimes)
+ *   - When running on a native Node.js / Windows PC host where filesystem is writable.
  */
 
 // --- Direct Local Disk Settings ---
 export function getUploadDirectory(): string {
-  if (process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim()) {
-    return path.resolve(process.env.UPLOAD_DIR.trim());
+  try {
+    if (process.env.UPLOAD_DIR && process.env.UPLOAD_DIR.trim()) {
+      return path.resolve(process.env.UPLOAD_DIR.trim());
+    }
+    return path.join(process.cwd(), "public", "uploads");
+  } catch {
+    return "/tmp/uploads";
   }
-  return path.join(process.cwd(), "public", "uploads");
 }
 
 export function getMediaBaseUrl(): string {
@@ -53,13 +60,13 @@ if (isMinIOConfigured) {
       accessKeyId: MINIO_ACCESS_KEY,
       secretAccessKey: MINIO_SECRET_KEY,
     },
-    forcePathStyle: true, // Essential for MinIO (http://endpoint/bucket/file)
+    forcePathStyle: true,
   });
 }
 
 export interface UploadResult {
   url: string;
-  storageType: "windows_server_disk" | "local_filesystem" | "minio_self_hosted";
+  storageType: "vps_database" | "minio_self_hosted" | "windows_server_disk" | "local_filesystem";
   filename: string;
   contentType: string;
   size: number;
@@ -68,8 +75,9 @@ export interface UploadResult {
 
 /**
  * Uploads media file buffer:
- * - If MinIO is configured in .env, uploads to self-hosted MinIO bucket.
- * - Otherwise, writes directly to Windows Server PC local disk.
+ * 1. Checks MinIO/S3 if configured.
+ * 2. Persists to PostgreSQL `workofhuman.media_files` table (reliable across Cloudflare Workers & VPS).
+ * 3. Tries mirror to local disk if running on writable Node.js/Windows Server environment.
  */
 export async function uploadMedia(
   buffer: Buffer,
@@ -106,30 +114,45 @@ export async function uploadMedia(
         size: buffer.length,
       };
     } catch (minioErr) {
-      console.error("[MinIO Upload Error, falling back to local disk]:", minioErr);
+      console.error("[MinIO Upload Error, falling back to PostgreSQL/Disk]:", minioErr);
     }
   }
 
-  // OPTION B: Direct Windows Server PC Local Disk Storage
-  const uploadsDir = getUploadDirectory();
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
+  // OPTION B: Dedicated PostgreSQL Media Table (Primary for Cloudflare & VPS)
+  let savedToDb = false;
+  try {
+    await query(
+      `INSERT INTO workofhuman.media_files (filename, content_type, size, data)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (filename) DO UPDATE SET
+         content_type = EXCLUDED.content_type,
+         size = EXCLUDED.size,
+         data = EXCLUDED.data`,
+      [filename, contentType, buffer.length, buffer]
+    );
+    savedToDb = true;
+  } catch (dbErr) {
+    console.error("[PostgreSQL Media Storage Error]:", dbErr);
   }
 
-  const filePath = path.join(uploadsDir, filename);
-  fs.writeFileSync(filePath, buffer);
-
-  // Sync to public/uploads if different
-  const publicUploads = path.join(process.cwd(), "public", "uploads");
-  if (uploadsDir !== publicUploads) {
-    try {
-      if (!fs.existsSync(publicUploads)) {
-        fs.mkdirSync(publicUploads, { recursive: true });
+  // OPTION C: Local Disk Mirror (If writable Node.js filesystem is available)
+  let localPath: string | undefined = undefined;
+  try {
+    if (typeof fs.mkdirSync === "function" && typeof fs.writeFileSync === "function") {
+      const uploadsDir = getUploadDirectory();
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
       }
-      fs.writeFileSync(path.join(publicUploads, filename), buffer);
-    } catch {
-      // Non-fatal
+      const filePath = path.join(uploadsDir, filename);
+      fs.writeFileSync(filePath, buffer);
+      localPath = filePath;
     }
+  } catch {
+    // Expected on Cloudflare Workers / read-only serverless - safely ignored
+  }
+
+  if (!savedToDb && !localPath) {
+    throw new Error("Failed to persist media file to storage engine.");
   }
 
   const baseUrl = getMediaBaseUrl();
@@ -137,11 +160,11 @@ export async function uploadMedia(
 
   return {
     url,
-    storageType: process.platform === "win32" ? "windows_server_disk" : "local_filesystem",
+    storageType: savedToDb ? "vps_database" : (process.platform === "win32" ? "windows_server_disk" : "local_filesystem"),
     filename,
     contentType,
     size: buffer.length,
-    localPath: filePath,
+    localPath,
   };
 }
 

@@ -20,7 +20,7 @@ export async function GET() {
       ? "minio_self_hosted"
       : isWindows
       ? "windows_server_disk"
-      : "local_filesystem",
+      : "vps_database",
     minIOConfigured: isMinIOConfigured,
     uploadDirectory: getUploadDirectory(),
     mediaBaseUrl: getMediaBaseUrl(),

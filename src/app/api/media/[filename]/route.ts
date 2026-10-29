@@ -2,28 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getUploadDirectory, getMimeTypeFromExt } from "@/lib/storage";
+import { query } from "@/lib/db";
 
-// In Node.js / Windows Server runtime
 export const dynamic = "force-dynamic";
 
-function resolveFile(filename: string): { filePath: string; exists: boolean } {
-  // Prevent directory traversal attacks
-  const safeFilename = path.basename(filename);
-  const uploadDir = getUploadDirectory();
-  const filePath = path.join(uploadDir, safeFilename);
+function resolveLocalFile(filename: string): { filePath: string; exists: boolean } {
+  try {
+    const safeFilename = path.basename(filename);
+    const uploadDir = getUploadDirectory();
+    const filePath = path.join(uploadDir, safeFilename);
 
-  if (fs.existsSync(filePath)) {
-    return { filePath, exists: true };
+    if (typeof fs.existsSync === "function" && fs.existsSync(filePath)) {
+      return { filePath, exists: true };
+    }
+
+    const publicDir = path.join(process.cwd(), "public", "uploads");
+    const fallbackPath = path.join(publicDir, safeFilename);
+    if (typeof fs.existsSync === "function" && fs.existsSync(fallbackPath)) {
+      return { filePath: fallbackPath, exists: true };
+    }
+  } catch {
+    // Filesystem not available in serverless/Cloudflare Workers runtime
   }
 
-  // Fallback to public/uploads if different
-  const publicDir = path.join(process.cwd(), "public", "uploads");
-  const fallbackPath = path.join(publicDir, safeFilename);
-  if (fs.existsSync(fallbackPath)) {
-    return { filePath: fallbackPath, exists: true };
-  }
-
-  return { filePath, exists: false };
+  return { filePath: "", exists: false };
 }
 
 export async function HEAD(
@@ -31,25 +33,54 @@ export async function HEAD(
   { params }: { params: Promise<{ filename: string }> }
 ) {
   const { filename } = await params;
-  const { filePath, exists } = resolveFile(filename);
+  const safeFilename = path.basename(filename);
 
-  if (!exists) {
-    return new NextResponse(null, { status: 404 });
+  // 1. Try local filesystem if available
+  const { filePath, exists } = resolveLocalFile(filename);
+  if (exists) {
+    try {
+      const stat = fs.statSync(filePath);
+      const ext = path.extname(filename);
+      const contentType = getMimeTypeFromExt(ext);
+
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Content-Length": stat.size.toString(),
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    } catch {
+      // Fall through to database check
+    }
   }
 
-  const stat = fs.statSync(filePath);
-  const ext = path.extname(filename);
-  const contentType = getMimeTypeFromExt(ext);
+  // 2. Query PostgreSQL media table
+  try {
+    const dbRes = await query<{ content_type: string; size: string }>(
+      "SELECT content_type, size FROM workofhuman.media_files WHERE filename = $1",
+      [safeFilename]
+    );
 
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Content-Type": contentType,
-      "Content-Length": stat.size.toString(),
-      "Accept-Ranges": "bytes",
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
+    if (dbRes.rows.length > 0) {
+      const row = dbRes.rows[0];
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          "Content-Type": row.content_type || getMimeTypeFromExt(path.extname(filename)),
+          "Content-Length": row.size.toString(),
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  } catch (err) {
+    console.error("[Media HEAD Error]:", err);
+  }
+
+  return new NextResponse(null, { status: 404 });
 }
 
 export async function GET(
@@ -57,80 +88,136 @@ export async function GET(
   { params }: { params: Promise<{ filename: string }> }
 ) {
   const { filename } = await params;
-  const { filePath, exists } = resolveFile(filename);
+  const safeFilename = path.basename(filename);
 
-  if (!exists) {
-    return new NextResponse("File not found on server storage.", { status: 404 });
+  // 1. Try local filesystem if available
+  const { filePath, exists } = resolveLocalFile(filename);
+  if (exists) {
+    try {
+      const stat = fs.statSync(filePath);
+      const fileSize = stat.size;
+      const ext = path.extname(filename);
+      const contentType = getMimeTypeFromExt(ext);
+      const range = request.headers.get("range");
+
+      if (range && range.startsWith("bytes=")) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+        if (!isNaN(start) && start < fileSize && (!parts[1] || (!isNaN(end) && end < fileSize && start <= end))) {
+          const chunkLength = end - start + 1;
+          const stream = fs.createReadStream(filePath, { start, end });
+          const readable = new ReadableStream({
+            start(controller) {
+              stream.on("data", (chunk) => controller.enqueue(chunk));
+              stream.on("end", () => controller.close());
+              stream.on("error", (err) => controller.error(err));
+            },
+            cancel() {
+              stream.destroy();
+            },
+          });
+
+          return new NextResponse(readable, {
+            status: 206,
+            headers: {
+              "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+              "Accept-Ranges": "bytes",
+              "Content-Length": chunkLength.toString(),
+              "Content-Type": contentType,
+              "Cache-Control": "public, max-age=31536000, immutable",
+            },
+          });
+        }
+      }
+
+      const fullStream = fs.createReadStream(filePath);
+      const readable = new ReadableStream({
+        start(controller) {
+          fullStream.on("data", (chunk) => controller.enqueue(chunk));
+          fullStream.on("end", () => controller.close());
+          fullStream.on("error", (err) => controller.error(err));
+        },
+        cancel() {
+          fullStream.destroy();
+        },
+      });
+
+      return new NextResponse(readable, {
+        status: 200,
+        headers: {
+          "Content-Length": fileSize.toString(),
+          "Content-Type": contentType,
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    } catch {
+      // Fall through to database check
+    }
   }
 
-  const stat = fs.statSync(filePath);
-  const fileSize = stat.size;
-  const ext = path.extname(filename);
-  const contentType = getMimeTypeFromExt(ext);
+  // 2. Query PostgreSQL media table (Universal for Cloudflare Workers & VPS)
+  try {
+    const dbRes = await query<{ content_type: string; size: string; data: Buffer }>(
+      "SELECT content_type, size, data FROM workofhuman.media_files WHERE filename = $1",
+      [safeFilename]
+    );
 
-  const range = request.headers.get("range");
+    if (dbRes.rows.length === 0) {
+      return new NextResponse("File not found on server storage.", { status: 404 });
+    }
 
-  // Handle HTTP Range request (HTTP 206 Partial Content for smooth video/audio seeking)
-  if (range && range.startsWith("bytes=")) {
-    const parts = range.replace(/bytes=/, "").split("-");
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const fileRow = dbRes.rows[0];
+    const fileBuffer = Buffer.isBuffer(fileRow.data)
+      ? fileRow.data
+      : Buffer.from(fileRow.data);
+    const fileSize = fileBuffer.length;
+    const contentType = fileRow.content_type || getMimeTypeFromExt(path.extname(filename));
 
-    if (isNaN(start) || start >= fileSize || (parts[1] && isNaN(end)) || end >= fileSize || start > end) {
-      return new NextResponse(null, {
-        status: 416,
+    const range = request.headers.get("range");
+
+    // Handle HTTP Range request (HTTP 206 Partial Content for video/audio seeking)
+    if (range && range.startsWith("bytes=")) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (isNaN(start) || start >= fileSize || (parts[1] && isNaN(end)) || end >= fileSize || start > end) {
+        return new NextResponse(null, {
+          status: 416,
+          headers: {
+            "Content-Range": `bytes */${fileSize}`,
+          },
+        });
+      }
+
+      const chunk = fileBuffer.subarray(start, end + 1);
+      return new NextResponse(new Uint8Array(chunk), {
+        status: 206,
         headers: {
-          "Content-Range": `bytes */${fileSize}`,
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunk.length.toString(),
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=31536000, immutable",
         },
       });
     }
 
-    const chunkLength = end - start + 1;
-    const stream = fs.createReadStream(filePath, { start, end });
-
-    const readable = new ReadableStream({
-      start(controller) {
-        stream.on("data", (chunk) => controller.enqueue(chunk));
-        stream.on("end", () => controller.close());
-        stream.on("error", (err) => controller.error(err));
-      },
-      cancel() {
-        stream.destroy();
-      },
-    });
-
-    return new NextResponse(readable, {
-      status: 206,
+    // Full 200 response
+    return new NextResponse(new Uint8Array(fileBuffer), {
+      status: 200,
       headers: {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunkLength.toString(),
+        "Content-Length": fileSize.toString(),
         "Content-Type": contentType,
+        "Accept-Ranges": "bytes",
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
+  } catch (err) {
+    console.error("[Media GET Error]:", err);
+    return new NextResponse("Failed to retrieve media file.", { status: 500 });
   }
-
-  // Full file streaming (HTTP 200)
-  const fullStream = fs.createReadStream(filePath);
-  const readable = new ReadableStream({
-    start(controller) {
-      fullStream.on("data", (chunk) => controller.enqueue(chunk));
-      fullStream.on("end", () => controller.close());
-      fullStream.on("error", (err) => controller.error(err));
-    },
-    cancel() {
-      fullStream.destroy();
-    },
-  });
-
-  return new NextResponse(readable, {
-    status: 200,
-    headers: {
-      "Content-Length": fileSize.toString(),
-      "Content-Type": contentType,
-      "Accept-Ranges": "bytes",
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
 }
