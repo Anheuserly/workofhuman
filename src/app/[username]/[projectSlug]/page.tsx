@@ -18,6 +18,8 @@ import { ProjectManageMenu } from "@/components/project-manage-menu";
 import { MediaLightbox } from "@/components/media-lightbox";
 import { AudioTrackPlayer } from "@/components/audio-track-player";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectDetailPage({
   params,
 }: {

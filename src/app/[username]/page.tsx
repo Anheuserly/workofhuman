@@ -6,6 +6,8 @@ import { RoleBadge } from "@/components/role-badge";
 import { MessageCreatorModal } from "@/components/message-creator-modal";
 import { FollowButton } from "@/components/follow-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function CreatorProfilePage({
   params,
 }: {

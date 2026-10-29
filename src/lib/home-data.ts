@@ -203,11 +203,11 @@ export async function getHomeData(): Promise<HomeData> {
         query(`SELECT * FROM workofhuman.homepage_settings WHERE id = 'default' LIMIT 1`),
         query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
                FROM workofhuman.projects p
-               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                ORDER BY p.published_at DESC LIMIT 24`),
         query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
                FROM workofhuman.projects p
-               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                WHERE p.ai_generated = true
                ORDER BY p.views DESC LIMIT 6`),
         query<DbProfileRow>(`SELECT * FROM workofhuman.profiles ORDER BY followers_count DESC LIMIT 8`),
@@ -215,7 +215,7 @@ export async function getHomeData(): Promise<HomeData> {
         query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type, pr.username as creator_username
                FROM workofhuman.trending_cache t
                LEFT JOIN workofhuman.projects p ON p.slug = t.project_id
-               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+               LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                WHERE t.period = 'week'
                ORDER BY t.rank ASC LIMIT 12`),
       ]);
@@ -286,7 +286,7 @@ export async function getProjectsByCategory(categorySlug: string): Promise<Proje
     const res = await query<DbProjectRow>(
       `SELECT p.*, pr.username as creator_username
        FROM workofhuman.projects p
-       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
        WHERE p.type = $1 OR p.type = $2
        ORDER BY p.published_at DESC LIMIT 50`,
       [categorySlug, categorySlug.replaceAll("-", "_")]
@@ -303,7 +303,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
     const res = await query<DbProjectRow>(
       `SELECT p.*, pr.username as creator_username
        FROM workofhuman.projects p
-       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
        WHERE p.slug = $1 LIMIT 1`,
       [slug]
     );
@@ -330,7 +330,7 @@ export async function getProfileByUsername(
     const projRes = await query<DbProjectRow>(
       `SELECT p.*, pr.username as creator_username
        FROM workofhuman.projects p
-       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id = p.creator_id)
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
        WHERE p.creator_id = $1 OR pr.username = $2
        ORDER BY p.published_at DESC LIMIT 30`,
       [profile.userId, cleanUsername]

@@ -20,7 +20,7 @@ export async function GET(
       display_name: string;
       avatar_url?: string | null;
     }>(
-      `SELECT c.id, c.content, c.likes_count, c.created_at,
+      `SELECT c.id, c.content, 0 as likes_count, c.created_at,
               COALESCE(p.username, 'member') as username,
               COALESCE(p.display_name, 'Creative Member') as display_name,
               p.avatar_url
