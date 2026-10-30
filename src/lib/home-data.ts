@@ -300,17 +300,21 @@ export async function getProjectsByCategory(categorySlug: string): Promise<Proje
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
+    const cleanSlug = decodeURIComponent(slug || "").trim();
     const res = await query<DbProjectRow>(
       `SELECT p.*, pr.username as creator_username
        FROM workofhuman.projects p
        LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-       WHERE p.slug = $1 LIMIT 1`,
-      [slug]
+       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+      [cleanSlug, slug]
     );
-    if (res.rows.length === 0) return null;
+    if (res.rows.length === 0) {
+      console.warn(`[getProjectBySlug] No rows found for slug: ${slug} (clean: ${cleanSlug})`);
+      return null;
+    }
     return mapProject(res.rows[0]);
   } catch (err) {
-    console.error(`[getProjectBySlug Error]:`, err);
+    console.error(`[getProjectBySlug Error for slug ${slug}]:`, err);
     return null;
   }
 }

@@ -22,7 +22,8 @@ export async function GET(
     return NextResponse.json({ success: true, project: res.rows[0] });
   } catch (err: unknown) {
     console.error("[Get Project Error]:", err);
-    return NextResponse.json({ error: "Failed to retrieve project." }, { status: 500 });
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    return NextResponse.json({ error: "Failed to retrieve project.", details: msg }, { status: 500 });
   }
 }
 
