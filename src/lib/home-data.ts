@@ -250,6 +250,7 @@ export async function getHomeData(): Promise<HomeData> {
             description: "",
             creatorId: "",
             creatorName: r.p_creator || undefined,
+            creatorUsername: (r as unknown as { creator_username?: string }).creator_username || undefined,
             type: (r.p_type as ContentType) || "art",
             thumbnailUrl: r.p_thumb || undefined,
           }
@@ -325,7 +326,9 @@ export async function getProfileByUsername(
   try {
     const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
     const profRes = await query<DbProfileRow>(
-      `SELECT * FROM workofhuman.profiles WHERE LOWER(username) = $1 LIMIT 1`,
+      `SELECT * FROM workofhuman.profiles 
+       WHERE LOWER(username) = $1 OR LOWER(display_name) = $1 
+       ORDER BY (LOWER(username) = $1) DESC LIMIT 1`,
       [cleanUsername]
     );
     if (profRes.rows.length === 0) return { profile: null, projects: [] };

@@ -14,7 +14,19 @@ interface CommentItem {
   avatar_url?: string | null;
 }
 
-export function ProjectComments({ projectSlug }: { projectSlug: string }) {
+interface CommentUser {
+  username: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+}
+
+export function ProjectComments({
+  projectSlug,
+  currentUser,
+}: {
+  projectSlug: string;
+  currentUser?: CommentUser | null;
+}) {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -58,6 +70,12 @@ export function ProjectComments({ projectSlug }: { projectSlug: string }) {
         body: JSON.stringify({ content: newComment.trim() }),
       });
 
+      if (res.status === 401) {
+        const currentPath = typeof window !== "undefined" ? window.location.pathname : `/explore`;
+        window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
+        return;
+      }
+
       const data = (await res.json()) as {
         success?: boolean;
         error?: string;
@@ -90,45 +108,64 @@ export function ProjectComments({ projectSlug }: { projectSlug: string }) {
         </div>
       </div>
 
-      {/* Comment submission form */}
-      <form onSubmit={handleAddComment} className="space-y-3">
-        {error && (
-          <p className="text-xs font-semibold text-red-600 bg-red-50 p-2.5 rounded-md border border-red-200">
-            {error}
+      {/* Comment submission form or guest prompt */}
+      {!currentUser ? (
+        <div className="rounded-xl border border-dashed border-[#0f766e]/30 bg-[#0f766e]/5 p-5 text-center space-y-2.5">
+          <p className="text-xs font-bold text-[#151515]">
+            Join the Discussion &amp; Leave Feedback
           </p>
-        )}
-        <div className="relative">
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Share your thoughts, ask a question, or leave feedback for the creator..."
-            rows={3}
-            className="w-full rounded-lg border border-[#ded9cf] bg-[#fcfbfa] p-3 text-xs text-[#151515] placeholder:text-[#8c857b] focus:border-[#0f766e] focus:bg-white focus:outline-none transition resize-none"
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] text-[#8c857b]">
-            Be respectful and constructive with fellow artists.
+          <p className="text-[11px] text-[#6f6a61] max-w-md mx-auto">
+            Sign in to share notes with the creator, appreciate creations, and connect with creative peers.
           </p>
-          <button
-            type="submit"
-            disabled={!newComment.trim() || submitting}
-            className="button-primary !px-4 !py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={13} className="animate-spin" />
-                Posting...
-              </>
-            ) : (
-              <>
-                Post Feedback
-                <Send size={12} />
-              </>
-            )}
-          </button>
+          <div className="pt-1">
+            <Link
+              href={`/login?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/explore")}`}
+              className="button-primary inline-flex items-center gap-2 !px-4 !py-1.5 text-xs font-semibold"
+            >
+              Sign In to Comment
+            </Link>
+          </div>
         </div>
-      </form>
+      ) : (
+        <form onSubmit={handleAddComment} className="space-y-3">
+          {error && (
+            <p className="text-xs font-semibold text-red-600 bg-red-50 p-2.5 rounded-md border border-red-200">
+              {error}
+            </p>
+          )}
+          <div className="relative">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Share your thoughts, ask a question, or leave feedback for the creator..."
+              rows={3}
+              className="w-full rounded-lg border border-[#ded9cf] bg-[#fcfbfa] p-3 text-xs text-[#151515] placeholder:text-[#8c857b] focus:border-[#0f766e] focus:bg-white focus:outline-none transition resize-none"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] text-[#8c857b]">
+              Posting as <span className="font-semibold text-[#151515]">@{currentUser.username}</span>. Be respectful and constructive.
+            </p>
+            <button
+              type="submit"
+              disabled={!newComment.trim() || submitting}
+              className="button-primary !px-4 !py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                <>
+                  Post Feedback
+                  <Send size={12} />
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Comments List */}
       {loading ? (

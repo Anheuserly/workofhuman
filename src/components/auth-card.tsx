@@ -28,7 +28,13 @@ interface AuthCardProps {
 export function AuthCard({ initialMode = "register" }: AuthCardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextUrl = searchParams.get("next") || "/studio/upload";
+  const rawTarget = searchParams.get("next") || searchParams.get("redirect") || "/explore";
+  let nextUrl = "/explore";
+  if (rawTarget && typeof rawTarget === "string" && !rawTarget.includes("undefined")) {
+    if (rawTarget.startsWith("/") && !rawTarget.startsWith("//")) {
+      nextUrl = rawTarget;
+    }
+  }
 
   const [mode, setMode] = useState<"login" | "register">(initialMode);
 

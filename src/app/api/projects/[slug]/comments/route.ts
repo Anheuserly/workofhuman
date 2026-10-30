@@ -4,12 +4,26 @@ import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function generateId(prefix: string): string {
+  const ts = Date.now();
+  const rnd = Math.random().toString(36).substring(2, 10);
+  return `${prefix}_${ts}_${rnd}`;
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const { slug } = await params;
+    const cleanSlug = decodeURIComponent(slug || "").trim();
+
+    // Find project to get both ID and slug
+    const projRes = await query<{ id: string }>(
+      `SELECT id FROM workofhuman.projects WHERE slug = $1 OR slug = $2 LIMIT 1`,
+      [cleanSlug, slug]
+    );
+    const projectId = projRes.rows[0]?.id;
 
     const res = await query<{
       id: string;
@@ -20,15 +34,15 @@ export async function GET(
       display_name: string;
       avatar_url?: string | null;
     }>(
-      `SELECT c.id, c.content, 0 as likes_count, c.created_at,
+      `SELECT c.id, c.content, COALESCE(c.likes_count, 0) as likes_count, c.created_at,
               COALESCE(p.username, 'member') as username,
               COALESCE(p.display_name, 'Creative Member') as display_name,
               p.avatar_url
        FROM workofhuman.comments c
        LEFT JOIN workofhuman.profiles p ON p.user_id = c.user_id
-       WHERE c.project_id = $1
+       WHERE c.project_id = $1 OR ($2::text IS NOT NULL AND c.project_id = $2)
        ORDER BY c.created_at DESC LIMIT 50`,
-      [slug]
+      [cleanSlug, projectId || null]
     );
 
     return NextResponse.json({ success: true, comments: res.rows });
@@ -60,44 +74,61 @@ export async function POST(
     }
 
     const { slug } = await params;
+    const cleanSlug = decodeURIComponent(slug || "").trim();
 
-    // Look up project creator
-    const projRes = await query<{ id: string; creator_id: string; title: string }>(
-      `SELECT id, creator_id, title FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
-      [slug]
+    // Look up project
+    const projRes = await query<{
+      id: string;
+      creator_id: string;
+      title: string;
+      slug: string;
+      creator_username?: string;
+    }>(
+      `SELECT p.id, p.creator_id, p.title, p.slug, pr.username as creator_username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
+       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+      [cleanSlug, slug]
     );
 
-    const insertRes = await query<{ id: string; created_at: string }>(
-      `INSERT INTO workofhuman.comments (project_id, user_id, content, created_at)
-       VALUES ($1, $2, $3, NOW())
-       RETURNING id, created_at`,
-      [slug, user.userId, content.trim()]
-    );
+    if (projRes.rows.length === 0) {
+      return NextResponse.json({ error: "Project not found." }, { status: 404 });
+    }
 
-    const newComment = insertRes.rows[0];
+    const project = projRes.rows[0];
+    const commentId = generateId("cm");
+
+    await query(
+      `INSERT INTO workofhuman.comments (id, project_id, user_id, content, likes_count, created_at)
+       VALUES ($1, $2, $3, $4, 0, NOW())`,
+      [commentId, project.id, user.userId, content.trim()]
+    );
 
     // Notify project creator if not commenting on own work
-    if (projRes.rows.length > 0 && projRes.rows[0].creator_id !== user.userId) {
+    if (project.creator_id !== user.userId) {
+      const notifId = generateId("notif");
+      const creatorHandle = project.creator_username || "creator";
       await query(
-        `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
-         VALUES ($1, $2, 'comment', $3, $4, false, NOW())`,
+        `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
+         VALUES ($1, $2, 'comment', $3, $4, $5, false, NOW())`,
         [
-          projRes.rows[0].creator_id,
-          user.userId,
-          `/@${user.username}/${slug}`,
-          `@${user.username} commented on your creation "${projRes.rows[0].title}".`,
+          notifId,
+          project.creator_id,
+          "New Feedback on Creation",
+          `@${user.username} commented on your creation "${project.title}".`,
+          `/@${creatorHandle}/${project.slug}`,
         ]
-      ).catch(() => {});
+      ).catch((e) => console.warn("Failed to create notification:", e));
     }
 
     return NextResponse.json(
       {
         success: true,
         comment: {
-          id: newComment.id,
+          id: commentId,
           content: content.trim(),
           likes_count: 0,
-          created_at: newComment.created_at,
+          created_at: new Date().toISOString(),
           username: user.username,
           display_name: user.displayName || user.username,
           avatar_url: user.avatarUrl || null,
@@ -107,8 +138,9 @@ export async function POST(
     );
   } catch (err: unknown) {
     console.error("[Create Comment Error]:", err);
+    const msg = err instanceof Error ? err.message : "Failed to post comment.";
     return NextResponse.json(
-      { error: "Failed to post comment. Please try again." },
+      { error: msg },
       { status: 500 }
     );
   }

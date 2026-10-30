@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -66,7 +67,17 @@ export default async function ProjectDetailPage({
     );
   }
 
-  const { profile } = await getProfileByUsername(cleanUsername);
+  // Canonical creator handle check:
+  // If the creator username is known and the URL has a different or undefined username, redirect to canonical route
+  if (project.creatorUsername && cleanUsername !== project.creatorUsername.toLowerCase()) {
+    redirect(`/@${project.creatorUsername}/${project.slug}`);
+  }
+
+  const effectiveUsername =
+    project.creatorUsername ||
+    (cleanUsername !== "undefined" ? cleanUsername : project.creatorName || "creator");
+
+  const { profile } = await getProfileByUsername(effectiveUsername);
 
   // Helper to detect media types
   function isVideo(url?: string): boolean {
@@ -100,11 +111,11 @@ export default async function ProjectDetailPage({
         {/* Back Link & Navigation Bar */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <Link
-            href={`/@${cleanUsername}`}
+            href={`/@${effectiveUsername}`}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6f6a61] hover:text-[#151515] transition"
           >
             <ArrowLeft size={14} />
-            Back to @{cleanUsername}&apos;s Portfolio
+            Back to @{effectiveUsername}&apos;s Portfolio
           </Link>
 
           {isOwner && (
@@ -112,7 +123,7 @@ export default async function ProjectDetailPage({
               projectSlug={project.slug}
               initialTitle={project.title}
               initialDescription={project.description}
-              creatorUsername={cleanUsername}
+              creatorUsername={effectiveUsername}
             />
           )}
         </div>
@@ -140,37 +151,37 @@ export default async function ProjectDetailPage({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 text-xs text-[#6f6a61]">
             <div className="flex flex-wrap items-center gap-3">
               <Link
-                href={`/@${cleanUsername}`}
+                href={`/@${effectiveUsername}`}
                 className="flex items-center gap-2.5 hover:text-[#151515] transition group"
               >
                 {profile?.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={profile.avatarUrl}
-                    alt={profile.displayName || cleanUsername}
+                    alt={profile.displayName || effectiveUsername}
                     className="size-9 rounded-full object-cover border border-[#ded9cf] group-hover:scale-105 transition"
                   />
                 ) : (
                   <div className="grid size-9 place-items-center rounded-full bg-[#0f766e] text-white font-bold text-xs uppercase group-hover:scale-105 transition">
-                    {(profile?.displayName || cleanUsername).slice(0, 2).toUpperCase()}
+                    {(profile?.displayName || effectiveUsername).slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div>
                   <p className="font-bold text-[#151515] group-hover:text-[#0f766e] transition">
-                    {project.creatorName || profile?.displayName || `@${cleanUsername}`}
+                    {project.creatorName || profile?.displayName || `@${effectiveUsername}`}
                   </p>
-                  <p className="font-mono text-[11px] text-[#8c857b]">@{cleanUsername}</p>
+                  <p className="font-mono text-[11px] text-[#8c857b]">@{effectiveUsername}</p>
                 </div>
                 <RoleBadge role={profile?.role} verified={profile?.verified} size="sm" />
               </Link>
 
               {/* Direct Follow & Message Buttons */}
               <FollowButton
-                username={cleanUsername}
+                username={effectiveUsername}
                 initialFollowers={profile?.followersCount || 0}
               />
               <MessageCreatorModal
-                recipientUsername={cleanUsername}
+                recipientUsername={effectiveUsername}
                 recipientName={profile?.displayName || project.creatorName}
               />
             </div>
@@ -323,7 +334,7 @@ export default async function ProjectDetailPage({
         )}
 
         {/* Interactive Comments & Community Feedback */}
-        <ProjectComments projectSlug={project.slug} />
+        <ProjectComments projectSlug={project.slug} currentUser={currentUser} />
       </article>
     </PageShell>
   );

@@ -4,17 +4,24 @@ import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function generateId(prefix: string): string {
+  const ts = Date.now();
+  const rnd = Math.random().toString(36).substring(2, 10);
+  return `${prefix}_${ts}_${rnd}`;
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const { slug } = await params;
+    const cleanSlug = decodeURIComponent(slug || "").trim();
     const user = await getCurrentUser();
 
     const projRes = await query<{ id: string; likes_count: number }>(
-      `SELECT id, likes_count FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
-      [slug]
+      `SELECT id, likes_count FROM workofhuman.projects WHERE slug = $1 OR slug = $2 LIMIT 1`,
+      [cleanSlug, slug]
     );
 
     if (projRes.rows.length === 0) {
@@ -26,7 +33,7 @@ export async function GET(
 
     if (user) {
       const likeCheck = await query(
-        `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND action = 'like' LIMIT 1`,
+        `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND type = 'like' LIMIT 1`,
         [user.userId, project.id]
       );
       liked = likeCheck.rows.length > 0;
@@ -56,10 +63,21 @@ export async function POST(
     }
 
     const { slug } = await params;
+    const cleanSlug = decodeURIComponent(slug || "").trim();
 
-    const projRes = await query<{ id: string; creator_id: string; title: string; likes_count: number }>(
-      `SELECT id, creator_id, title, likes_count FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
-      [slug]
+    const projRes = await query<{
+      id: string;
+      creator_id: string;
+      title: string;
+      likes_count: number;
+      slug: string;
+      creator_username?: string;
+    }>(
+      `SELECT p.id, p.creator_id, p.title, p.likes_count, p.slug, pr.username as creator_username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
+       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+      [cleanSlug, slug]
     );
 
     if (projRes.rows.length === 0) {
@@ -70,7 +88,7 @@ export async function POST(
 
     // Check if already liked
     const existing = await query<{ id: string }>(
-      `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND action = 'like' LIMIT 1`,
+      `SELECT id FROM workofhuman.interactions WHERE user_id = $1 AND project_id = $2 AND type = 'like' LIMIT 1`,
       [user.userId, project.id]
     );
 
@@ -87,10 +105,11 @@ export async function POST(
       liked = false;
     } else {
       // Like
+      const intId = generateId("int");
       await query(
-        `INSERT INTO workofhuman.interactions (user_id, project_id, action, created_at)
-         VALUES ($1, $2, 'like', NOW())`,
-        [user.userId, project.id]
+        `INSERT INTO workofhuman.interactions (id, user_id, project_id, type, created_at)
+         VALUES ($1, $2, $3, 'like', NOW())`,
+        [intId, user.userId, project.id]
       );
 
       newCount += 1;
@@ -98,14 +117,17 @@ export async function POST(
 
       // Notify project creator if not liking own work
       if (project.creator_id !== user.userId) {
+        const notifId = generateId("notif");
+        const creatorHandle = project.creator_username || "creator";
         await query(
-          `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
-           VALUES ($1, $2, 'like', $3, $4, false, NOW())`,
+          `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
+           VALUES ($1, $2, 'like', $3, $4, $5, false, NOW())`,
           [
+            notifId,
             project.creator_id,
-            user.userId,
-            `/@${user.username}/${slug}`,
+            "New Appreciation",
             `@${user.username} appreciated your creation "${project.title}".`,
+            `/@${creatorHandle}/${project.slug}`,
           ]
         ).catch(() => {});
       }

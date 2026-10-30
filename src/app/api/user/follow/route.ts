@@ -4,6 +4,12 @@ import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function generateId(prefix: string): string {
+  const ts = Date.now();
+  const rnd = Math.random().toString(36).substring(2, 10);
+  return `${prefix}_${ts}_${rnd}`;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -92,25 +98,27 @@ export async function POST(request: Request) {
       newCount = Math.max(0, newCount - 1);
       following = false;
     } else {
-      // Follow (id has gen_random_uuid() default in schema)
+      // Follow
+      const followId = generateId("fol");
       await query(
-        `INSERT INTO workofhuman.follows (follower_id, following_id, created_at)
-         VALUES ($1, $2, NOW())`,
-        [user.userId, targetUser.user_id]
+        `INSERT INTO workofhuman.follows (id, follower_id, following_id, created_at)
+         VALUES ($1, $2, $3, NOW())`,
+        [followId, user.userId, targetUser.user_id]
       );
 
       newCount += 1;
       following = true;
 
       // Notify followed creator
+      const notifId = generateId("notif");
       await query(
-        `INSERT INTO workofhuman.notifications (user_id, actor_id, type, entity_id, content, read, created_at)
-         VALUES ($1, $2, 'follow', $3, $4, false, NOW())`,
+        `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
+         VALUES ($1, $2, 'follow', 'New Follower', $3, $4, false, NOW())`,
         [
+          notifId,
           targetUser.user_id,
-          user.userId,
-          `/@${user.username}`,
           `@${user.username} started following your portfolio.`,
+          `/@${user.username}`,
         ]
       ).catch(() => {});
     }

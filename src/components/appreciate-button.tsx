@@ -56,7 +56,8 @@ export function AppreciateButton({
         setLiked(prevLiked);
         setCount(prevCount);
         if (res.status === 401) {
-          window.location.href = `/login?redirect=/@undefined/${projectSlug}`;
+          const currentPath = typeof window !== "undefined" ? window.location.pathname : "/explore";
+          window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
         }
         return;
       }

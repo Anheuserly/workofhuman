@@ -57,7 +57,8 @@ export function FollowButton({
         setFollowing(prevFollowing);
         setFollowersCount(prevCount);
         if (res.status === 401) {
-          window.location.href = `/login?redirect=/@${cleanUsername}`;
+          const currentPath = typeof window !== "undefined" ? window.location.pathname : `/@${cleanUsername}`;
+          window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
         }
         return;
       }
