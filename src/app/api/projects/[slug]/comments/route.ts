@@ -40,15 +40,16 @@ export async function GET(
               p.avatar_url
        FROM workofhuman.comments c
        LEFT JOIN workofhuman.profiles p ON p.user_id = c.user_id
-       WHERE c.project_id = $1 OR ($2::text IS NOT NULL AND c.project_id = $2)
+       WHERE c.project_id = $1 OR c.project_id = $2
        ORDER BY c.created_at DESC LIMIT 50`,
-      [cleanSlug, projectId || null]
+      [cleanSlug, projectId || cleanSlug]
     );
 
     return NextResponse.json({ success: true, comments: res.rows });
   } catch (err: unknown) {
     console.error("[Get Comments Error]:", err);
-    return NextResponse.json({ success: false, comments: [] });
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: msg, comments: [] });
   }
 }
 
