@@ -4,10 +4,7 @@ const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://postgres:AnheVps2022@vps.amcmep.in:5432/workofhuman";
 
-export async function query<R extends QueryResultRow = QueryResultRow>(
-  text: string,
-  params?: unknown[]
-): Promise<QueryResult<R>> {
+export async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
   const client = new Client({
     connectionString,
     connectionTimeoutMillis: 5000,
@@ -15,7 +12,7 @@ export async function query<R extends QueryResultRow = QueryResultRow>(
 
   try {
     await client.connect();
-    return await client.query<R>(text, params);
+    return await fn(client);
   } finally {
     try {
       await client.end().catch(() => {});
@@ -23,6 +20,13 @@ export async function query<R extends QueryResultRow = QueryResultRow>(
       // ignore
     }
   }
+}
+
+export async function query<R extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[]
+): Promise<QueryResult<R>> {
+  return withClient((client) => client.query<R>(text, params));
 }
 
 export async function checkDatabaseConnection(): Promise<{ ok: boolean; error?: string; database?: string }> {

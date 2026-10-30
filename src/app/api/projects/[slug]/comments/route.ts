@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { query } from "@/lib/db";
+import { query, withClient } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +18,6 @@ export async function GET(
     const { slug } = await params;
     const cleanSlug = decodeURIComponent(slug || "").trim();
 
-    // Find project to get both ID and slug
-    const projRes = await query<{ id: string }>(
-      `SELECT id FROM workofhuman.projects WHERE slug = $1 OR slug = $2 LIMIT 1`,
-      [cleanSlug, slug]
-    );
-    const projectId = projRes.rows[0]?.id;
-
     const res = await query<{
       id: string;
       content: string;
@@ -40,9 +33,10 @@ export async function GET(
               p.avatar_url
        FROM workofhuman.comments c
        LEFT JOIN workofhuman.profiles p ON p.user_id = c.user_id
-       WHERE c.project_id = $1 OR c.project_id = $2
+       JOIN workofhuman.projects pr ON (c.project_id = pr.id OR c.project_id = pr.slug)
+       WHERE pr.slug = $1 OR pr.slug = $2
        ORDER BY c.created_at DESC LIMIT 50`,
-      [cleanSlug, projectId || cleanSlug]
+      [cleanSlug, slug]
     );
 
     return NextResponse.json({ success: true, comments: res.rows });
@@ -77,66 +71,68 @@ export async function POST(
     const { slug } = await params;
     const cleanSlug = decodeURIComponent(slug || "").trim();
 
-    // Look up project
-    const projRes = await query<{
-      id: string;
-      creator_id: string;
-      title: string;
-      slug: string;
-      creator_username?: string;
-    }>(
-      `SELECT p.id, p.creator_id, p.title, p.slug, pr.username as creator_username
-       FROM workofhuman.projects p
-       LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
-      [cleanSlug, slug]
-    );
+    return await withClient(async (client) => {
+      // Look up project
+      const projRes = await client.query<{
+        id: string;
+        creator_id: string;
+        title: string;
+        slug: string;
+        creator_username?: string;
+      }>(
+        `SELECT p.id, p.creator_id, p.title, p.slug, pr.username as creator_username
+         FROM workofhuman.projects p
+         LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
+         WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+        [cleanSlug, slug]
+      );
 
-    if (projRes.rows.length === 0) {
-      return NextResponse.json({ error: "Project not found." }, { status: 404 });
-    }
+      if (projRes.rows.length === 0) {
+        return NextResponse.json({ error: "Project not found." }, { status: 404 });
+      }
 
-    const project = projRes.rows[0];
-    const commentId = generateId("cm");
+      const project = projRes.rows[0];
+      const commentId = generateId("cm");
 
-    await query(
-      `INSERT INTO workofhuman.comments (id, project_id, user_id, content, likes_count, created_at)
-       VALUES ($1, $2, $3, $4, 0, NOW())`,
-      [commentId, project.id, user.userId, content.trim()]
-    );
+      await client.query(
+        `INSERT INTO workofhuman.comments (id, project_id, user_id, content, likes_count, created_at)
+         VALUES ($1, $2, $3, $4, 0, NOW())`,
+        [commentId, project.id, user.userId, content.trim()]
+      );
 
-    // Notify project creator if not commenting on own work
-    if (project.creator_id !== user.userId) {
-      const notifId = generateId("notif");
-      const creatorHandle = project.creator_username || "creator";
-      await query(
-        `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
-         VALUES ($1, $2, 'comment', $3, $4, $5, false, NOW())`,
-        [
-          notifId,
-          project.creator_id,
-          "New Feedback on Creation",
-          `@${user.username} commented on your creation "${project.title}".`,
-          `/@${creatorHandle}/${project.slug}`,
-        ]
-      ).catch((e) => console.warn("Failed to create notification:", e));
-    }
+      // Notify project creator if not commenting on own work
+      if (project.creator_id !== user.userId) {
+        const notifId = generateId("notif");
+        const creatorHandle = project.creator_username || "creator";
+        await client.query(
+          `INSERT INTO workofhuman.notifications (id, user_id, type, title, message, link, is_read, created_at)
+           VALUES ($1, $2, 'comment', $3, $4, $5, false, NOW())`,
+          [
+            notifId,
+            project.creator_id,
+            "New Feedback on Creation",
+            `@${user.username} commented on your creation "${project.title}".`,
+            `/@${creatorHandle}/${project.slug}`,
+          ]
+        ).catch((e) => console.warn("Failed to create notification:", e));
+      }
 
-    return NextResponse.json(
-      {
-        success: true,
-        comment: {
-          id: commentId,
-          content: content.trim(),
-          likes_count: 0,
-          created_at: new Date().toISOString(),
-          username: user.username,
-          display_name: user.displayName || user.username,
-          avatar_url: user.avatarUrl || null,
+      return NextResponse.json(
+        {
+          success: true,
+          comment: {
+            id: commentId,
+            content: content.trim(),
+            likes_count: 0,
+            created_at: new Date().toISOString(),
+            username: user.username,
+            display_name: user.displayName || user.username,
+            avatar_url: user.avatarUrl || null,
+          },
         },
-      },
-      { status: 201 }
-    );
+        { status: 201 }
+      );
+    });
   } catch (err: unknown) {
     console.error("[Create Comment Error]:", err);
     const msg = err instanceof Error ? err.message : "Failed to post comment.";
