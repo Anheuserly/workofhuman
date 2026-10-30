@@ -178,9 +178,13 @@ export default async function ProjectDetailPage({
             {/* Metrics & Appreciate Button */}
             <div className="flex items-center gap-3 sm:gap-4 text-[#8c857b]">
               {project.publishedAt && (
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1" suppressHydrationWarning>
                   <Calendar size={13} />
-                  {new Date(project.publishedAt).toLocaleDateString()}
+                  {new Date(project.publishedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </span>
               )}
               <span className="inline-flex items-center gap-1">

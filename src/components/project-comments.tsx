@@ -172,8 +172,12 @@ export function ProjectComments({ projectSlug }: { projectSlug: string }) {
                       @{cm.username}
                     </span>
                   </div>
-                  <span className="text-[10px] text-[#8c857b]">
-                    {new Date(cm.created_at).toLocaleDateString()}
+                  <span className="text-[10px] text-[#8c857b]" suppressHydrationWarning>
+                    {new Date(cm.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </span>
                 </div>
                 <p className="mt-1.5 text-xs text-[#2c2825] leading-relaxed whitespace-pre-wrap">

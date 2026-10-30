@@ -1,4 +1,4 @@
-import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
+import { Pool, QueryResult, QueryResultRow } from "pg";
 
 const connectionString =
   process.env.DATABASE_URL ||
@@ -10,19 +10,20 @@ export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString,
-      options: "-c search_path=workofhuman,public",
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 6000,
-    });
-
-    pool.on("connect", (client: PoolClient) => {
-      // Redundant safeguard to ensure all queries check workofhuman schema first
-      client.query("SET search_path TO workofhuman, public;").catch(() => {});
+      max: 5,
+      idleTimeoutMillis: 2000,
+      connectionTimeoutMillis: 4000,
     });
 
     pool.on("error", (err) => {
       console.error("[PostgreSQL Pool Error]:", err.message);
+      // Discard broken pool so the next query initializes a fresh connection
+      try {
+        pool?.end().catch(() => {});
+      } catch {
+        // ignore
+      }
+      pool = null;
     });
   }
   return pool;
@@ -32,8 +33,30 @@ export async function query<R extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<R>> {
-  const p = getPool();
-  return p.query<R>(text, params);
+  try {
+    const p = getPool();
+    return await p.query<R>(text, params);
+  } catch (err) {
+    // If connection was dropped or timed out, reset pool and retry once
+    const msg = err instanceof Error ? err.message : String(err);
+    if (
+      msg.includes("Connection terminated") ||
+      msg.includes("timeout") ||
+      msg.includes("closed") ||
+      msg.includes("ECONNRESET")
+    ) {
+      console.warn("[PostgreSQL query retry after error]:", msg);
+      try {
+        await pool?.end().catch(() => {});
+      } catch {
+        // ignore
+      }
+      pool = null;
+      const freshPool = getPool();
+      return await freshPool.query<R>(text, params);
+    }
+    throw err;
+  }
 }
 
 export async function checkDatabaseConnection(): Promise<{ ok: boolean; error?: string; database?: string }> {
