@@ -1,61 +1,27 @@
-import { Pool, QueryResult, QueryResultRow } from "pg";
+import { Client, QueryResult, QueryResultRow } from "pg";
 
 const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://postgres:AnheVps2022@vps.amcmep.in:5432/workofhuman";
 
-let pool: Pool | null = null;
-
-export function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
-      connectionString,
-      max: 5,
-      idleTimeoutMillis: 2000,
-      connectionTimeoutMillis: 4000,
-    });
-
-    pool.on("error", (err) => {
-      console.error("[PostgreSQL Pool Error]:", err.message);
-      // Discard broken pool so the next query initializes a fresh connection
-      try {
-        pool?.end().catch(() => {});
-      } catch {
-        // ignore
-      }
-      pool = null;
-    });
-  }
-  return pool;
-}
-
 export async function query<R extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[]
 ): Promise<QueryResult<R>> {
+  const client = new Client({
+    connectionString,
+    connectionTimeoutMillis: 5000,
+  });
+
   try {
-    const p = getPool();
-    return await p.query<R>(text, params);
-  } catch (err) {
-    // If connection was dropped or timed out, reset pool and retry once
-    const msg = err instanceof Error ? err.message : String(err);
-    if (
-      msg.includes("Connection terminated") ||
-      msg.includes("timeout") ||
-      msg.includes("closed") ||
-      msg.includes("ECONNRESET")
-    ) {
-      console.warn("[PostgreSQL query retry after error]:", msg);
-      try {
-        await pool?.end().catch(() => {});
-      } catch {
-        // ignore
-      }
-      pool = null;
-      const freshPool = getPool();
-      return await freshPool.query<R>(text, params);
+    await client.connect();
+    return await client.query<R>(text, params);
+  } finally {
+    try {
+      await client.end().catch(() => {});
+    } catch {
+      // ignore
     }
-    throw err;
   }
 }
 
