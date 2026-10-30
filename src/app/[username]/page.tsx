@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { PageShell } from "@/components/shell";
 import { ProjectCard } from "@/components/project-card";
 import { getProfileByUsername } from "@/lib/home-data";
@@ -19,10 +18,6 @@ export default async function CreatorProfilePage({
   const decoded = decodeURIComponent(username || "");
   const cleanHandle = decoded.replace(/^[@%40]+/, "").trim().toLowerCase();
   const { profile, projects } = await getProfileByUsername(cleanHandle);
-
-  if (profile && cleanHandle !== profile.username.toLowerCase()) {
-    redirect(`/@${profile.username}`);
-  }
 
   if (!profile && projects.length === 0) {
     return (

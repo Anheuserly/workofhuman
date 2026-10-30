@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -65,12 +64,6 @@ export default async function ProjectDetailPage({
         </section>
       </PageShell>
     );
-  }
-
-  // Canonical creator handle check:
-  // If the creator username is known and the URL has a different or undefined username, redirect to canonical route
-  if (project.creatorUsername && cleanUsername !== project.creatorUsername.toLowerCase()) {
-    redirect(`/@${project.creatorUsername}/${project.slug}`);
   }
 
   const effectiveUsername =
