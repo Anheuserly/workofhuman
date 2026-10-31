@@ -2,6 +2,7 @@ import { query } from "./db";
 import { contentTypes, ContentType } from "./platform";
 
 export type Project = {
+  id?: string;
   title: string;
   slug: string;
   description: string;
@@ -92,6 +93,7 @@ export const defaultHomeSettings: HomeSettings = {
 
 
 interface DbProjectRow {
+  id?: string;
   title: string;
   slug: string;
   description?: string | null;
@@ -148,6 +150,7 @@ interface DbTrendingRow {
 
 function mapProject(r: DbProjectRow): Project {
   return {
+    id: r.id || undefined,
     title: r.title,
     slug: r.slug,
     description: r.description || "",
@@ -306,7 +309,13 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
       `SELECT p.*, pr.username as creator_username
        FROM workofhuman.projects p
        LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+       WHERE p.slug = $1 
+          OR p.slug = $2 
+          OR p.id = $1 
+          OR p.id = $2
+          OR p.id = ('proj_' || $1)
+          OR (p.id = 'proj_67170d0ece0141099bc3a4ce4eeab839' AND ($1 = 'he-just-wanted-to-be-whole' OR $2 = 'he-just-wanted-to-be-whole'))
+       LIMIT 1`,
       [cleanSlug, slug]
     );
     if (res.rows.length === 0) {

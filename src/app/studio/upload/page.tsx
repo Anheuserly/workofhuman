@@ -1009,7 +1009,10 @@ export default function UploadStudioPage() {
                       value={title}
                       onChange={(e) => {
                         setTitle(e.target.value);
-                        if (!slug || slug === title.toLowerCase().replace(/[^\w-]/g, "-")) {
+                        const isVideo =
+                          mediaUrls.some((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
+                          ["films", "short_movies", "cinematic_edits", "animations", "ai_films", "video"].includes(type);
+                        if (!isVideo && (!slug || slug === title.toLowerCase().replace(/[^\w-]/g, "-"))) {
                           setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, ""));
                         }
                       }}
@@ -1020,13 +1023,13 @@ export default function UploadStudioPage() {
 
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Custom URL Slug <span className="text-xs font-normal lowercase text-[#8c857b]">(theworkofhuman.com/@username/slug)</span>
+                      Custom URL Slug <span className="text-xs font-normal lowercase text-[#8c857b]">(Leave empty for auto unique ID)</span>
                     </label>
                     <input
                       type="text"
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
-                      placeholder="my-creation-slug"
+                      placeholder="Leave empty for unique content ID (e.g. proj_...)"
                       className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] font-mono placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
                     />
                   </div>

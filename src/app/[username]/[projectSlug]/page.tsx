@@ -134,6 +134,11 @@ export default async function ProjectDetailPage({
                 AI Disclosed: {project.aiModel || "Generative AI"}
               </span>
             )}
+
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#f6f4ef] border border-[#ded9cf] px-2.5 py-1 text-[11px] font-mono text-[#6f6a61]">
+              <span className="text-[#0f766e] font-semibold">{videoAsset ? "VIDEO ID:" : "ID:"}</span>
+              <span className="font-bold text-[#151515]">{project.id || project.slug}</span>
+            </span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#151515]">

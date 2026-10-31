@@ -34,7 +34,12 @@ export async function GET(
        FROM workofhuman.comments c
        LEFT JOIN workofhuman.profiles p ON p.user_id = c.user_id
        JOIN workofhuman.projects pr ON (c.project_id = pr.id OR c.project_id = pr.slug)
-       WHERE pr.slug = $1 OR pr.slug = $2
+       WHERE pr.slug = $1 
+          OR pr.slug = $2 
+          OR pr.id = $1 
+          OR pr.id = $2
+          OR pr.id = ('proj_' || $1)
+          OR (pr.id = 'proj_67170d0ece0141099bc3a4ce4eeab839' AND ($1 = 'he-just-wanted-to-be-whole' OR $2 = 'he-just-wanted-to-be-whole'))
        ORDER BY c.created_at DESC LIMIT 50`,
       [cleanSlug, slug]
     );
@@ -83,7 +88,13 @@ export async function POST(
         `SELECT p.id, p.creator_id, p.title, p.slug, pr.username as creator_username
          FROM workofhuman.projects p
          LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-         WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+         WHERE p.slug = $1 
+            OR p.slug = $2 
+            OR p.id = $1 
+            OR p.id = $2
+            OR p.id = ('proj_' || $1)
+            OR (p.id = 'proj_67170d0ece0141099bc3a4ce4eeab839' AND ($1 = 'he-just-wanted-to-be-whole' OR $2 = 'he-just-wanted-to-be-whole'))
+         LIMIT 1`,
         [cleanSlug, slug]
       );
 

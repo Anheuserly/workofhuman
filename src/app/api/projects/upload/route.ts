@@ -73,27 +73,38 @@ export async function POST(request: Request) {
       aiModel,
     } = parsed.data;
 
-    // Generate unique slug
-    let baseSlug = customSlug && customSlug.length > 0 ? slugify(customSlug) : slugify(title);
-    if (!baseSlug) baseSlug = `project-${Date.now().toString(36)}`;
-
-    // Ensure slug uniqueness
-    let finalSlug = baseSlug;
-    const existingSlug = await query(
-      `SELECT id FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
-      [finalSlug]
-    );
-    if (existingSlug.rows.length > 0) {
-      const shortSuffix =
-        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID().replace(/-/g, "").slice(0, 6)
-          : Math.random().toString(36).substring(2, 8);
-      finalSlug = `${baseSlug}-${shortSuffix}`;
-    }
-
     const projectId = generateId("proj");
     const cleanMediaUrls = mediaUrls.filter((url) => Boolean(url && url.length > 0));
     const cleanTags = tags.filter((t) => Boolean(t && t.length > 0));
+
+    const isVideoProject =
+      cleanMediaUrls.some((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
+      ["films", "short_movies", "cinematic_edits", "animations", "ai_films", "video"].includes(type);
+
+    // Generate unique slug: if video and no custom slug given, show as unique ID
+    let finalSlug = projectId;
+    if (customSlug && customSlug.trim().length > 0) {
+      finalSlug = slugify(customSlug);
+    } else if (!isVideoProject && title) {
+      finalSlug = slugify(title);
+    }
+
+    if (!finalSlug) finalSlug = projectId;
+
+    // Ensure slug uniqueness
+    if (finalSlug !== projectId) {
+      const existingSlug = await query(
+        `SELECT id FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
+        [finalSlug]
+      );
+      if (existingSlug.rows.length > 0) {
+        const shortSuffix =
+          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID().replace(/-/g, "").slice(0, 6)
+            : Math.random().toString(36).substring(2, 8);
+        finalSlug = `${finalSlug}-${shortSuffix}`;
+      }
+    }
 
     await query(
       `INSERT INTO workofhuman.projects (

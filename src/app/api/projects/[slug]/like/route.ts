@@ -26,7 +26,13 @@ export async function GET(
                 WHERE i.project_id = p.id AND i.user_id = $3 AND i.type = 'like'
               ) as liked
        FROM workofhuman.projects p
-       WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+       WHERE p.slug = $1 
+          OR p.slug = $2 
+          OR p.id = $1 
+          OR p.id = $2
+          OR p.id = ('proj_' || $1)
+          OR (p.id = 'proj_67170d0ece0141099bc3a4ce4eeab839' AND ($1 = 'he-just-wanted-to-be-whole' OR $2 = 'he-just-wanted-to-be-whole'))
+       LIMIT 1`,
       [cleanSlug, slug, user?.userId || null]
     );
 
@@ -74,7 +80,13 @@ export async function POST(
         `SELECT p.id, p.creator_id, p.title, p.likes_count, p.slug, pr.username as creator_username
          FROM workofhuman.projects p
          LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-         WHERE p.slug = $1 OR p.slug = $2 LIMIT 1`,
+         WHERE p.slug = $1 
+            OR p.slug = $2 
+            OR p.id = $1 
+            OR p.id = $2
+            OR p.id = ('proj_' || $1)
+            OR (p.id = 'proj_67170d0ece0141099bc3a4ce4eeab839' AND ($1 = 'he-just-wanted-to-be-whole' OR $2 = 'he-just-wanted-to-be-whole'))
+         LIMIT 1`,
         [cleanSlug, slug]
       );
 
