@@ -74,8 +74,71 @@ export default async function Home() {
             </div>
           </div>
 
-          {data.projects.length > 0 ? (
-            <div className="grid min-h-[460px] grid-cols-12 grid-rows-6 gap-3">
+          {data.projects.length === 1 && heroP0 ? (
+            /* Single Featured Creation Spotlight Card - No Empty Dummy Placeholders */
+            <div className="relative group rounded-2xl overflow-hidden border border-[#ded9cf] bg-white shadow-xs hover:shadow-md transition">
+              <Link href={heroP0Href} className="block relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden bg-[#151515]">
+                {heroP0.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={heroP0.title}
+                    src={heroP0.thumbnailUrl}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-[#151515] text-white/50 text-xs font-mono">
+                    Featured Creation
+                  </div>
+                )}
+
+                {/* Subtle dark gradient overlay for text contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                {/* Top Badges */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white border border-white/10">
+                    <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Featured Creation
+                  </div>
+
+                  <span className="rounded-full bg-white/95 backdrop-blur-md px-3 py-1 text-[10px] font-bold text-[#151515] uppercase tracking-wider capitalize shadow-2xs">
+                    {heroP0.type.replaceAll("_", " ")}
+                  </span>
+                </div>
+
+                {/* Bottom Content Overlay */}
+                <div className="absolute bottom-4 left-4 right-4 text-white space-y-1.5">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-sm group-hover:text-emerald-300 transition line-clamp-1">
+                    {heroP0.title}
+                  </h2>
+                  <div className="flex items-center gap-2 text-xs text-white/80 font-mono">
+                    <span>@{heroP0.creatorUsername || heroP0.creatorShortId || "creator"}</span>
+                    {heroP0.aiGenerated && (
+                      <span className="inline-flex items-center gap-1 text-[10px] bg-[#0f766e]/90 text-white px-2 py-0.5 rounded-full font-sans font-semibold">
+                        <Sparkles size={11} />
+                        AI Disclosed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+
+              {/* Card Footer Bar */}
+              <div className="p-4 sm:p-5 flex items-center justify-between bg-white border-t border-[#ded9cf] gap-3">
+                <p className="text-xs text-[#6f6a61] line-clamp-1 flex-1">
+                  {heroP0.description || "Original creative work on The Work of Human."}
+                </p>
+                <Link
+                  href={heroP0Href}
+                  className="button-primary shrink-0 text-xs !py-1.5 !px-3.5 font-bold"
+                >
+                  Experience Work &rarr;
+                </Link>
+              </div>
+            </div>
+          ) : data.projects.length > 1 ? (
+            /* Multi-card grid for 2+ real creations */
+            <div className="grid min-h-[460px] grid-cols-12 gap-3">
               <Link href={heroP0Href} className="media-tile col-span-7 row-span-4 rounded-xl relative overflow-hidden bg-[#e6dfd1] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
                 {heroP0?.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -95,71 +158,67 @@ export default async function Home() {
                     </div>
                   </div>
                 )}
-                {/* Play Badge */}
                 <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Featured Creation
                 </div>
               </Link>
 
-              <Link href={heroP1Href} className="media-tile col-span-5 row-span-3 rounded-xl relative overflow-hidden bg-[#ded7c8] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
-                {heroP1?.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt={heroP1.title}
-                    src={heroP1.thumbnailUrl}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
+              {heroP1 && (
+                <Link href={heroP1Href} className="media-tile col-span-5 row-span-3 rounded-xl relative overflow-hidden bg-[#ded7c8] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
+                  {heroP1.thumbnailUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt={heroP1.title}
+                      src={heroP1.thumbnailUrl}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="flex h-full flex-col justify-between p-5">
                     <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-xs">
-                      {heroP1?.type || "Featured Study"}
+                      {heroP1.type || "Featured Study"}
                     </span>
                     <div>
-                      <h4 className="text-base font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP1?.title}</h4>
-                      <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1?.creatorName}</p>
+                      <h4 className="text-base font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP1.title}</h4>
+                      <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1.creatorName}</p>
                     </div>
                   </div>
-                )}
-              </Link>
+                </Link>
+              )}
 
-              <div className="col-span-5 row-span-2 rounded-xl border border-[#ded9cf] bg-white p-4 shadow-xs flex flex-col justify-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0f766e]">Indexed Mediums</p>
-                <p className="mt-1 text-2xl font-bold text-[#151515]">{data.categories.length}</p>
-                <p className="text-[11px] text-[#6f6a61]">creative formats ready</p>
-              </div>
-
-              <Link href={heroP2Href} className="media-tile col-span-4 row-span-2 rounded-xl relative overflow-hidden bg-[#e3ddd1] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
-                {heroP2?.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt={heroP2.title}
-                    src={heroP2.thumbnailUrl}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
+              {heroP2 && (
+                <Link href={heroP2Href} className="media-tile col-span-4 row-span-2 rounded-xl relative overflow-hidden bg-[#e3ddd1] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
+                  {heroP2.thumbnailUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt={heroP2.title}
+                      src={heroP2.thumbnailUrl}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="flex h-full flex-col justify-center p-3">
-                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP2?.type}</span>
-                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP2?.title}</p>
+                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP2.type}</span>
+                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP2.title}</p>
                   </div>
-                )}
-              </Link>
+                </Link>
+              )}
 
-              <Link href={heroP3Href} className="media-tile col-span-8 row-span-2 rounded-xl relative overflow-hidden bg-[#ede7dc] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
-                {heroP3?.thumbnailUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt={heroP3.title}
-                    src={heroP3.thumbnailUrl}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
+              {heroP3 && (
+                <Link href={heroP3Href} className="media-tile col-span-8 row-span-2 rounded-xl relative overflow-hidden bg-[#ede7dc] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
+                  {heroP3.thumbnailUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt={heroP3.title}
+                      src={heroP3.thumbnailUrl}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  )}
                   <div className="flex h-full flex-col justify-center p-4">
-                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP3?.type}</span>
-                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP3?.title}</p>
+                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP3.type}</span>
+                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP3.title}</p>
                   </div>
-                )}
-              </Link>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="surface p-8 sm:p-10 flex flex-col justify-between shadow-xs min-h-[420px] rounded-2xl border border-[#ded9cf]">
@@ -198,20 +257,6 @@ export default async function Home() {
           )}
         </div>
       </section>
-
-      {/* Mobile hero showcase */}
-      <Link href={heroP0Href} className="media-tile h-64 rounded-xl sm:hidden relative overflow-hidden bg-[#e6dfd1] block transition hover:ring-2 hover:ring-[#0f766e] mb-12 border border-[#ded9cf]">
-        {heroP0?.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt={heroP0.title} src={heroP0.thumbnailUrl} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full flex-col justify-center p-6 text-center">
-            <span className="text-xs font-semibold text-[#0f766e]">33 Creative Disciplines</span>
-            <p className="mt-2 text-xl font-bold text-[#151515]">A home for serious creative work.</p>
-            <p className="mt-2 text-xs text-[#6f6a61]">The global stage for authentic craftsmanship and transparent AI experiments.</p>
-          </div>
-        )}
-      </Link>
 
       <section className="py-12 border-t border-[#ded9cf]">
         <SectionIntro eyebrow="Trending now" title="Creations moving through culture." href="/trending" />

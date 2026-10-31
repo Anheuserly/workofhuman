@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
@@ -13,6 +14,7 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   Loader2,
+  Lock,
   Music,
   Sparkles,
   Tag,
@@ -154,6 +156,13 @@ export default function UploadStudioPage() {
     window.addEventListener("woh_auth_change", onAuthChange);
     return () => window.removeEventListener("woh_auth_change", onAuthChange);
   }, [checkAuth]);
+
+  // Protect upload studio: redirect to login if unauthenticated
+  useEffect(() => {
+    if (!authLoading && !currentUser) {
+      router.replace("/login?redirect=/studio/upload");
+    }
+  }, [authLoading, currentUser, router]);
 
   function formatBytes(bytes: number) {
     if (bytes === 0) return "0 B";
@@ -458,7 +467,39 @@ export default function UploadStudioPage() {
         {authLoading ? (
           <div className="surface p-12 text-center max-w-md mx-auto">
             <Loader2 className="mx-auto animate-spin text-[#0f766e]" size={28} />
-            <p className="mt-3 text-xs font-semibold text-[#6f6a61]">Loading Creative Studio...</p>
+            <p className="mt-3 text-xs font-semibold text-[#6f6a61]">Verifying creator credentials...</p>
+          </div>
+        ) : !currentUser ? (
+          <div className="surface p-8 sm:p-12 text-center max-w-md mx-auto rounded-2xl border border-[#ded9cf] space-y-5 shadow-xs my-6">
+            <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#0f766e]/10 text-[#0f766e]">
+              <Lock size={26} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
+                Creator Studio Access
+              </span>
+              <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[#151515]">
+                Authentication Required
+              </h1>
+              <p className="mt-2 text-xs leading-relaxed text-[#6f6a61]">
+                Only authenticated creators can access the Creative Upload Studio. Please sign in to publish your work.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2.5">
+              <Link
+                href="/login?redirect=/studio/upload"
+                className="button-primary w-full justify-center !py-2.5 text-xs font-bold"
+              >
+                Sign In to Your Account
+              </Link>
+              <Link
+                href="/register?redirect=/studio/upload"
+                className="button-secondary w-full justify-center !py-2.5 text-xs font-bold"
+              >
+                Create New Creator Profile
+              </Link>
+            </div>
           </div>
         ) : activeSection === "preview" ? (
           /* ============================================================ */

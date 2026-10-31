@@ -1,16 +1,47 @@
-import { ArrowRight, Bell, Search } from "lucide-react";
+"use client";
+
+import { createContext, useContext, useState, useEffect } from "react";
+import { ArrowRight, Bell, Search, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { HeaderUserNav } from "@/components/user-nav";
 import { Logo } from "@/components/logo";
 import { MobileMenu } from "@/components/mobile-menu";
 import { AppSidebar, MobileBottomBar } from "@/components/app-sidebar";
 
+interface SidebarContextType {
+  collapsed: boolean;
+  toggleSidebar: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextType>({
+  collapsed: false,
+  toggleSidebar: () => {},
+});
+
+export function useSidebar() {
+  return useContext(SidebarContext);
+}
+
 export function AppTopBar() {
+  const { collapsed, toggleSidebar } = useSidebar();
+
   return (
-    <header className="sticky top-0 z-30 h-16 w-full border-b border-[#ded9cf] bg-white/95 px-4 sm:px-6 backdrop-blur-md flex items-center justify-between gap-4">
-      {/* Mobile Logo on small screens */}
-      <div className="flex items-center lg:hidden">
-        <Logo size="sm" />
+    <header className="sticky top-0 z-30 h-16 w-full border-b border-[#ded9cf] bg-white/95 px-4 sm:px-6 backdrop-blur-md flex items-center justify-between gap-3 sm:gap-4">
+      {/* Left: Mobile Logo & Desktop Sidebar Toggle */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center lg:hidden">
+          <Logo size="sm" />
+        </div>
+
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="hidden lg:grid size-8 place-items-center rounded-lg text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
+          title={collapsed ? "Expand sidebar (Full menu)" : "Minimize sidebar (Compact rail)"}
+          aria-label={collapsed ? "Expand sidebar" : "Minimize sidebar"}
+        >
+          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+        </button>
       </div>
 
       {/* Global App Search Input */}
@@ -60,22 +91,47 @@ export function SiteHeader() {
 }
 
 export function PageShell({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("woh_sidebar_minimized");
+      if (saved === "true") setCollapsed(true);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("woh_sidebar_minimized", next ? "true" : "false");
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#151515] flex antialiased">
-      {/* Desktop App Sidebar Rail */}
-      <AppSidebar />
+    <SidebarContext.Provider value={{ collapsed, toggleSidebar }}>
+      <div className="min-h-screen bg-[#faf8f5] text-[#151515] flex antialiased">
+        {/* Desktop App Sidebar Rail */}
+        <AppSidebar />
 
-      {/* Main Application Area */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <AppTopBar />
-        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 max-w-7xl w-full mx-auto pb-20 lg:pb-12">
-          {children}
-        </main>
+        {/* Main Application Area */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <AppTopBar />
+          <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 max-w-7xl w-full mx-auto pb-20 lg:pb-12">
+            {children}
+          </main>
+        </div>
+
+        {/* Mobile Bottom App Navigation */}
+        <MobileBottomBar />
       </div>
-
-      {/* Mobile Bottom App Navigation */}
-      <MobileBottomBar />
-    </div>
+    </SidebarContext.Provider>
   );
 }
 

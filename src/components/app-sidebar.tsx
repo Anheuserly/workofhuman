@@ -9,8 +9,11 @@ import {
   Video,
   Sparkles,
   Users,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
+import { useSidebar } from "@/components/shell";
 
 interface NavItem {
   href: string;
@@ -29,6 +32,7 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { collapsed, toggleSidebar } = useSidebar();
 
   function isActive(href: string) {
     if (href === "/") {
@@ -41,18 +45,40 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col justify-between border-r border-[#ded9cf] bg-white sticky top-0 h-screen select-none">
+    <aside
+      className={`hidden lg:flex shrink-0 flex-col justify-between border-r border-[#ded9cf] bg-white sticky top-0 h-screen select-none transition-all duration-200 z-20 ${
+        collapsed ? "w-[72px]" : "w-64"
+      }`}
+    >
       <div>
         {/* Brand App Header */}
-        <div className="h-16 flex items-center px-5 border-b border-[#ded9cf]/60">
-          <Logo size="sm" />
+        <div
+          className={`h-16 flex items-center border-b border-[#ded9cf]/60 ${
+            collapsed ? "justify-center px-2" : "justify-between px-4"
+          }`}
+        >
+          <Logo size="sm" showWordmark={!collapsed} />
+
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="grid size-8 place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
+              title="Minimize sidebar"
+              aria-label="Minimize sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          )}
         </div>
 
         {/* Primary Navigation Links */}
-        <div className="p-3 space-y-1">
-          <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8c857b]">
-            Discovery
-          </div>
+        <div className={`space-y-1 ${collapsed ? "p-2" : "p-3"}`}>
+          {!collapsed && (
+            <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8c857b]">
+              Discovery
+            </div>
+          )}
           {mainNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -60,25 +86,52 @@ export function AppSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition ${
+                className={`group relative flex items-center rounded-xl text-xs transition ${
+                  collapsed
+                    ? "justify-center size-12 mx-auto"
+                    : "gap-3 px-3 py-2.5"
+                } ${
                   active
                     ? "bg-[#151515] text-white shadow-xs font-bold"
                     : "text-[#555047] hover:bg-[#f6f4ef] hover:text-[#151515] font-semibold"
                 }`}
+                title={collapsed ? item.label : undefined}
               >
-                <Icon size={16} className={active ? "text-[#0f766e]" : "text-[#8c857b]"} />
-                <span>{item.label}</span>
+                <Icon
+                  size={18}
+                  className={active ? "text-[#0f766e]" : "text-[#8c857b] group-hover:text-[#151515]"}
+                />
+                {!collapsed ? (
+                  <span>{item.label}</span>
+                ) : (
+                  /* Floating Tooltip */
+                  <span className="pointer-events-none absolute left-full ml-3 hidden group-hover:block z-50 rounded-lg bg-[#151515] px-2.5 py-1 text-xs font-semibold text-white shadow-lg whitespace-nowrap">
+                    {item.label}
+                  </span>
+                )}
               </Link>
             );
           })}
         </div>
       </div>
 
-      {/* Minimal Footer */}
-      <div className="p-4 border-t border-[#ded9cf]/60 text-center">
-        <p className="text-[10px] text-[#8c857b] font-medium tracking-wide">
-          The Work of Human &copy; 2026
-        </p>
+      {/* Footer / Expand Rail button */}
+      <div className={`border-t border-[#ded9cf]/60 ${collapsed ? "p-2 text-center" : "p-4 text-center"}`}>
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="grid size-9 mx-auto place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
+        ) : (
+          <p className="text-[10px] text-[#8c857b] font-medium tracking-wide">
+            The Work of Human &copy; 2026
+          </p>
+        )}
       </div>
     </aside>
   );
