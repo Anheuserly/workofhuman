@@ -13,12 +13,13 @@ interface HomeProjectFeedProps {
 const CATEGORY_CHIPS = [
   { id: "all", label: "All Works" },
   { id: "video", label: "Cinema & Video", types: ["films", "short_movies", "cinematic_edits", "animations", "ai_films", "video"] },
+  { id: "paintings", label: "Paintings & Fine Art", types: ["paintings", "digital_art", "handmade_crafts"] },
+  { id: "books", label: "Books & Writing", types: ["books", "stories", "poetry", "articles", "blogs"] },
+  { id: "architecture", label: "Architecture & Spatial", types: ["architecture", "3d_models", "inventions"] },
+  { id: "digital_art", label: "Digital Art", types: ["digital_art", "photography", "ai_generated_art"] },
   { id: "ai", label: "AI Creations", onlyAi: true },
-  { id: "digital_art", label: "Digital Art", types: ["digital_art", "paintings", "photography", "ai_generated_art"] },
-  { id: "3d", label: "3D & Animation", types: ["animations", "3d_models", "indie_games"] },
   { id: "music", label: "Music & Audio", types: ["music", "songs", "podcasts", "audio_tracks", "ai_music"] },
-  { id: "writing", label: "Writing & Stories", types: ["stories", "poetry", "books", "articles", "blogs"] },
-  { id: "code", label: "Code & Inventions", types: ["coding_projects", "websites", "apps", "inventions", "startup_ideas"] },
+  { id: "code", label: "Code & Inventions", types: ["coding_projects", "websites", "apps", "startup_ideas"] },
 ];
 
 export function HomeProjectFeed({ projects }: HomeProjectFeedProps) {

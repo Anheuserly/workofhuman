@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import { ArrowRight, Bell, Search, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowRight, Bell, Search, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { HeaderUserNav } from "@/components/user-nav";
 import { Logo } from "@/components/logo";
@@ -27,21 +27,23 @@ export function AppTopBar() {
 
   return (
     <header className="sticky top-0 z-30 h-16 w-full border-b border-[#ded9cf] bg-white/95 px-4 sm:px-6 backdrop-blur-md flex items-center justify-between gap-3 sm:gap-4">
-      {/* Left: Mobile Logo & Desktop Sidebar Toggle */}
+      {/* Left: Mobile Logo & Desktop Sidebar Toggle (Only when sidebar is collapsed) */}
       <div className="flex items-center gap-2">
         <div className="flex items-center lg:hidden">
           <Logo size="sm" />
         </div>
 
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="hidden lg:grid size-8 place-items-center rounded-lg text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
-          title={collapsed ? "Expand sidebar (Full menu)" : "Minimize sidebar (Compact rail)"}
-          aria-label={collapsed ? "Expand sidebar" : "Minimize sidebar"}
-        >
-          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
+        {collapsed && (
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="hidden lg:grid size-8 place-items-center rounded-lg text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515] transition cursor-pointer"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+        )}
       </div>
 
       {/* Global App Search Input */}

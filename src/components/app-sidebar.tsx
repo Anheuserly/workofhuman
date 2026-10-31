@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,8 +10,9 @@ import {
   Video,
   Sparkles,
   Palette,
-  Music,
   BookOpen,
+  Building2,
+  Music,
   Code,
   Users,
   PanelLeftClose,
@@ -25,6 +27,16 @@ interface NavItem {
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }
 
+interface CreatorItem {
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  short_id: string | null;
+  followers_count?: number;
+  verified?: boolean;
+}
+
 const discoveryItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/explore", label: "Explore", icon: Compass },
@@ -33,10 +45,12 @@ const discoveryItems: NavItem[] = [
 
 const disciplineItems: NavItem[] = [
   { href: "/explore?tag=ai%20video", label: "Cinema & Video", icon: Video },
-  { href: "/ai", label: "AI Creations", icon: Sparkles },
-  { href: "/categories/digital_art", label: "Digital Art", icon: Palette },
+  { href: "/categories/paintings", label: "Paintings & Fine Art", icon: Palette },
+  { href: "/categories/books", label: "Books & Literature", icon: BookOpen },
+  { href: "/categories/architecture", label: "Architecture & Design", icon: Building2 },
+  { href: "/categories/digital_art", label: "Digital Art", icon: Sparkles },
   { href: "/categories/music", label: "Music & Audio", icon: Music },
-  { href: "/categories/stories", label: "Stories & Writing", icon: BookOpen },
+  { href: "/ai", label: "AI Creations", icon: Sparkles },
   { href: "/categories/apps", label: "Code & Apps", icon: Code },
 ];
 
@@ -47,6 +61,18 @@ const communityItems: NavItem[] = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { collapsed, toggleSidebar } = useSidebar();
+  const [creators, setCreators] = useState<CreatorItem[]>([]);
+
+  useEffect(() => {
+    fetch("/api/creators")
+      .then((res) => (res.ok ? res.json() : { creators: [] }))
+      .then((data) => {
+        if (Array.isArray(data.creators)) {
+          setCreators(data.creators);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   function isActive(href: string) {
     if (href === "/") {
@@ -89,7 +115,7 @@ export function AppSidebar() {
                 className={active ? "text-[#0f766e]" : "text-[#8c857b] group-hover:text-[#151515]"}
               />
               {!collapsed ? (
-                <span>{item.label}</span>
+                <span className="truncate">{item.label}</span>
               ) : (
                 /* Floating Tooltip */
                 <span className="pointer-events-none absolute left-full ml-3 hidden group-hover:block z-50 rounded-lg bg-[#151515] px-2.5 py-1 text-xs font-semibold text-white shadow-lg whitespace-nowrap">
@@ -122,7 +148,7 @@ export function AppSidebar() {
             <button
               type="button"
               onClick={toggleSidebar}
-              className="grid size-8 place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
+              className="grid size-8 place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition cursor-pointer"
               title="Minimize sidebar"
               aria-label="Minimize sidebar"
             >
@@ -135,6 +161,72 @@ export function AppSidebar() {
         <div className={`space-y-3 ${collapsed ? "p-2" : "p-3"}`}>
           {renderNavSection(discoveryItems, "Discovery")}
           {renderNavSection(disciplineItems, "Disciplines")}
+
+          {/* Top Creators Section */}
+          <div className="space-y-1">
+            {!collapsed && (
+              <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8c857b]">
+                  Top Creators
+                </span>
+                <Link
+                  href="/explore"
+                  className="text-[10px] font-semibold text-[#0f766e] hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
+            )}
+            {creators.map((c) => {
+              const handle = c.username || c.short_id || "creator";
+              const displayName = c.display_name || c.username;
+              const initials = displayName.slice(0, 2).toUpperCase();
+              const creatorUrl = `/@${c.short_id || c.username}`;
+              const active = pathname.startsWith(creatorUrl);
+
+              return (
+                <Link
+                  key={c.user_id}
+                  href={creatorUrl}
+                  className={`group relative flex items-center rounded-xl text-xs transition ${
+                    collapsed
+                      ? "justify-center size-10 mx-auto"
+                      : "gap-2.5 px-3 py-1.5"
+                  } ${
+                    active
+                      ? "bg-[#151515] text-white font-bold"
+                      : "text-[#555047] hover:bg-[#f6f4ef] hover:text-[#151515] font-semibold"
+                  }`}
+                  title={collapsed ? `${displayName} (@${handle})` : undefined}
+                >
+                  {c.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={c.avatar_url}
+                      alt={displayName}
+                      className="size-6 rounded-full object-cover shrink-0 border border-[#ded9cf]"
+                    />
+                  ) : (
+                    <div className="grid size-6 place-items-center rounded-full bg-[#0f766e] text-white text-[10px] font-bold uppercase shrink-0">
+                      {initials}
+                    </div>
+                  )}
+
+                  {!collapsed ? (
+                    <div className="min-w-0 flex-1 truncate">
+                      <p className="truncate text-xs font-semibold">{displayName}</p>
+                      <p className="truncate text-[10px] text-[#8c857b] font-mono">@{handle}</p>
+                    </div>
+                  ) : (
+                    <span className="pointer-events-none absolute left-full ml-3 hidden group-hover:block z-50 rounded-lg bg-[#151515] px-2.5 py-1 text-xs font-semibold text-white shadow-lg whitespace-nowrap">
+                      {displayName} (@{handle})
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+
           {renderNavSection(communityItems, "Community")}
         </div>
       </div>
@@ -145,7 +237,7 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={toggleSidebar}
-            className="grid size-9 mx-auto place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
+            className="grid size-9 mx-auto place-items-center rounded-lg text-[#8c857b] hover:bg-[#f6f4ef] hover:text-[#151515] transition cursor-pointer"
             title="Expand sidebar"
             aria-label="Expand sidebar"
           >
@@ -165,12 +257,8 @@ export function MobileBottomBar() {
   const pathname = usePathname();
 
   function isActive(href: string) {
-    if (href === "/") {
-      return pathname === "/";
-    }
-    if (href === "/explore") {
-      return pathname === "/explore";
-    }
+    if (href === "/") return pathname === "/";
+    if (href === "/explore") return pathname === "/explore";
     return pathname.startsWith(href);
   }
 
