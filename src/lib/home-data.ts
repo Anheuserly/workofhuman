@@ -219,7 +219,12 @@ export async function getHomeData(): Promise<HomeData> {
                LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                WHERE p.ai_generated = true
                ORDER BY p.views DESC LIMIT 6`),
-        query<DbProfileRow>(`SELECT * FROM workofhuman.profiles ORDER BY followers_count DESC LIMIT 8`),
+        query<DbProfileRow>(
+          `SELECT * FROM workofhuman.profiles 
+           WHERE email IS NOT NULL AND user_id LIKE 'usr_%'
+           ORDER BY followers_count DESC, views_count DESC, created_at ASC 
+           LIMIT 8`
+        ),
         query<DbCommunityRow>(`SELECT * FROM workofhuman.communities WHERE featured = true ORDER BY member_count DESC LIMIT 6`),
         query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type, pr.username as creator_username, pr.short_id as creator_short_id
                FROM workofhuman.trending_cache t
