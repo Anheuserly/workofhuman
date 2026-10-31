@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageShell } from "@/components/shell";
-import { ProjectCard } from "@/components/project-card";
+import { CreatorWorksTabs } from "@/components/creator-works-tabs";
 import { getProfileByUsername, getProjectBySlug } from "@/lib/home-data";
+import { getCurrentUser } from "@/lib/auth";
 import { Users, Eye, Sparkles, Globe, Link2, ExternalLink } from "lucide-react";
 import { RoleBadge } from "@/components/role-badge";
 import { MessageCreatorModal } from "@/components/message-creator-modal";
@@ -97,7 +98,10 @@ export default async function CreatorProfilePage({
   const { username } = await params;
   const decoded = decodeURIComponent(username || "");
   const cleanHandle = decoded.replace(/^[@%40]+/, "").trim().toLowerCase();
-  const { profile, projects } = await getProfileByUsername(cleanHandle);
+  const [{ profile, projects }, currentUser] = await Promise.all([
+    getProfileByUsername(cleanHandle),
+    getCurrentUser(),
+  ]);
 
   if (!profile && projects.length === 0) {
     const directProject = await getProjectBySlug(cleanHandle);
@@ -299,28 +303,19 @@ export default async function CreatorProfilePage({
           </div>
         </div>
 
-        {/* Creator Published Works Grid */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
+        {/* Creator Published Works with Interactive Category Filtering & Sorting */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-[#151515]">
               Published Works ({projects.length})
             </h3>
-            <span className="text-xs text-[#8c857b]">Click any creation to play and view</span>
+            <span className="text-xs text-[#8c857b]">Sort, filter, share, and play creations</span>
           </div>
 
-          {projects.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
-              ))}
-            </div>
-          ) : (
-            <div className="surface p-12 text-center text-[#6f6a61] rounded-2xl border border-dashed border-[#ded9cf]">
-              <p className="text-xs font-semibold">
-                No published projects found for @{cleanHandle} yet.
-              </p>
-            </div>
-          )}
+          <CreatorWorksTabs
+            initialProjects={projects}
+            isOwner={currentUser?.userId === profile?.userId || currentUser?.role === "admin"}
+          />
         </div>
       </section>
     </PageShell>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
@@ -16,6 +17,7 @@ import { ProjectComments } from "@/components/project-comments";
 import { AppreciateButton } from "@/components/appreciate-button";
 import { FollowButton } from "@/components/follow-button";
 import { ProjectManageMenu } from "@/components/project-manage-menu";
+import { CreationActionsMenu } from "@/components/creation-actions-menu";
 import { MediaLightbox } from "@/components/media-lightbox";
 import { AudioTrackPlayer } from "@/components/audio-track-player";
 
@@ -161,6 +163,17 @@ export default async function ProjectDetailPage({
     );
   }
 
+  // Canonical redirect: If accessed via old slug or alias, cleanly redirect to the smart ID URL
+  const canonicalCreator = project.creatorShortId || project.creatorUsername || cleanUsername;
+  const isDifferentSlug = project.slug && projectSlug !== project.slug;
+  const isNonCanonicalCreator =
+    cleanUsername === "undefined" ||
+    (canonicalCreator && cleanUsername !== canonicalCreator.toLowerCase());
+
+  if (isDifferentSlug || isNonCanonicalCreator) {
+    redirect(`/@${canonicalCreator}/${project.slug}`);
+  }
+
   const effectiveUsername =
     project.creatorUsername ||
     (cleanUsername !== "undefined" ? cleanUsername : project.creatorName || "creator");
@@ -206,14 +219,24 @@ export default async function ProjectDetailPage({
             Back to @{effectiveUsername}&apos;s Portfolio
           </Link>
 
-          {isOwner && (
-            <ProjectManageMenu
+          <div className="flex items-center gap-2">
+            <CreationActionsMenu
+              projectId={project.id}
               projectSlug={project.slug}
-              initialTitle={project.title}
-              initialDescription={project.description}
+              projectTitle={project.title}
               creatorUsername={effectiveUsername}
+              creatorShortId={project.creatorShortId}
+              isOwner={isOwner}
             />
-          )}
+            {isOwner && (
+              <ProjectManageMenu
+                projectSlug={project.slug}
+                initialTitle={project.title}
+                initialDescription={project.description}
+                creatorUsername={effectiveUsername}
+              />
+            )}
+          </div>
         </div>
 
         {/* Project Header */}

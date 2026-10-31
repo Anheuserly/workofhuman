@@ -32,6 +32,13 @@ export function ProjectComments({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginRedirect, setLoginRedirect] = useState<string>("/explore");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.pathname) {
+      setLoginRedirect(window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -119,7 +126,7 @@ export function ProjectComments({
           </p>
           <div className="pt-1">
             <Link
-              href={`/login?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/explore")}`}
+              href={`/login?next=${encodeURIComponent(loginRedirect)}`}
               className="button-primary inline-flex items-center gap-2 !px-4 !py-1.5 text-xs font-semibold"
             >
               Sign In to Comment

@@ -1,8 +1,17 @@
 import Link from "next/link";
 import { Eye, Heart, ImageIcon, Play, Sparkles } from "lucide-react";
 import type { Project } from "@/lib/home-data";
+import { CreationActionsMenu } from "@/components/creation-actions-menu";
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({
+  project,
+  isOwner = false,
+  onDeleted,
+}: {
+  project: Project;
+  isOwner?: boolean;
+  onDeleted?: () => void;
+}) {
   const rawCreator = project.creatorShortId || project.creatorUsername || project.creatorName || "creator";
   const creatorHandle = String(rawCreator).replace(/^@+/, "").trim() || "creator";
   const projectHref = `/@${creatorHandle}/${project.slug}`;
@@ -14,6 +23,19 @@ export function ProjectCard({ project }: { project: Project }) {
 
   return (
     <article className="project-card group relative flex flex-col justify-between overflow-hidden rounded-xl border border-[#ded9cf] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-[#151515] hover:shadow-lg">
+      {/* Quick Action Menu Button */}
+      <div className="absolute top-3 right-3 z-20">
+        <CreationActionsMenu
+          projectId={project.id}
+          projectSlug={project.slug}
+          projectTitle={project.title}
+          creatorUsername={project.creatorUsername || creatorHandle}
+          creatorShortId={project.creatorShortId}
+          isOwner={isOwner}
+          onDeleted={onDeleted}
+        />
+      </div>
+
       <Link href={projectHref} className="block overflow-hidden focus:outline-none" aria-label={project.title}>
         <div className="relative h-56 overflow-hidden bg-[#e9e4da]">
           {project.thumbnailUrl ? (

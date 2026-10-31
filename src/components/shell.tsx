@@ -1,29 +1,56 @@
 import { ArrowRight, Bell, Search } from "lucide-react";
 import Link from "next/link";
-import { platformRoutes } from "@/lib/platform";
 import { HeaderUserNav } from "@/components/user-nav";
 import { Logo } from "@/components/logo";
 import { MobileMenu } from "@/components/mobile-menu";
+import { AppSidebar, MobileBottomBar } from "@/components/app-sidebar";
 
-export function SiteHeader() {
+export function AppTopBar() {
   return (
-    <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full border border-[#ded9cf] bg-white/90 px-3 py-3 shadow-sm backdrop-blur-xl">
-      <Logo size="md" />
-      <nav className="hidden items-center gap-3.5 md:flex md:gap-5 text-sm text-[#6f6a61]">
-        {platformRoutes.map((item) => (
-          <Link className="transition hover:text-[#151515]" href={item.href} key={item.href}>
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+    <header className="sticky top-0 z-30 h-16 w-full border-b border-[#ded9cf] bg-white/95 px-4 sm:px-6 backdrop-blur-md flex items-center justify-between gap-4">
+      {/* Mobile Logo on small screens */}
+      <div className="flex items-center gap-3 lg:hidden">
+        <Link href="/" className="flex items-center gap-2">
+          <Logo size="sm" />
+          <span className="text-xs font-black tracking-[0.16em] text-[#151515]">
+            WORK OF HUMAN
+          </span>
+        </Link>
+      </div>
+
+      {/* Global App Search Input */}
+      <div className="flex-1 max-w-md hidden sm:block">
+        <form action="/explore" method="GET" className="relative">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8c857b]" />
+          <input
+            type="text"
+            name="q"
+            placeholder="Search creations, films, art, creators..."
+            className="w-full rounded-full border border-[#ded9cf] bg-[#f6f4ef] py-1.5 pl-9 pr-4 text-xs text-[#151515] placeholder:text-[#8c857b] focus:border-[#0f766e] focus:bg-white focus:outline-none transition shadow-2xs"
+          />
+        </form>
+      </div>
+
+      {/* Right Controls: Notifications & User Nav */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <Link className="icon-button" href="/explore" aria-label="Search">
-          <Search size={17} />
+        <Link
+          className="icon-button sm:hidden"
+          href="/explore"
+          aria-label="Search"
+        >
+          <Search size={16} />
         </Link>
-        <Link className="icon-button hidden md:inline-flex" href="/notifications" aria-label="Notifications">
-          <Bell size={17} />
+
+        <Link
+          className="icon-button"
+          href="/notifications"
+          aria-label="Notifications"
+        >
+          <Bell size={16} />
         </Link>
+
         <HeaderUserNav />
+
         <div className="ml-1 sm:ml-1.5 md:hidden">
           <MobileMenu />
         </div>
@@ -32,16 +59,42 @@ export function SiteHeader() {
   );
 }
 
+// Backwards-compatible export
+export function SiteHeader() {
+  return <AppTopBar />;
+}
+
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen px-5 py-6 text-[#151515] sm:px-8 lg:px-12">
-      <SiteHeader />
-      {children}
-    </main>
+    <div className="min-h-screen bg-[#faf8f5] text-[#151515] flex antialiased">
+      {/* Desktop App Sidebar Rail */}
+      <AppSidebar />
+
+      {/* Main Application Area */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <AppTopBar />
+        <main className="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 max-w-7xl w-full mx-auto pb-20 lg:pb-12">
+          {children}
+        </main>
+      </div>
+
+      {/* Mobile Bottom App Navigation */}
+      <MobileBottomBar />
+    </div>
   );
 }
 
-export function SectionIntro({ eyebrow, title, body, href }: { eyebrow: string; title: string; body?: string; href?: string }) {
+export function SectionIntro({
+  eyebrow,
+  title,
+  body,
+  href,
+}: {
+  eyebrow: string;
+  title: string;
+  body?: string;
+  href?: string;
+}) {
   return (
     <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div className="max-w-3xl">
@@ -50,9 +103,9 @@ export function SectionIntro({ eyebrow, title, body, href }: { eyebrow: string; 
         {body ? <p className="mt-4 max-w-2xl text-base leading-7 text-[#6f6a61] sm:text-lg">{body}</p> : null}
       </div>
       {href ? (
-        <Link className="button-secondary w-fit px-4" href={href}>
+        <Link className="button-secondary w-fit px-4 text-xs font-semibold" href={href}>
           View all
-          <ArrowRight size={17} />
+          <ArrowRight size={15} />
         </Link>
       ) : null}
     </div>
@@ -71,12 +124,12 @@ export function EmptyState({
   actionLabel?: string;
 }) {
   return (
-    <section className="mx-auto mt-12 max-w-xl surface p-8 sm:p-12 text-center">
+    <section className="mx-auto mt-12 max-w-xl surface p-8 sm:p-12 text-center rounded-2xl border border-[#ded9cf]">
       <h3 className="text-2xl font-bold tracking-tight text-[#151515]">{title}</h3>
       <p className="mt-3 text-sm leading-relaxed text-[#6f6a61]">{body}</p>
       {href && actionLabel && (
         <div className="mt-6">
-          <Link href={href} className="button-primary text-xs">
+          <Link href={href} className="button-primary text-xs font-semibold">
             {actionLabel}
             <ArrowRight size={15} />
           </Link>
