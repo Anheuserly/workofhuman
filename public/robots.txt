@@ -1,0 +1,11 @@
+# https://theworkofhuman.com robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /studio/
+Disallow: /settings/
+Disallow: /api/
+Disallow: /messages/
+Disallow: /notifications/
+
+Sitemap: https://theworkofhuman.com/sitemap.xml
