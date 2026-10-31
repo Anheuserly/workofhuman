@@ -14,7 +14,7 @@ export default async function VideoShortcutPage({
   const project = await getProjectBySlug(id);
   if (!project) notFound();
 
-  const creator = project.creatorUsername || project.creatorName || "creator";
+  const creator = project.creatorShortId || project.creatorUsername || project.creatorName || "creator";
   const targetUrl = `/@${creator}/${project.slug}`;
 
   return (

@@ -61,20 +61,25 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(password);
     const userId = `usr_${crypto.randomUUID().replace(/-/g, "")}`;
     const profileId = `prof_${crypto.randomUUID().replace(/-/g, "")}`;
+    const shortChars = "23456789abcdefghjkmnpqrstuvwxyz";
+    let shortId = "";
+    for (let i = 0; i < 8; i++) {
+      shortId += shortChars[Math.floor(Math.random() * shortChars.length)];
+    }
     const cleanDisplayName = displayName && displayName.trim().length > 0 ? displayName.trim() : normalizedUsername;
 
     // Insert user into profiles
     await query(
       `INSERT INTO workofhuman.profiles (
-        id, user_id, username, email, password_hash, role, display_name,
+        id, user_id, username, short_id, email, password_hash, role, display_name,
         bio, avatar_url, banner_url, verified, categories, social_links,
         followers_count, views_count, created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, 'creator', $6,
+        $1, $2, $3, $4, $5, $6, 'creator', $7,
         '', '', '', false, '[]'::jsonb, '{}'::jsonb,
         0, 0, NOW(), NOW()
       )`,
-      [profileId, userId, normalizedUsername, normalizedEmail, passwordHash, cleanDisplayName]
+      [profileId, userId, normalizedUsername, shortId, normalizedEmail, passwordHash, cleanDisplayName]
     );
 
     // Create session in database and on cookie

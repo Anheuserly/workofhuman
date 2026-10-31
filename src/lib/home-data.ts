@@ -9,6 +9,7 @@ export type Project = {
   creatorId: string;
   creatorName?: string;
   creatorUsername?: string;
+  creatorShortId?: string;
   type: string;
   mediaUrls?: string[];
   thumbnailUrl?: string;
@@ -24,6 +25,7 @@ export type Project = {
 export type Profile = {
   userId: string;
   username: string;
+  shortId?: string;
   role?: string;
   displayName?: string;
   bio?: string;
@@ -100,6 +102,7 @@ interface DbProjectRow {
   creator_id: string;
   creator_name?: string | null;
   creator_username?: string | null;
+  creator_short_id?: string | null;
   type: ContentType | string;
   media_urls?: string[] | null;
   thumbnail_url?: string | null;
@@ -115,6 +118,7 @@ interface DbProjectRow {
 interface DbProfileRow {
   user_id: string;
   username: string;
+  short_id?: string | null;
   role?: string | null;
   display_name?: string | null;
   bio?: string | null;
@@ -157,6 +161,7 @@ function mapProject(r: DbProjectRow): Project {
     creatorId: r.creator_id,
     creatorName: r.creator_name || undefined,
     creatorUsername: r.creator_username || undefined,
+    creatorShortId: r.creator_short_id || undefined,
     type: r.type,
     mediaUrls: Array.isArray(r.media_urls) ? r.media_urls : [],
     thumbnailUrl: r.thumbnail_url || undefined,
@@ -174,6 +179,7 @@ function mapProfile(r: DbProfileRow): Profile {
   return {
     userId: r.user_id,
     username: r.username,
+    shortId: r.short_id || undefined,
     role: r.role || "creator",
     displayName: r.display_name || undefined,
     bio: r.bio || undefined,
@@ -204,18 +210,18 @@ export async function getHomeData(): Promise<HomeData> {
     const [settingsRes, projectsRes, aiProjectsRes, creatorsRes, communitiesRes, trendingRes] =
       await Promise.all([
         query(`SELECT * FROM workofhuman.homepage_settings WHERE id = 'default' LIMIT 1`),
-        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
+        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username, pr.short_id as creator_short_id
                FROM workofhuman.projects p
                LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                ORDER BY p.published_at DESC LIMIT 24`),
-        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username
+        query<DbProjectRow>(`SELECT p.*, pr.username as creator_username, pr.short_id as creator_short_id
                FROM workofhuman.projects p
                LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
                WHERE p.ai_generated = true
                ORDER BY p.views DESC LIMIT 6`),
         query<DbProfileRow>(`SELECT * FROM workofhuman.profiles ORDER BY followers_count DESC LIMIT 8`),
         query<DbCommunityRow>(`SELECT * FROM workofhuman.communities WHERE featured = true ORDER BY member_count DESC LIMIT 6`),
-        query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type, pr.username as creator_username
+        query<DbTrendingRow>(`SELECT t.*, p.title as p_title, p.thumbnail_url as p_thumb, p.creator_name as p_creator, p.type as p_type, pr.username as creator_username, pr.short_id as creator_short_id
                FROM workofhuman.trending_cache t
                LEFT JOIN workofhuman.projects p ON p.slug = t.project_id
                LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
@@ -254,6 +260,7 @@ export async function getHomeData(): Promise<HomeData> {
             creatorId: "",
             creatorName: r.p_creator || undefined,
             creatorUsername: (r as unknown as { creator_username?: string }).creator_username || undefined,
+            creatorShortId: (r as unknown as { creator_short_id?: string }).creator_short_id || undefined,
             type: (r.p_type as ContentType) || "art",
             thumbnailUrl: r.p_thumb || undefined,
           }
@@ -288,7 +295,7 @@ export async function getHomeData(): Promise<HomeData> {
 export async function getProjectsByCategory(categorySlug: string): Promise<Project[]> {
   try {
     const res = await query<DbProjectRow>(
-      `SELECT p.*, pr.username as creator_username
+      `SELECT p.*, pr.username as creator_username, pr.short_id as creator_short_id
        FROM workofhuman.projects p
        LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
        WHERE p.type = $1 OR p.type = $2
@@ -306,7 +313,7 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
     const cleanSlug = decodeURIComponent(slug || "").trim();
     const res = await query<DbProjectRow>(
-      `SELECT p.*, pr.username as creator_username
+      `SELECT p.*, pr.username as creator_username, pr.short_id as creator_short_id
        FROM workofhuman.projects p
        LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
        WHERE p.slug = $1 
@@ -336,18 +343,21 @@ export async function getProfileByUsername(
     const cleanUsername = username.replace(/^[@%40]+/, "").toLowerCase();
     const profRes = await query<DbProfileRow>(
       `SELECT * FROM workofhuman.profiles 
-       WHERE LOWER(username) = $1 OR LOWER(display_name) = $1 
-       ORDER BY (LOWER(username) = $1) DESC LIMIT 1`,
+       WHERE LOWER(username) = $1 
+          OR LOWER(display_name) = $1 
+          OR LOWER(short_id) = $1 
+          OR user_id = $1
+       ORDER BY (LOWER(username) = $1) DESC, (LOWER(short_id) = $1) DESC LIMIT 1`,
       [cleanUsername]
     );
     if (profRes.rows.length === 0) return { profile: null, projects: [] };
 
     const profile = mapProfile(profRes.rows[0]);
     const projRes = await query<DbProjectRow>(
-      `SELECT p.*, pr.username as creator_username
+      `SELECT p.*, pr.username as creator_username, pr.short_id as creator_short_id
        FROM workofhuman.projects p
        LEFT JOIN workofhuman.profiles pr ON (pr.user_id = p.creator_id OR pr.id::text = p.creator_id)
-       WHERE p.creator_id = $1 OR pr.username = $2
+       WHERE p.creator_id = $1 OR pr.username = $2 OR pr.short_id = $2
        ORDER BY p.published_at DESC LIMIT 30`,
       [profile.userId, cleanUsername]
     );

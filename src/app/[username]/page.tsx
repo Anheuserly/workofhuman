@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PageShell } from "@/components/shell";
 import { ProjectCard } from "@/components/project-card";
-import { getProfileByUsername } from "@/lib/home-data";
+import { getProfileByUsername, getProjectBySlug } from "@/lib/home-data";
 import { Users, Eye, Sparkles, Globe, Link2, ExternalLink } from "lucide-react";
 import { RoleBadge } from "@/components/role-badge";
 import { MessageCreatorModal } from "@/components/message-creator-modal";
@@ -20,6 +21,12 @@ export default async function CreatorProfilePage({
   const { profile, projects } = await getProfileByUsername(cleanHandle);
 
   if (!profile && projects.length === 0) {
+    const directProject = await getProjectBySlug(cleanHandle);
+    if (directProject) {
+      const creatorRef = directProject.creatorShortId || directProject.creatorUsername || "creator";
+      redirect(`/@${creatorRef}/${directProject.slug}`);
+    }
+
     return (
       <PageShell>
         <section className="mx-auto max-w-2xl py-20 text-center">
@@ -87,7 +94,14 @@ export default async function CreatorProfilePage({
                     </h1>
                     <RoleBadge role={profile?.role} verified={profile?.verified} size="md" />
                   </div>
-                  <p className="font-mono text-xs font-semibold text-[#0f766e]">@{cleanHandle}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono text-xs font-semibold text-[#0f766e]">@{profile?.username || cleanHandle}</p>
+                    {profile?.shortId && (
+                      <span className="text-[10px] font-mono font-bold text-[#6f6a61] bg-[#f6f4ef] border border-[#ded9cf] px-2 py-0.5 rounded-full">
+                        ID: {profile.shortId}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs sm:text-sm text-[#6f6a61] max-w-2xl leading-relaxed pt-1">
                     {profile?.bio || `Independent creator portfolio and multimedia archive of @${cleanHandle}.`}
                   </p>
