@@ -42,10 +42,10 @@ export async function generateMetadata({
   const creatorDisplay = project.creatorName || project.creatorUsername || "creator";
   const title = `${project.title} • by ${creatorDisplay} | The Work of Human`;
   
-  // Clean description of newlines and whitespace for reliable OpenGraph / Discord / Twitter parsing
+  // Clean description of newlines and whitespace for reliable OpenGraph / Discord / WhatsApp / Twitter parsing
   const rawDescription = (project.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
   const description = rawDescription
-    ? (rawDescription.length > 200 ? rawDescription.slice(0, 197) + "..." : rawDescription)
+    ? `by ${creatorDisplay} • ${rawDescription.length > 180 ? rawDescription.slice(0, 177) + "..." : rawDescription}`
     : `Experience "${project.title}" by ${creatorDisplay} on The Work of Human.`;
 
   let ogImage = project.thumbnailUrl;
@@ -69,22 +69,32 @@ export async function generateMetadata({
   return {
     title,
     description,
+    authors: [
+      {
+        name: creatorDisplay,
+        url: `${siteOrigin}/@${targetCreator}`,
+      },
+    ],
+    creator: creatorDisplay,
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
       type: "article",
-      siteName: "The Work of Human",
-      title,
+      siteName: `The Work of Human • ${creatorDisplay}`,
+      title: project.title,
       description,
       url: pageUrl,
+      authors: [creatorDisplay],
       images: ogImage
         ? [
             {
               url: ogImage,
-              width: 1280,
-              height: 720,
-              alt: project.title,
+              secureUrl: ogImage,
+              width: 1200,
+              height: 675,
+              type: "image/jpeg",
+              alt: `${project.title} by ${creatorDisplay}`,
             },
           ]
         : [],
@@ -102,9 +112,15 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      site: "@theworkofhuman",
+      creator: `@${project.creatorUsername || creatorDisplay}`,
+      title: `${project.title} • ${creatorDisplay}`,
       description,
       images: ogImage ? [ogImage] : [],
+    },
+    other: {
+      "author": creatorDisplay,
+      "article:author": creatorDisplay,
     },
   };
 }

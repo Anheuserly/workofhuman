@@ -24,9 +24,9 @@ export async function generateMetadata({
   const siteOrigin = "https://theworkofhuman.com";
   const creatorDisplay = project.creatorName || project.creatorUsername || "creator";
   const title = `${project.title} • by ${creatorDisplay} | The Work of Human`;
-  const rawDescription = project.description?.trim();
+  const rawDescription = (project.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
   const description = rawDescription
-    ? (rawDescription.length > 200 ? rawDescription.slice(0, 197) + "..." : rawDescription)
+    ? `by ${creatorDisplay} • ${rawDescription.length > 180 ? rawDescription.slice(0, 177) + "..." : rawDescription}`
     : `Experience "${project.title}" by ${creatorDisplay} on The Work of Human.`;
 
   let ogImage = project.thumbnailUrl;
@@ -50,22 +50,32 @@ export async function generateMetadata({
   return {
     title,
     description,
+    authors: [
+      {
+        name: creatorDisplay,
+        url: `${siteOrigin}/@${targetCreator}`,
+      },
+    ],
+    creator: creatorDisplay,
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
-      type: absoluteVideoUrl ? "video.other" : "article",
-      siteName: "The Work of Human",
+      type: "article",
+      siteName: `The Work of Human • ${creatorDisplay}`,
       title: project.title,
       description,
       url: pageUrl,
+      authors: [creatorDisplay],
       images: ogImage
         ? [
             {
               url: ogImage,
-              width: 1280,
-              height: 720,
-              alt: project.title,
+              secureUrl: ogImage,
+              width: 1200,
+              height: 675,
+              type: "image/jpeg",
+              alt: `${project.title} by ${creatorDisplay}`,
             },
           ]
         : [],
@@ -82,20 +92,16 @@ export async function generateMetadata({
         : undefined,
     },
     twitter: {
-      card: absoluteVideoUrl ? "player" : "summary_large_image",
-      title: project.title,
+      card: "summary_large_image",
+      site: "@theworkofhuman",
+      creator: `@${project.creatorUsername || creatorDisplay}`,
+      title: `${project.title} • ${creatorDisplay}`,
       description,
       images: ogImage ? [ogImage] : [],
-      players: absoluteVideoUrl
-        ? [
-            {
-              playerUrl: pageUrl,
-              streamUrl: absoluteVideoUrl,
-              width: 1280,
-              height: 720,
-            },
-          ]
-        : undefined,
+    },
+    other: {
+      "author": creatorDisplay,
+      "article:author": creatorDisplay,
     },
   };
 }
