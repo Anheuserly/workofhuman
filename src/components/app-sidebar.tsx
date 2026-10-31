@@ -9,11 +9,6 @@ import {
   Video,
   Sparkles,
   Users,
-  ShoppingBag,
-  Plus,
-  Bell,
-  MessageSquare,
-  Settings,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 
@@ -21,17 +16,15 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
-  tag?: string;
 }
 
 const mainNavItems: NavItem[] = [
-  { href: "/", label: "Home Overview", icon: Home },
-  { href: "/explore", label: "Explore All Works", icon: Compass },
-  { href: "/trending", label: "Trending Creations", icon: Flame },
+  { href: "/", label: "Home", icon: Home },
+  { href: "/explore", label: "Explore", icon: Compass },
+  { href: "/trending", label: "Trending", icon: Flame },
   { href: "/explore?tag=ai%20video", label: "Cinema & Video", icon: Video },
   { href: "/ai", label: "AI Creations", icon: Sparkles },
   { href: "/communities", label: "Communities", icon: Users },
-  { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
 ];
 
 export function AppSidebar() {
@@ -48,7 +41,7 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col justify-between border-r border-[#ded9cf] bg-white sticky top-0 h-screen select-none overflow-y-auto">
+    <aside className="hidden lg:flex w-64 shrink-0 flex-col justify-between border-r border-[#ded9cf] bg-white sticky top-0 h-screen select-none">
       <div>
         {/* Brand App Header */}
         <div className="h-16 flex items-center px-5 border-b border-[#ded9cf]/60">
@@ -79,45 +72,13 @@ export function AppSidebar() {
             );
           })}
         </div>
-
-        {/* Studio Workspace Section */}
-        <div className="p-3 pt-1">
-          <div className="px-3 pt-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8c857b]">
-            Studio Workspace
-          </div>
-          <Link
-            href="/studio/upload"
-            className="flex items-center justify-center gap-2 w-full bg-[#0f766e] text-white rounded-xl py-2.5 px-3 text-xs font-bold shadow-xs hover:bg-[#0d655e] transition"
-          >
-            <Plus size={16} />
-            <span>Create New Work</span>
-          </Link>
-        </div>
       </div>
 
-      {/* Bottom Shortcuts */}
-      <div className="p-3 border-t border-[#ded9cf]/60 space-y-1">
-        <Link
-          href="/notifications"
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#555047] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
-        >
-          <Bell size={16} className="text-[#8c857b]" />
-          <span>Notifications</span>
-        </Link>
-        <Link
-          href="/messages"
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#555047] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
-        >
-          <MessageSquare size={16} className="text-[#8c857b]" />
-          <span>Messages</span>
-        </Link>
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-[#555047] hover:bg-[#f6f4ef] hover:text-[#151515] transition"
-        >
-          <Settings size={16} className="text-[#8c857b]" />
-          <span>Account Settings</span>
-        </Link>
+      {/* Minimal Footer */}
+      <div className="p-4 border-t border-[#ded9cf]/60 text-center">
+        <p className="text-[10px] text-[#8c857b] font-medium tracking-wide">
+          The Work of Human &copy; 2026
+        </p>
       </div>
     </aside>
   );
@@ -158,15 +119,6 @@ export function MobileBottomBar() {
         <span>Explore</span>
       </Link>
 
-      {/* Floating Create Icon */}
-      <Link
-        href="/studio/upload"
-        className="grid size-10 place-items-center rounded-full bg-[#0f766e] text-white shadow-md -mt-5 transition hover:scale-105"
-        title="Create in Studio"
-      >
-        <Plus size={20} />
-      </Link>
-
       <Link
         href="/trending"
         className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-bold transition ${
@@ -178,13 +130,23 @@ export function MobileBottomBar() {
       </Link>
 
       <Link
-        href="/settings"
+        href="/explore?tag=ai%20video"
         className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-bold transition ${
-          isActive("/settings") ? "text-[#0f766e]" : "text-[#8c857b]"
+          pathname.includes("ai%20video") || pathname.includes("ai video") ? "text-[#0f766e]" : "text-[#8c857b]"
         }`}
       >
-        <Settings size={18} />
-        <span>Account</span>
+        <Video size={18} />
+        <span>Video</span>
+      </Link>
+
+      <Link
+        href="/ai"
+        className={`flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-bold transition ${
+          isActive("/ai") ? "text-[#0f766e]" : "text-[#8c857b]"
+        }`}
+      >
+        <Sparkles size={18} />
+        <span>AI</span>
       </Link>
     </nav>
   );

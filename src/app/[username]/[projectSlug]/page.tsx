@@ -41,7 +41,9 @@ export async function generateMetadata({
   const siteOrigin = "https://theworkofhuman.com";
   const creatorDisplay = project.creatorName || project.creatorUsername || "creator";
   const title = `${project.title} • by ${creatorDisplay} | The Work of Human`;
-  const rawDescription = project.description?.trim();
+  
+  // Clean description of newlines and whitespace for reliable OpenGraph / Discord / Twitter parsing
+  const rawDescription = (project.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
   const description = rawDescription
     ? (rawDescription.length > 200 ? rawDescription.slice(0, 197) + "..." : rawDescription)
     : `Experience "${project.title}" by ${creatorDisplay} on The Work of Human.`;
@@ -71,9 +73,9 @@ export async function generateMetadata({
       canonical: pageUrl,
     },
     openGraph: {
-      type: absoluteVideoUrl ? "video.other" : "article",
+      type: "article",
       siteName: "The Work of Human",
-      title: project.title,
+      title,
       description,
       url: pageUrl,
       images: ogImage
@@ -99,20 +101,10 @@ export async function generateMetadata({
         : undefined,
     },
     twitter: {
-      card: absoluteVideoUrl ? "player" : "summary_large_image",
-      title: project.title,
+      card: "summary_large_image",
+      title,
       description,
       images: ogImage ? [ogImage] : [],
-      players: absoluteVideoUrl
-        ? [
-            {
-              playerUrl: pageUrl,
-              streamUrl: absoluteVideoUrl,
-              width: 1280,
-              height: 720,
-            },
-          ]
-        : undefined,
     },
   };
 }
