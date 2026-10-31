@@ -9,13 +9,8 @@ export function AppTopBar() {
   return (
     <header className="sticky top-0 z-30 h-16 w-full border-b border-[#ded9cf] bg-white/95 px-4 sm:px-6 backdrop-blur-md flex items-center justify-between gap-4">
       {/* Mobile Logo on small screens */}
-      <div className="flex items-center gap-3 lg:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <Logo size="sm" />
-          <span className="text-xs font-black tracking-[0.16em] text-[#151515]">
-            WORK OF HUMAN
-          </span>
-        </Link>
+      <div className="flex items-center lg:hidden">
+        <Logo size="sm" />
       </div>
 
       {/* Global App Search Input */}

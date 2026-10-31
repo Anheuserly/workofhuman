@@ -1,8 +1,7 @@
 import { ArrowRight, ShieldCheck, Sparkles, UploadCloud, UsersRound, WandSparkles } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { ProjectCard } from "@/components/project-card";
-import { SectionIntro, SiteHeader } from "@/components/shell";
+import { PageShell, SectionIntro } from "@/components/shell";
 import { defaultHomeSettings, getHomeData } from "@/lib/home-data";
 import { contentTypes, featureMatrix } from "@/lib/platform";
 
@@ -36,43 +35,39 @@ export default async function Home() {
   const heroP3Href = heroP3 ? `/@${heroP3.creatorShortId || heroP3.creatorUsername || "creator"}/${heroP3.slug}` : "/explore";
 
   return (
-    <main className="min-h-screen overflow-hidden text-[#151515]">
-      <section className="relative isolate min-h-[92svh] px-5 py-6 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 -z-20 bg-[#f6f4ef]" />
-        <div className="absolute right-0 top-0 -z-10 h-full w-[42vw] bg-[#ebe6dc] max-lg:hidden" />
-
-        <SiteHeader />
-
-        <div className="mx-auto grid min-h-[calc(92svh-84px)] max-w-7xl gap-12 pb-10 pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+    <PageShell>
+      {/* Hero Showcase Section */}
+      <section className="mb-14">
+        <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
-            <div>
-              <p className="mb-5 inline-flex rounded-full border border-[#d8d2c7] bg-white/80 px-4 py-2 text-sm text-[#5f5a52] shadow-sm backdrop-blur-xl">
-                {settings.eyebrow}
-              </p>
-              <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[0.95] text-[#151515] sm:text-7xl lg:text-8xl">
-                {settings.heading}
-              </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f5a52] sm:text-xl">{settings.subheading}</p>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link className="button-primary" href={settings.primaryCtaHref}>
-                  {settings.primaryCtaLabel}
-                  <ArrowRight size={18} />
-                </Link>
-                <Link className="button-secondary" href={settings.secondaryCtaHref}>
-                  {settings.secondaryCtaLabel}
-                  <UploadCloud size={18} />
-                </Link>
-              </div>
+            <p className="mb-4 inline-flex rounded-full border border-[#d8d2c7] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#5f5a52] shadow-2xs">
+              {settings.eyebrow}
+            </p>
+            <h1 className="text-balance text-4xl font-bold tracking-tight text-[#151515] sm:text-6xl lg:text-7xl leading-[1.05]">
+              {settings.heading}
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-[#5f5a52] sm:text-lg">
+              {settings.subheading}
+            </p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link className="button-primary inline-flex items-center gap-2 !px-5 !py-2.5 text-xs font-bold" href={settings.primaryCtaHref}>
+                {settings.primaryCtaLabel}
+                <ArrowRight size={15} />
+              </Link>
+              <Link className="button-secondary inline-flex items-center gap-2 !px-5 !py-2.5 text-xs font-bold" href={settings.secondaryCtaHref}>
+                {settings.secondaryCtaLabel}
+                <UploadCloud size={15} />
+              </Link>
             </div>
 
-            <div className="mt-14 grid gap-3 sm:grid-cols-3">
+            <div className="mt-10 grid gap-3 sm:grid-cols-3">
               {[
                 ["Creative mediums", data.categories.length],
                 ["Published works", data.projects.length],
                 ["AI-labeled works", data.aiProjects.length],
               ].map(([label, value]) => (
-                <div className="border-t border-[#d8d2c7] py-4 text-sm uppercase tracking-[0.16em] text-[#6f6a61]" key={label}>
-                  <strong className="block text-2xl font-semibold normal-case tracking-normal text-[#151515]">{value}</strong>
+                <div className="border-t border-[#d8d2c7] pt-3 text-[11px] font-bold uppercase tracking-wider text-[#6f6a61]" key={label}>
+                  <strong className="block text-2xl font-bold normal-case tracking-tight text-[#151515]">{value}</strong>
                   {label}
                 </div>
               ))}
@@ -80,162 +75,189 @@ export default async function Home() {
           </div>
 
           {data.projects.length > 0 ? (
-            <div className="grid min-h-[520px] grid-cols-12 grid-rows-6 gap-3 max-lg:min-h-[420px] max-sm:hidden">
-              <Link href={heroP0Href} className="media-tile col-span-7 row-span-4 rounded-[8px] relative overflow-hidden bg-[#e6dfd1] group block transition hover:ring-2 hover:ring-[#0f766e]">
+            <div className="grid min-h-[460px] grid-cols-12 grid-rows-6 gap-3">
+              <Link href={heroP0Href} className="media-tile col-span-7 row-span-4 rounded-xl relative overflow-hidden bg-[#e6dfd1] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
                 {heroP0?.thumbnailUrl ? (
-                  <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="(min-width: 1024px) 38vw, 80vw" priority className="object-cover transition duration-500 group-hover:scale-105" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={heroP0.title}
+                    src={heroP0.thumbnailUrl}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
                   <div className="flex h-full flex-col justify-between p-6">
-                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-xs">
                       {heroP0?.type || "Creative Showcase"}
                     </span>
                     <div>
-                      <h3 className="text-2xl font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP0?.title}</h3>
-                      <p className="mt-2 text-sm text-[#5f5a52] line-clamp-2">{heroP0?.description}</p>
+                      <h3 className="text-xl font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP0?.title}</h3>
+                      <p className="mt-1.5 text-xs text-[#5f5a52] line-clamp-2">{heroP0?.description}</p>
                     </div>
                   </div>
                 )}
+                {/* Play Badge */}
+                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Featured Creation
+                </div>
               </Link>
 
-              <Link href={heroP1Href} className="media-tile col-span-5 row-span-3 rounded-[8px] relative overflow-hidden bg-[#ded7c8] group block transition hover:ring-2 hover:ring-[#0f766e]">
+              <Link href={heroP1Href} className="media-tile col-span-5 row-span-3 rounded-xl relative overflow-hidden bg-[#ded7c8] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
                 {heroP1?.thumbnailUrl ? (
-                  <Image alt={heroP1.title} src={heroP1.thumbnailUrl} fill sizes="(min-width: 1024px) 28vw, 60vw" priority className="object-cover transition duration-500 group-hover:scale-105" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={heroP1.title}
+                    src={heroP1.thumbnailUrl}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
                   <div className="flex h-full flex-col justify-between p-5">
-                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-sm">
+                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-[#0f766e] w-fit shadow-xs">
                       {heroP1?.type || "Featured Study"}
                     </span>
                     <div>
-                      <h4 className="text-lg font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP1?.title}</h4>
+                      <h4 className="text-base font-bold text-[#151515] group-hover:text-[#0f766e] transition">{heroP1?.title}</h4>
                       <p className="mt-1 text-xs text-[#5f5a52] line-clamp-1">{heroP1?.creatorName}</p>
                     </div>
                   </div>
                 )}
               </Link>
 
-              <div className="col-span-5 row-span-2 rounded-[8px] border border-[#d8d2c7] bg-white p-5 shadow-sm">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0f766e]">Indexed Mediums</p>
-                <p className="mt-3 text-3xl font-semibold">{data.categories.length}</p>
-                <p className="mt-1 text-sm text-[#6f6a61]">creative formats</p>
+              <div className="col-span-5 row-span-2 rounded-xl border border-[#ded9cf] bg-white p-4 shadow-xs flex flex-col justify-center">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0f766e]">Indexed Mediums</p>
+                <p className="mt-1 text-2xl font-bold text-[#151515]">{data.categories.length}</p>
+                <p className="text-[11px] text-[#6f6a61]">creative formats ready</p>
               </div>
 
-              <Link href={heroP2Href} className="media-tile col-span-4 row-span-2 rounded-[8px] relative overflow-hidden bg-[#e3ddd1] group block transition hover:ring-2 hover:ring-[#0f766e]">
+              <Link href={heroP2Href} className="media-tile col-span-4 row-span-2 rounded-xl relative overflow-hidden bg-[#e3ddd1] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
                 {heroP2?.thumbnailUrl ? (
-                  <Image alt={heroP2.title} src={heroP2.thumbnailUrl} fill sizes="24vw" priority className="object-cover transition duration-500 group-hover:scale-105" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={heroP2.title}
+                    src={heroP2.thumbnailUrl}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
-                  <div className="flex h-full flex-col justify-center p-4">
-                    <span className="text-xs font-semibold text-[#0f766e]">{heroP2?.type}</span>
-                    <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1 group-hover:text-[#0f766e] transition">{heroP2?.title}</p>
+                  <div className="flex h-full flex-col justify-center p-3">
+                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP2?.type}</span>
+                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP2?.title}</p>
                   </div>
                 )}
               </Link>
 
-              <Link href={heroP3Href} className="media-tile col-span-8 row-span-2 rounded-[8px] relative overflow-hidden bg-[#ede7dc] group block transition hover:ring-2 hover:ring-[#0f766e]">
+              <Link href={heroP3Href} className="media-tile col-span-8 row-span-2 rounded-xl relative overflow-hidden bg-[#ede7dc] group block transition hover:ring-2 hover:ring-[#0f766e] border border-[#ded9cf]">
                 {heroP3?.thumbnailUrl ? (
-                  <Image alt={heroP3.title} src={heroP3.thumbnailUrl} fill sizes="42vw" priority className="object-cover transition duration-500 group-hover:scale-105" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={heroP3.title}
+                    src={heroP3.thumbnailUrl}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
-                  <div className="flex h-full flex-col justify-center p-5">
-                    <span className="text-xs font-semibold text-[#0f766e]">{heroP3?.type}</span>
-                    <p className="mt-1 font-bold text-[#151515] text-sm line-clamp-1 group-hover:text-[#0f766e] transition">{heroP3?.title}</p>
+                  <div className="flex h-full flex-col justify-center p-4">
+                    <span className="text-[10px] font-semibold text-[#0f766e]">{heroP3?.type}</span>
+                    <p className="mt-0.5 font-bold text-[#151515] text-xs line-clamp-1 group-hover:text-[#0f766e] transition">{heroP3?.title}</p>
                   </div>
                 )}
               </Link>
             </div>
           ) : (
-            <div className="surface p-8 sm:p-10 flex flex-col justify-between shadow-xs max-sm:hidden min-h-[480px]">
+            <div className="surface p-8 sm:p-10 flex flex-col justify-between shadow-xs min-h-[420px] rounded-2xl border border-[#ded9cf]">
               <div>
                 <span className="section-eyebrow text-[#0f766e]">Platform Manifesto</span>
-                <h3 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight text-[#151515] leading-tight">
+                <h3 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#151515] leading-tight">
                   Independent work across every creative discipline.
                 </h3>
-                <p className="mt-4 text-sm leading-relaxed text-[#6f6a61] max-w-lg">
+                <p className="mt-3 text-xs leading-relaxed text-[#6f6a61] max-w-lg">
                   No sample or placeholder projects are displayed. The stage is live for real creators to publish works with transparent AI disclosure and attribution.
                 </p>
 
-                <div className="mt-8 flex flex-wrap gap-2">
+                <div className="mt-6 flex flex-wrap gap-2">
                   {data.categories.slice(0, 10).map((cat) => (
                     <span
                       key={cat}
-                      className="rounded-full bg-[#f6f4ef] px-3 py-1 text-xs font-semibold text-[#504b44] border border-[#ded9cf]"
+                      className="rounded-full bg-[#f6f4ef] px-2.5 py-1 text-[11px] font-semibold text-[#504b44] border border-[#ded9cf]"
                     >
                       {cat.replaceAll("_", " ")}
                     </span>
                   ))}
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#0f766e] border border-[#0f766e]/30">
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0f766e] border border-[#0f766e]/30">
                     +23 more disciplines
                   </span>
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-[#ded9cf] flex items-center justify-between">
-                <p className="text-xs text-[#8c857b]">Database connected: PostgreSQL</p>
-                <Link href="/studio/upload" className="button-primary !py-2 text-xs">
-                  <UploadCloud size={15} />
+              <div className="pt-6 border-t border-[#ded9cf] flex items-center justify-between">
+                <p className="text-[11px] text-[#8c857b]">Database connected: PostgreSQL</p>
+                <Link href="/studio/upload" className="button-primary !py-1.5 text-xs">
+                  <UploadCloud size={14} />
                   Publish First Creation
                 </Link>
               </div>
             </div>
           )}
-
-          <Link href={heroP0Href} className="media-tile h-72 rounded-[8px] sm:hidden relative overflow-hidden bg-[#e6dfd1] block transition hover:ring-2 hover:ring-[#0f766e]">
-            {heroP0?.thumbnailUrl ? (
-              <Image alt={heroP0.title} src={heroP0.thumbnailUrl} fill sizes="92vw" priority className="object-cover" />
-            ) : (
-              <div className="flex h-full flex-col justify-center p-6 text-center">
-                <span className="text-xs font-semibold text-[#0f766e]">33 Creative Disciplines</span>
-                <p className="mt-2 text-xl font-bold text-[#151515]">A home for serious creative work.</p>
-                <p className="mt-2 text-xs text-[#6f6a61]">The global stage for authentic craftsmanship and transparent AI experiments.</p>
-              </div>
-            )}
-          </Link>
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <SectionIntro eyebrow="Trending now" title="Creations moving through culture." href="/trending" />
-          {data.projects.length ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {data.projects.slice(0, 12).map((project) => (
-                <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
-              ))}
-            </div>
-          ) : (
-            <EmptyContent />
-          )}
-        </div>
+      {/* Mobile hero showcase */}
+      <Link href={heroP0Href} className="media-tile h-64 rounded-xl sm:hidden relative overflow-hidden bg-[#e6dfd1] block transition hover:ring-2 hover:ring-[#0f766e] mb-12 border border-[#ded9cf]">
+        {heroP0?.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img alt={heroP0.title} src={heroP0.thumbnailUrl} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full flex-col justify-center p-6 text-center">
+            <span className="text-xs font-semibold text-[#0f766e]">33 Creative Disciplines</span>
+            <p className="mt-2 text-xl font-bold text-[#151515]">A home for serious creative work.</p>
+            <p className="mt-2 text-xs text-[#6f6a61]">The global stage for authentic craftsmanship and transparent AI experiments.</p>
+          </div>
+        )}
+      </Link>
+
+      <section className="py-12 border-t border-[#ded9cf]">
+        <SectionIntro eyebrow="Trending now" title="Creations moving through culture." href="/trending" />
+        {data.projects.length ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {data.projects.slice(0, 12).map((project) => (
+              <ProjectCard project={project} key={`${project.creatorId}-${project.slug}`} />
+            ))}
+          </div>
+        ) : (
+          <EmptyContent />
+        )}
       </section>
 
-      <section className="border-y border-[#ded9cf] bg-[#151515] px-5 py-20 text-white sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+      {/* Transparent AI Hub Banner */}
+      <section className="rounded-2xl bg-[#151515] p-6 sm:p-10 text-white my-12 shadow-sm">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="section-eyebrow text-rose-300">AI creations hub</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
+            <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-4xl">
               Transparent AI publishing, built into the culture.
             </h2>
-            <p className="mt-5 text-lg leading-8 text-white/66">
+            <p className="mt-4 text-sm leading-relaxed text-white/70">
               AI-assisted and fully AI-generated work stays clearly labeled, searchable, recommendable, and ready for creator communities.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {[
               ["AI content tagging", "Label AI-assisted and fully AI-generated creations with transparent metadata."],
               ["AI discovery", "Personalize search, recommendations, and category exploration around creator intent."],
               ["Generated thumbnails", "Prepare adaptive visuals for films, tracks, stories, apps, and experiments."],
               ["Creator assistant", "Help creators caption, describe, and package original work for discovery."],
             ].map(([title, body]) => (
-              <article className="rounded-[8px] border border-white/12 bg-white/[0.06] p-5" key={title}>
-                <WandSparkles className="mb-8 text-[#f4a261]" size={28} />
-                <h3 className="text-xl font-semibold">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-white/62">{body}</p>
+              <article className="rounded-xl border border-white/10 bg-white/[0.05] p-4.5" key={title}>
+                <WandSparkles className="mb-4 text-[#f4a261]" size={22} />
+                <h3 className="text-base font-bold text-white">{title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-white/60">{body}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_0.85fr]">
+      {/* Top Creators & Communities Grid */}
+      <section className="py-10 border-t border-[#ded9cf]">
+        <div className="grid gap-10 lg:grid-cols-[1fr_0.85fr]">
           <div>
             <div className="flex items-center justify-between">
               <p className="section-eyebrow text-[#0f766e]">Top Creators</p>
@@ -254,10 +276,10 @@ export default async function Home() {
                   return (
                     <Link
                       href={`/@${creatorRef}`}
-                      className="group grid gap-4 py-5 sm:grid-cols-[56px_1fr_auto] sm:items-center hover:bg-[#faf8f5] px-2 -mx-2 rounded-lg transition"
+                      className="group grid gap-4 py-4 sm:grid-cols-[48px_1fr_auto] sm:items-center hover:bg-[#faf8f5] px-2 -mx-2 rounded-lg transition"
                       key={creator.userId}
                     >
-                      <span className="text-3xl font-bold font-mono text-[#c8c0b2] group-hover:text-[#0f766e] transition">
+                      <span className="text-2xl font-bold font-mono text-[#c8c0b2] group-hover:text-[#0f766e] transition">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <div className="flex items-center gap-3 min-w-0">
@@ -266,17 +288,17 @@ export default async function Home() {
                           <img
                             src={creator.avatarUrl}
                             alt={creator.displayName || creator.username}
-                            className="size-10 rounded-full object-cover border border-[#ded9cf] shrink-0"
+                            className="size-9 rounded-full object-cover border border-[#ded9cf] shrink-0"
                           />
                         ) : (
-                          <div className="grid size-10 place-items-center rounded-full bg-[#0f766e] text-white font-bold text-xs uppercase shrink-0">
+                          <div className="grid size-9 place-items-center rounded-full bg-[#0f766e] text-white font-bold text-xs uppercase shrink-0">
                             {(creator.displayName || creator.username).slice(0, 2).toUpperCase()}
                           </div>
                         )}
                         <div className="min-w-0">
-                          <h3 className="flex items-center gap-1.5 text-lg font-bold text-[#151515] group-hover:text-[#0f766e] transition truncate">
+                          <h3 className="flex items-center gap-1.5 text-base font-bold text-[#151515] group-hover:text-[#0f766e] transition truncate">
                             {creator.displayName ?? creator.username}
-                            {creator.verified ? <Sparkles className="text-[#0f766e] shrink-0" size={15} /> : null}
+                            {creator.verified ? <Sparkles className="text-[#0f766e] shrink-0" size={14} /> : null}
                           </h3>
                           <div className="flex items-center gap-2 text-xs text-[#6f6a61] font-mono">
                             <span>@{creator.username}</span>
@@ -309,15 +331,15 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="surface p-6">
-            <UsersRound className="text-[#0f766e]" size={30} />
-            <p className="section-eyebrow mt-5 text-[#0f766e]">Featured communities</p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight">Find your creative neighborhood.</h2>
-            <div className="mt-8 grid gap-3">
+          <div className="surface p-6 rounded-2xl border border-[#ded9cf]">
+            <UsersRound className="text-[#0f766e]" size={26} />
+            <p className="section-eyebrow mt-4 text-[#0f766e]">Featured communities</p>
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-[#151515]">Find your creative neighborhood.</h2>
+            <div className="mt-6 grid gap-2.5">
               {data.communities.map((community) => (
-                <Link className="surface flex justify-between gap-4 p-4 text-[#504b44] transition hover:border-[#0f766e] hover:text-[#151515]" href={`/communities/${community.slug}`} key={community.slug}>
-                  <span>{community.name}</span>
-                  <span className="text-[#837c70]">{community.memberCount ?? 0} members</span>
+                <Link className="flex justify-between items-center gap-4 p-3.5 rounded-xl border border-[#ded9cf] bg-white text-[#504b44] transition hover:border-[#0f766e] hover:text-[#151515] hover:shadow-2xs" href={`/communities/${community.slug}`} key={community.slug}>
+                  <span className="text-xs font-bold">{community.name}</span>
+                  <span className="text-[11px] text-[#837c70] font-mono">{community.memberCount ?? 0} members</span>
                 </Link>
               ))}
             </div>
@@ -325,42 +347,42 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <SectionIntro
-            eyebrow="Explore by category"
-            title="Every medium gets a doorway."
-            body="Music, films, writing, apps, inventions, fashion, architecture, games, AI experiments, and the beautiful formats still being invented."
-          />
-          <div className="flex flex-wrap gap-3">
-            {data.categories.map((category) => (
-              <Link className="pill" href={`/categories/${category}`} key={category}>
-                {category.replaceAll("_", " ")}
-              </Link>
-            ))}
-          </div>
+      {/* Explore by Category */}
+      <section className="py-10 border-t border-[#ded9cf]">
+        <SectionIntro
+          eyebrow="Explore by category"
+          title="Every medium gets a doorway."
+          body="Music, films, writing, apps, inventions, fashion, architecture, games, AI experiments, and the beautiful formats still being invented."
+        />
+        <div className="flex flex-wrap gap-2.5">
+          {data.categories.map((category) => (
+            <Link className="rounded-full bg-white border border-[#ded9cf] px-3.5 py-1.5 text-xs font-semibold text-[#504b44] hover:bg-[#151515] hover:text-white transition" href={`/categories/${category}`} key={category}>
+              {category.replaceAll("_", " ")}
+            </Link>
+          ))}
         </div>
       </section>
 
-      <section className="px-5 pb-24 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="flex flex-col justify-between rounded-[8px] bg-[#151515] p-7 text-white">
+      {/* Upload Studio Banner */}
+      <section className="py-10 border-t border-[#ded9cf]">
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="flex flex-col justify-between rounded-2xl bg-[#151515] p-7 text-white">
             <div>
-              <UploadCloud size={32} />
-              <p className="mt-5 text-sm font-bold uppercase tracking-[0.18em] text-white/52">Upload Studio</p>
-              <h2 className="mt-4 text-4xl font-semibold tracking-tight">Publish any medium from one expressive studio.</h2>
+              <UploadCloud size={28} className="text-[#0f766e]" />
+              <p className="mt-4 text-xs font-bold uppercase tracking-wider text-white/50">Upload Studio</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight">Publish any medium from one expressive studio.</h2>
             </div>
-            <Link className="mt-10 inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#151515] transition hover:bg-[#e8e2d8]" href="/studio/upload">
-              Create a project
-              <ArrowRight size={18} />
+            <Link className="mt-8 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-bold text-[#151515] transition hover:bg-[#e8e2d8]" href="/studio/upload">
+              Create a Project
+              <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="surface p-6">
+          <div className="surface p-6 rounded-2xl border border-[#ded9cf]">
             <p className="section-eyebrow text-[#0f766e]">Platform system</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
               {featureMatrix.map((feature) => (
-                <div className="flex items-center gap-3 rounded-[8px] border border-[#ded9cf] bg-[#fbfaf7] p-4 text-[#5f5a52]" key={feature}>
-                  <ShieldCheck className="shrink-0 text-[#0f766e]" size={18} />
+                <div className="flex items-center gap-2.5 rounded-xl border border-[#ded9cf] bg-[#fbfaf7] p-3 text-xs text-[#5f5a52] font-medium" key={feature}>
+                  <ShieldCheck className="shrink-0 text-[#0f766e]" size={16} />
                   {feature}
                 </div>
               ))}
@@ -368,7 +390,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
-    </main>
+    </PageShell>
   );
 }
 
