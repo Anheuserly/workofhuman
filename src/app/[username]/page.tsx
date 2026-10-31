@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageShell } from "@/components/shell";
@@ -9,6 +10,84 @@ import { MessageCreatorModal } from "@/components/message-creator-modal";
 import { FollowButton } from "@/components/follow-button";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await params;
+  const decoded = decodeURIComponent(username || "");
+  const cleanHandle = decoded.replace(/^[@%40]+/, "").trim().toLowerCase();
+  const { profile } = await getProfileByUsername(cleanHandle);
+
+  const siteOrigin = "https://theworkofhuman.com";
+
+  if (!profile) {
+    // If it's a project ID shortcut (e.g. /67170d0e)
+    const directProject = await getProjectBySlug(cleanHandle);
+    if (directProject) {
+      const creatorDisplay = directProject.creatorName || directProject.creatorUsername || "creator";
+      const title = `${directProject.title} • by ${creatorDisplay} | The Work of Human`;
+      let ogImage = directProject.thumbnailUrl;
+      if (ogImage && ogImage.startsWith("/")) ogImage = `${siteOrigin}${ogImage}`;
+
+      return {
+        title,
+        description: directProject.description?.slice(0, 200) || `Experience ${directProject.title} on The Work of Human.`,
+        openGraph: {
+          siteName: "The Work of Human",
+          title,
+          description: directProject.description?.slice(0, 200) || `Experience ${directProject.title} on The Work of Human.`,
+          images: ogImage ? [{ url: ogImage, width: 1280, height: 720 }] : [],
+        },
+      };
+    }
+
+    return {
+      title: "Creator Not Found | The Work of Human",
+      description: "We couldn't find this creator on The Work of Human.",
+    };
+  }
+
+  const name = profile.displayName || `@${profile.username}`;
+  const title = `${name} (@${profile.username}) • Portfolio | The Work of Human`;
+  const description = profile.bio || `Explore original portfolio and creative works by ${name} on The Work of Human.`;
+  const image = profile.avatarUrl || profile.bannerUrl;
+  const absoluteImage = image ? (image.startsWith("/") ? `${siteOrigin}${image}` : image) : undefined;
+  const pageUrl = `${siteOrigin}/@${profile.shortId || profile.username}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      type: "profile",
+      siteName: "The Work of Human",
+      title,
+      description,
+      url: pageUrl,
+      images: absoluteImage
+        ? [
+            {
+              url: absoluteImage,
+              width: 800,
+              height: 800,
+              alt: name,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: absoluteImage ? [absoluteImage] : [],
+    },
+  };
+}
 
 export default async function CreatorProfilePage({
   params,

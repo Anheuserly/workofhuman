@@ -1,8 +1,107 @@
+import type { Metadata } from "next";
 import { getProjectBySlug, getProfileByUsername } from "@/lib/home-data";
 import Link from "next/link";
 import { PageShell } from "@/components/shell";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ creatorId: string; projectSlug: string }>;
+}): Promise<Metadata> {
+  const { creatorId, projectSlug } = await params;
+  const decodedCreator = decodeURIComponent(creatorId || "").trim().replace(/^[@%40]+/, "");
+  const [project, { profile }] = await Promise.all([
+    getProjectBySlug(projectSlug),
+    getProfileByUsername(decodedCreator),
+  ]);
+
+  if (!project) {
+    return {
+      title: "Creation Not Found | The Work of Human",
+      description: "The requested creation could not be located on The Work of Human.",
+    };
+  }
+
+  const siteOrigin = "https://theworkofhuman.com";
+  const creatorDisplay = profile?.displayName || project.creatorName || profile?.username || project.creatorUsername || "creator";
+  const title = `${project.title} • by ${creatorDisplay} | The Work of Human`;
+  const rawDescription = project.description?.trim();
+  const description = rawDescription
+    ? (rawDescription.length > 200 ? rawDescription.slice(0, 197) + "..." : rawDescription)
+    : `Experience "${project.title}" by ${creatorDisplay} on The Work of Human.`;
+
+  let ogImage = project.thumbnailUrl;
+  if (ogImage && ogImage.startsWith("/")) {
+    ogImage = `${siteOrigin}${ogImage}`;
+  }
+
+  const videoUrl =
+    project.mediaUrls?.find((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
+    (project.thumbnailUrl && /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(project.thumbnailUrl)
+      ? project.thumbnailUrl
+      : undefined);
+
+  const absoluteVideoUrl = videoUrl
+    ? (videoUrl.startsWith("/") ? `${siteOrigin}${videoUrl}` : videoUrl)
+    : undefined;
+
+  const targetCreator = profile?.shortId || project.creatorShortId || profile?.username || project.creatorUsername || decodedCreator;
+  const pageUrl = `${siteOrigin}/@${targetCreator}/${project.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      type: absoluteVideoUrl ? "video.other" : "article",
+      siteName: "The Work of Human",
+      title: project.title,
+      description,
+      url: pageUrl,
+      images: ogImage
+        ? [
+            {
+              url: ogImage,
+              width: 1280,
+              height: 720,
+              alt: project.title,
+            },
+          ]
+        : [],
+      videos: absoluteVideoUrl
+        ? [
+            {
+              url: absoluteVideoUrl,
+              secureUrl: absoluteVideoUrl,
+              type: "video/mp4",
+              width: 1280,
+              height: 720,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: absoluteVideoUrl ? "player" : "summary_large_image",
+      title: project.title,
+      description,
+      images: ogImage ? [ogImage] : [],
+      players: absoluteVideoUrl
+        ? [
+            {
+              playerUrl: pageUrl,
+              streamUrl: absoluteVideoUrl,
+              width: 1280,
+              height: 720,
+            },
+          ]
+        : undefined,
+    },
+  };
+}
 
 export default async function CreatorProjectShortcutPage({
   params,
