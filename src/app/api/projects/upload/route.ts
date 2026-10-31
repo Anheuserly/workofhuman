@@ -41,6 +41,23 @@ function generateId(prefix: string): string {
   return `${prefix}_${uuid}`;
 }
 
+function generateShortId(length = 8): string {
+  const chars = "23456789abcdefghjkmnpqrstuvwxyz";
+  let result = "";
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    for (let i = 0; i < length; i++) {
+      result += chars[bytes[i] % chars.length];
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      result += chars[Math.floor(Math.random() * chars.length)];
+    }
+  }
+  return result;
+}
+
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
@@ -81,29 +98,25 @@ export async function POST(request: Request) {
       cleanMediaUrls.some((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
       ["films", "short_movies", "cinematic_edits", "animations", "ai_films", "video"].includes(type);
 
-    // Generate unique slug: if video and no custom slug given, show as unique ID
-    let finalSlug = projectId;
+    // Generate unique slug: if video and no custom slug given, use clean 8-character unique ID
+    const shortId = generateShortId(8);
+    let finalSlug = shortId;
     if (customSlug && customSlug.trim().length > 0) {
       finalSlug = slugify(customSlug);
     } else if (!isVideoProject && title) {
       finalSlug = slugify(title);
     }
 
-    if (!finalSlug) finalSlug = projectId;
+    if (!finalSlug) finalSlug = shortId;
 
     // Ensure slug uniqueness
-    if (finalSlug !== projectId) {
-      const existingSlug = await query(
-        `SELECT id FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
-        [finalSlug]
-      );
-      if (existingSlug.rows.length > 0) {
-        const shortSuffix =
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID().replace(/-/g, "").slice(0, 6)
-            : Math.random().toString(36).substring(2, 8);
-        finalSlug = `${finalSlug}-${shortSuffix}`;
-      }
+    const existingSlug = await query(
+      `SELECT id FROM workofhuman.projects WHERE slug = $1 LIMIT 1`,
+      [finalSlug]
+    );
+    if (existingSlug.rows.length > 0) {
+      const shortSuffix = generateShortId(4);
+      finalSlug = `${finalSlug}-${shortSuffix}`;
     }
 
     await query(

@@ -1029,7 +1029,7 @@ export default function UploadStudioPage() {
                       type="text"
                       value={slug}
                       onChange={(e) => setSlug(e.target.value)}
-                      placeholder="Leave empty for unique content ID (e.g. proj_...)"
+                      placeholder="Leave empty for unique content ID (e.g. 8-char short ID)"
                       className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] font-mono placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
                     />
                   </div>
