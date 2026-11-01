@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electrical Transformers: Masterclass Handbook & Presentation</title>
+  <style>
+    /* ==========================================================================
+       CANVAS PRESENTATION DECK SYSTEM (16:9 RATIO)
+       Electrical Transformers: Theory, Types, Construction, Properties & Formulas
+       ========================================================================== */
+    :root {
+      --bg-dark: #0a0f1d;
+      --bg-card: #131b2e;
+      --bg-card-hover: #1c2742;
+      --border-subtle: #1e293b;
+      --border-highlight: #334155;
+      
+      --copper: #f59e0b;
+      --copper-light: #fbbf24;
+      --copper-glow: rgba(245, 158, 11, 0.2);
+      
+      --cyan: #06b6d4;
+      --cyan-light: #22d3ee;
+      --cyan-glow: rgba(6, 182, 212, 0.2);
+      
+      --teal: #10b981;
+      --teal-light: #34d399;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #030712;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Fixed Presentation Navigation Bar */
+    .deck-controls {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-highlight);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .deck-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .deck-btn:hover {
+      background: var(--copper);
+      color: #000;
+      border-color: var(--copper);
+      transform: translateY(-1px);
+    }
+
+    .deck-btn-primary {
+      background: #0f766e;
+      border-color: #14b8a6;
+      color: #fff;
+    }
+
+    .deck-btn-primary:hover {
+      background: #14b8a6;
+      border-color: #2dd4bf;
+      color: #000;
+    }
+
+    .slide-indicator {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--cyan-light);
+      font-weight: 700;
+      padding: 0 8px;
+    }
+
+    /* Main Slides Canvas Container */
+    .slides-viewport {
+      width: 100%;
+      max-width: 1360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 72px 20px 40px 20px;
+      gap: 36px;
+    }
+
+    /* Standard 16:9 Presentation Canvas Slide */
+    .slide {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(circle at 15% 15%, #141f38 0%, #0a0f1d 75%, #050811 100%);
+      border: 1px solid var(--border-highlight);
+      border-radius: 16px;
+      padding: 44px 54px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #f59e0b 0%, #06b6d4 50%, #10b981 100%);
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
+    }
+
+    .slide-title-group h2 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slide-subtitle {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .slide-pill {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--cyan-light);
+    }
+
+    /* Slide Content Layout Grids */
+    .slide-body {
+      flex: 1;
+      margin: 18px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Card Panels */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: border-color 0.2s;
+    }
+
+    .card-accent-copper {
+      border-left: 4px solid var(--copper);
+    }
+
+    .card-accent-cyan {
+      border-left: 4px solid var(--cyan);
+    }
+
+    .card-accent-teal {
+      border-left: 4px solid var(--teal);
+    }
+
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p, .card li {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .card ul {
+      margin-left: 18px;
+      margin-top: 6px;
+    }
+
+    /* Mathematical Formula Box */
+    .formula-box {
+      background: rgba(10, 15, 29, 0.85);
+      border: 1px solid var(--border-highlight);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .formula-box.glow-copper {
+      border-color: rgba(245, 158, 11, 0.4);
+      box-shadow: 0 0 20px var(--copper-glow);
+    }
+
+    .formula-box.glow-cyan {
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    .formula-title {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--copper-light);
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .math-expr {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    .math-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Comparison Tables */
+    .slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      text-align: left;
+    }
+
+    .slide-table th {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--cyan-light);
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.05em;
+      padding: 9px 12px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .slide-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .slide-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .slide-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slide-number {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--copper-light);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .badge-copper { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-teal { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* SVG Circuit Icons */
+    .icon-svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+    }
+
+    /* PRINT TO PDF EXACT 16:9 LANDSCAPE RULES */
+    @media print {
+      body {
+        background: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .deck-controls {
+        display: none !important;
+      }
+
+      .slides-viewport {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        gap: 0 !important;
+      }
+
+      .slide {
+        width: 100vw !important;
+        height: 100vh !important;
+        aspect-ratio: auto !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      @page {
+        size: 16in 9in landscape;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Presentation Bar -->
+  <div class="deck-controls">
+    <button class="deck-btn" onclick="prevSlide()" title="Previous Slide (←)">
+      ◀ Prev
+    </button>
+    <div class="slide-indicator" id="slideIndicator">01 / 14</div>
+    <button class="deck-btn" onclick="nextSlide()" title="Next Slide (→)">
+      Next ▶
+    </button>
+    <button class="deck-btn deck-btn-primary" onclick="window.print()" title="Export PDF / Print">
+      📄 Export PDF
+    </button>
+  </div>
+
+  <div class="slides-viewport" id="viewport">
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 1: COVER & TITLE SLIDE                                       -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <span class="slide-pill">Electrical Engineering • Power Systems Series</span>
+          <h2 style="font-size: 38px; margin-top: 10px; color: #ffffff;">
+            Electrical Transformers Masterclass
+          </h2>
+          <p class="slide-subtitle" style="font-size: 18px; color: #94a3b8; margin-top: 6px;">
+            A Comprehensive Handbook on Classification, Construction, Operating Principles &amp; Mathematical Formulations
+          </p>
+        </div>
+        <span class="badge badge-copper" style="font-size: 12px; padding: 6px 14px;">16:9 Canvas Deck</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card card-accent-copper">
+            <span class="badge badge-copper" style="width: fit-content;">Core Theory</span>
+            <h3 style="margin-top: 8px;">Electromagnetic Principles</h3>
+            <p>Faraday’s Law of Mutual Induction, Lenz’s Law, magnetic flux linkage, and ideal vs practical transformer operations.</p>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <span class="badge badge-cyan" style="width: fit-content;">Taxonomy</span>
+            <h3 style="margin-top: 8px;">Complete Classification</h3>
+            <p>Power, Distribution, Autotransformers, Instrument Transformers (CT &amp; PT), Isolation, Dry-Type vs Oil-Immersed.</p>
+          </div>
+
+          <div class="card card-accent-teal">
+            <span class="badge badge-teal" style="width: fit-content;">Engineering Math</span>
+            <h3 style="margin-top: 8px;">Governing Formulas</h3>
+            <p>EMF equations, transformation ratio, core and copper losses, voltage regulation, equivalent circuit models &amp; efficiency conditions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left">
+          <span>The Work of Human • Engineering Technical Archive</span>
+          <span>•</span>
+          <span>Standard: IEC 60076 / IEEE C57</span>
+        </div>
+        <div class="slide-number">01 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 2: OPERATING PRINCIPLES & INDUCTION PHYSICS                 -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>02. Fundamental Working Principle</h2>
+          <p class="slide-subtitle">Electromagnetic induction without any physical moving parts (Static AC Machine)</p>
+        </div>
+        <span class="slide-pill">Faraday &amp; Lenz</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-cyan">
+            <h3>Law of Mutual Induction</h3>
+            <p>When alternating voltage $V_1$ is applied to the primary winding, it produces an alternating magnetizing current that establishes a mutual alternating flux $\Phi$ in the ferromagnetic core.</p>
+            <p style="margin-top: 10px;">This common flux links with both the primary and secondary windings, inducing an electromotive force (EMF) in each winding according to Faraday's law:</p>
+            <div class="formula-box glow-cyan">
+              <div class="formula-title">Faraday's &amp; Lenz's Law</div>
+              <div class="math-expr">e = -N \frac{d\Phi}{dt}</div>
+              <div class="math-desc">Negative sign indicates induced EMF opposes the cause producing it (Lenz's Law).</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-copper">
+            <h3>Ideal vs. Practical Transformer</h3>
+            <ul style="space-y-2;">
+              <li><strong>Zero Winding Resistance ($R_1 = R_2 = 0$):</strong> No copper ($I^2R$) losses.</li>
+              <li><strong>Zero Leakage Flux ($\Phi_{l1} = \Phi_{l2} = 0$):</strong> 100% of flux is confined in the core.</li>
+              <li><strong>Infinite Permeability ($\mu_r \to \infty$):</strong> Zero reluctance; infinitesimal current required to establish flux.</li>
+              <li><strong>Zero Core Losses ($P_h = P_e = 0$):</strong> No hysteresis or eddy current dissipation.</li>
+            </ul>
+            <div class="formula-box" style="margin-top: 14px;">
+              <div class="formula-title">Frequency Invariance Principle</div>
+              <div class="math-expr">f_{primary} = f_{secondary} = f_{core}</div>
+              <div class="math-desc">A transformer transforms voltage and current, but NEVER alters electrical frequency.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Operating Principles</span></div>
+        <div class="slide-number">02 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 3: MASTER TRANSFORMATION FORMULAS                           -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>03. Governing Equations of Transformation</h2>
+          <p class="slide-subtitle">Turn ratio, EMF derivation, and impedance reflection</p>
+        </div>
+        <span class="slide-pill">Core Formulas</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="formula-box glow-copper" style="height: 100%; display: flex; flex-direction: column; justify-content: space-around;">
+            <div>
+              <div class="formula-title">The Master EMF Equation</div>
+              <div class="math-expr" style="font-size: 20px;">E_{rms} = 4.44 \cdot f \cdot N \cdot \Phi_m</div>
+              <div class="math-expr" style="font-size: 16px; margin-top: 6px; color: var(--cyan-light);">E_{rms} = 4.44 \cdot f \cdot N \cdot B_m \cdot A_{core}</div>
+              <div class="math-desc" style="font-size: 12px; margin-top: 8px;">
+                Where $f$ = Supply Frequency (Hz), $N$ = Number of turns, $\Phi_m$ = Peak magnetic flux (Weber), $B_m$ = Maximum flux density ($\text{Tesla}$ or $\text{Wb/m}^2$), $A$ = Net core cross-sectional area ($\text{m}^2$).
+              </div>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+              <div class="formula-title">Transformation &amp; Turns Ratio ($k$)</div>
+              <div class="math-expr" style="font-size: 19px;">\frac{V_2}{V_1} \approx \frac{E_2}{E_1} = \frac{N_2}{N_1} = \frac{I_1}{I_2} = k</div>
+              <div class="math-desc">If $k > 1 \implies$ Step-Up; If $k < 1 \implies$ Step-Down. Note current transforms inversely to voltage.</div>
+            </div>
+          </div>
+
+          <div class="formula-box glow-cyan" style="height: 100%; display: flex; flex-direction: column; justify-content: space-around;">
+            <div>
+              <div class="formula-title">Turns Ratio ($a$) &amp; Impedance Reflection</div>
+              <div class="math-expr" style="font-size: 18px;">a = \frac{N_1}{N_2} = \frac{1}{k}</div>
+              <div class="math-desc" style="margin-top: 8px;">Impedance transferred from Secondary to Primary:</div>
+              <div class="math-expr" style="font-size: 16px; color: var(--copper-light); margin-top: 4px;">R_2' = a^2 \cdot R_2 = \left(\frac{N_1}{N_2}\right)^2 R_2</div>
+              <div class="math-expr" style="font-size: 16px; color: var(--cyan-light); margin-top: 4px;">X_2' = a^2 \cdot X_2 = \left(\frac{N_1}{N_2}\right)^2 X_2</div>
+              <div class="math-expr" style="font-size: 16px; color: #fff; margin-top: 4px;">Z_2' = a^2 \cdot Z_2</div>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+              <div class="formula-title">EMF Per Turn (Universal Invariant)</div>
+              <div class="math-expr" style="font-size: 18px;">\frac{E_1}{N_1} = \frac{E_2}{N_2} = 4.44 \cdot f \cdot \Phi_m</div>
+              <div class="math-desc">Both windings always experience the exact same induced voltage per turn.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Mathematical Foundations</span></div>
+        <div class="slide-number">03 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 4: COMPLETE TRANSFORMER CLASSIFICATION TAXONOMY             -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>04. Comprehensive Transformer Taxonomy</h2>
+          <p class="slide-subtitle">Categorization by application, structural construction, phase count, and insulation</p>
+        </div>
+        <span class="slide-pill">Classification</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="card card-accent-copper">
+            <span class="badge badge-copper">By Application</span>
+            <h3 style="margin-top: 6px;">Grid Purpose</h3>
+            <ul>
+              <li><strong>Power:</strong> High voltage transmission (>200 MVA).</li>
+              <li><strong>Distribution:</strong> End-user supply (≤2500 kVA, 11kV/415V).</li>
+              <li><strong>Autotransformer:</strong> Inter-grid voltage tie.</li>
+              <li><strong>Instrument:</strong> CT &amp; PT metering/protection.</li>
+              <li><strong>Isolation:</strong> 1:1 safety &amp; harmonic decoupling.</li>
+            </ul>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <span class="badge badge-cyan">By Construction</span>
+            <h3 style="margin-top: 6px;">Magnetic Design</h3>
+            <ul>
+              <li><strong>Core Type:</strong> Windings encircle core limbs; preferred for high voltage.</li>
+              <li><strong>Shell Type:</strong> Core encircles windings; excellent mechanical bracing.</li>
+              <li><strong>Berry Type:</strong> Multi-limb radial shell; high cooling surface.</li>
+              <li><strong>Toroidal:</strong> Doughnut core; near-zero leakage flux.</li>
+            </ul>
+          </div>
+
+          <div class="card card-accent-teal">
+            <span class="badge badge-teal">By Cooling Medium</span>
+            <h3 style="margin-top: 6px;">Thermal Class</h3>
+            <ul>
+              <li><strong>Dry-Type (VPI/Cast Resin):</strong> Fire-safe for indoor commercial facilities.</li>
+              <li><strong>Oil-Immersed (ONAN/ONAF):</strong> Mineral or synthetic ester oil for high thermal dissipation.</li>
+              <li><strong>Forced Cooling (OFAF/ODAF):</strong> Pumped oil &amp; fans for massive power units.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <span class="badge badge-copper">By Phase &amp; Freq</span>
+            <h3 style="margin-top: 6px;">System Service</h3>
+            <ul>
+              <li><strong>Single-Phase (1-Φ):</strong> Residential pole-top, traction.</li>
+              <li><strong>Three-Phase (3-Φ):</strong> Standard commercial &amp; grid power.</li>
+              <li><strong>High-Frequency (Ferrite):</strong> SMPS, flyback, inverter stages (kHz to MHz).</li>
+              <li><strong>Earthing/Grounding:</strong> Zig-zag winding creates neutral.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>System Taxonomy</span></div>
+        <div class="slide-number">04 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 5: CORE MATERIALS & MAGNETIC PROPERTIES                     -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>05. Core Construction &amp; Magnetic Properties</h2>
+          <p class="slide-subtitle">Metallurgy, silicon steel laminations, and suppression of parasitic losses</p>
+        </div>
+        <span class="slide-pill">Metallurgy &amp; Physics</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-copper">
+            <h3>Cold Rolled Grain Oriented (CRGO) Steel</h3>
+            <p>Modern transformer cores use silicon alloyed steel (approx 3.2% Si) cold-rolled to align crystal grains in the rolling direction, yielding very high permeability $\mu_r$ and narrow hysteresis loop.</p>
+            <ul style="margin-top: 8px;">
+              <li><strong>Lamination Thickness:</strong> Typically <strong>0.23 mm to 0.35 mm</strong> insulated with Carlite varnish.</li>
+              <li><strong>Saturation Flux Density ($B_{sat}$):</strong> Operates between <strong>1.6 T and 1.8 T</strong> to prevent saturation under overvoltage.</li>
+              <li><strong>Step-Lap Mitred Joints:</strong> 45° mitered overlapping joints reduce joint reluctance and inrush acoustics.</li>
+            </ul>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <h3>Amorphous Metal (Metglas) Cores</h3>
+            <p>Produced by ultra-rapid cooling (1,000,000 °C/sec) of molten alloy, resulting in non-crystalline glass-like atomic structure.</p>
+            <ul style="margin-top: 8px;">
+              <li><strong>No-Load Loss Reduction:</strong> Reduces core hysteresis &amp; eddy losses by up to <strong>70% – 80%</strong> compared to standard CRGO.</li>
+              <li><strong>Trade-Offs:</strong> Lower saturation flux density ($B_{sat} \approx 1.56\text{ T}$), mechanically brittle, higher initial cost.</li>
+              <li><strong>Target Application:</strong> High-efficiency green distribution transformers.</li>
+            </ul>
+            <div class="formula-box glow-copper" style="margin-top: 12px;">
+              <div class="formula-title">Stacking Factor ($k_i$)</div>
+              <div class="math-expr">A_{net} = k_i \cdot A_{gross} \quad (k_i \approx 0.90 \text{ to } 0.96)</div>
+              <div class="math-desc">Accounts for insulation varnish occupying physical core volume.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Core Architecture</span></div>
+        <div class="slide-number">05 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 6: WINDING TYPES & INSULATION SYSTEMS                       -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>06. Windings &amp; Dielectric Insulation Systems</h2>
+          <p class="slide-subtitle">Conductors, winding geometries, and thermal classification standards</p>
+        </div>
+        <span class="slide-pill">Insulation &amp; Thermal</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-teal">
+            <h3>Winding Types &amp; Placement</h3>
+            <p>Low-voltage (LV) winding is placed nearest to the core limb to reduce required dielectric clearance to ground. High-voltage (HV) winding surrounds the LV winding.</p>
+            <ul style="margin-top: 6px;">
+              <li><strong>Cylindrical / Layer Winding:</strong> Low voltage, up to 33 kV.</li>
+              <li><strong>Helical Winding:</strong> High current LV windings (interleaved multi-strip).</li>
+              <li><strong>Continuous Disc Winding:</strong> Standard for medium &amp; high voltage systems; excellent axial short-circuit withstand.</li>
+              <li><strong>Foil Winding:</strong> Copper or aluminum sheet across full axial length, ideal for Cast Resin Dry Transformers.</li>
+            </ul>
+          </div>
+
+          <div class="card card-accent-copper">
+            <h3>Thermal Insulation Classes (IEC / NEMA)</h3>
+            <table class="slide-table" style="margin-top: 8px;">
+              <thead>
+                <tr>
+                  <th>Class</th>
+                  <th>Max Temp</th>
+                  <th>Typical Materials</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Class A</strong></td>
+                  <td>105 °C</td>
+                  <td>Kraft paper, pressboard in mineral oil.</td>
+                </tr>
+                <tr>
+                  <td><strong>Class B</strong></td>
+                  <td>130 °C</td>
+                  <td>Inorganic materials with bonding varnish.</td>
+                </tr>
+                <tr>
+                  <td><strong>Class F</strong></td>
+                  <td>155 °C</td>
+                  <td>Resin-encapsulated glass cloth, mica.</td>
+                </tr>
+                <tr>
+                  <td><strong>Class H</strong></td>
+                  <td>180 °C</td>
+                  <td>Silicone elastomers, Nomex aramid paper.</td>
+                </tr>
+                <tr>
+                  <td><strong>Class C</strong></td>
+                  <td>> 180 °C</td>
+                  <td>Porcelain, ceramic, high-temp composites.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Dielectric Materials</span></div>
+        <div class="slide-number">06 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 7: POWER VS DISTRIBUTION TRANSFORMERS                       -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>07. Power vs. Distribution Transformers</h2>
+          <p class="slide-subtitle">Operating philosophy, load cycles, and efficiency optimization points</p>
+        </div>
+        <span class="slide-pill">Grid Engineering</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="card" style="padding: 14px 20px;">
+          <table class="slide-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Design Feature</th>
+                <th style="width: 37%;">Power Transformer</th>
+                <th style="width: 38%;">Distribution Transformer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Grid Location</strong></td>
+                <td>Generating stations &amp; transmission substations (>132 kV).</td>
+                <td>Distribution networks, commercial facilities, end-users (11kV/415V).</td>
+              </tr>
+              <tr>
+                <td><strong>Load Profile</strong></td>
+                <td>Continuous near 100% full load around the clock.</td>
+                <td>Widely fluctuating load (average 50% to 70% load over 24 hours).</td>
+              </tr>
+              <tr>
+                <td><strong>Efficiency Target</strong></td>
+                <td>Engineered for <strong>Maximum Commercial Efficiency at 100% Full Load</strong> ($P_i = P_{cu,FL}$).</td>
+                <td>Engineered for <strong>Maximum All-Day Efficiency at 50% – 70% Load</strong> ($P_i \ll P_{cu,FL}$).</td>
+              </tr>
+              <tr>
+                <td><strong>Impedance (%Z)</strong></td>
+                <td>High (10% to 15%) to limit catastrophic downstream fault levels.</td>
+                <td>Low (4% to 5%) to maintain tight voltage regulation at consumer taps.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="formula-box glow-copper" style="margin-top: 14px;">
+          <div class="formula-title">All-Day Energy Efficiency ($\eta_{all-day}$)</div>
+          <div class="math-expr">\eta_{all-day} = \frac{\text{Energy Output (kWh in 24 hours)}}{\text{Energy Input (kWh in 24 hours)}} = \frac{\text{Output kWh}}{\text{Output kWh} + 24 \cdot P_i + \sum (x_t^2 P_{cu} \cdot t)} \times 100\%</div>
+          <div class="math-desc">Core loss ($P_i$) runs 24/7 regardless of load; copper loss scales with square of hourly load factor ($x_t^2$).</div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Operational Comparison</span></div>
+        <div class="slide-number">07 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 8: AUTOTRANSFORMERS & SPECIALTY DESIGNS                      -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-8">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>08. Autotransformers &amp; Specialty Units</h2>
+          <p class="slide-subtitle">Common winding configurations, copper economy, and isolation decoupling</p>
+        </div>
+        <span class="slide-pill">Specialty Machinery</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-copper">
+            <h3>Autotransformer: Principle &amp; Economy</h3>
+            <p>Utilizes a single continuous winding shared between primary and secondary, where energy is transferred partly by <strong>conduction</strong> and partly by <strong>induction</strong>.</p>
+            <div class="formula-box glow-copper" style="margin-top: 10px;">
+              <div class="formula-title">Copper Weight Saving</div>
+              <div class="math-expr">\text{Weight of Cu}_{Auto} = (1 - k) \cdot \text{Weight of Cu}_{2-Winding}</div>
+              <div class="math-desc">Maximum economy when $k \to 1$ (e.g. stepping 400 kV to 220 kV).</div>
+            </div>
+            <div class="formula-box" style="margin-top: 10px;">
+              <div class="formula-title">Power Conduction vs Induction</div>
+              <div class="math-expr">S_{transformed} = (1 - k) S_{total} \quad \Big| \quad S_{conducted} = k \cdot S_{total}</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <h3>Specialty Transformers</h3>
+            <ul style="margin-top: 6px;">
+              <li><strong>Galvanic Isolation Transformer (1:1 Ratio):</strong>
+                Zero physical connection between primary and secondary. Decouples ground loops, eliminates common-mode surges, protects sensitive hospital/medical equipment.
+              </li>
+              <li><strong>Toroidal Transformer:</strong>
+                Circular donut core with no air gap. Virtually zero acoustic hum, extremely low stray magnetic field (ideal for audio amplifiers and precision lab instrumentation).
+              </li>
+              <li><strong>Grounding / Earthing Transformer (Zig-Zag):</strong>
+                Provides a stable artificial neutral for ungrounded Delta networks to drain fault currents without circulating zero-sequence harmonics.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Special Configurations</span></div>
+        <div class="slide-number">08 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 9: INSTRUMENT TRANSFORMERS (CT & PT)                         -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-9">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>09. Instrument Transformers: CT &amp; PT</h2>
+          <p class="slide-subtitle">Precision measurement, relay protection, and the critical secondary open-circuit rule</p>
+        </div>
+        <span class="slide-pill">Protection &amp; Metering</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-teal">
+            <span class="badge badge-teal">Current Transformer (CT)</span>
+            <h3 style="margin-top: 8px;">Series Measuring Instrument</h3>
+            <p>Steps down massive primary currents (e.g. 1000A) to standard secondary values (<strong>1A or 5A</strong>) for protective relays and energy meters.</p>
+            <div class="callout-box" style="background: rgba(220, 38, 38, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 12px; margin-top: 10px;">
+              <strong style="color: #f87171; font-size: 12px;">CRITICAL SAFETY RULE:</strong>
+              <p style="font-size: 11.5px; color: #fca5a5; margin-top: 4px;">
+                NEVER open-circuit a live CT secondary! With zero secondary counter-MMF, total primary MMF saturates the core, inducing lethal kilovolts across terminals and causing explosive dielectric failure.
+              </p>
+            </div>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <span class="badge badge-cyan">Potential Transformer (PT)</span>
+            <h3 style="margin-top: 8px;">Parallel Voltage Instrument</h3>
+            <p>Steps down high distribution/transmission voltages (e.g. 11kV, 33kV) to safe standardized secondary levels (typically <strong>110V or 110V/√3</strong>).</p>
+            <ul style="margin-top: 8px;">
+              <li><strong>Burden Rating:</strong> Apparent power (VA) drawn by connected relays/meters.</li>
+              <li><strong>Accuracy Classes:</strong>
+                <ul>
+                  <li><strong>Class 0.2S / 0.5:</strong> Revenue billing meters.</li>
+                  <li><strong>Class 5P10 / 5P20:</strong> Protective relaying (5% composite error up to 10x or 20x rated current).</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Instrument Subsystems</span></div>
+        <div class="slide-number">09 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 10: COOLING METHODS & PROTECTION ARCHITECTURE                -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-10">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>10. Cooling Codes &amp; Substation Protection</h2>
+          <p class="slide-subtitle">Thermal classification (IEC 60076) and transformer auxiliary safety equipment</p>
+        </div>
+        <span class="slide-pill">Safety &amp; Thermal</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-copper">
+            <h3>Standard Cooling Classifications</h3>
+            <table class="slide-table" style="margin-top: 6px;">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Internal Fluid</th>
+                  <th>External Circulation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>ONAN</strong></td>
+                  <td>Oil Natural convection</td>
+                  <td>Air Natural radiation/fins. Standard ≤ 5 MVA.</td>
+                </tr>
+                <tr>
+                  <td><strong>ONAF</strong></td>
+                  <td>Oil Natural convection</td>
+                  <td>Air Forced with motorized cooling fans.</td>
+                </tr>
+                <tr>
+                  <td><strong>OFAF</strong></td>
+                  <td>Oil Forced with pumps</td>
+                  <td>Air Forced cooling radiator banks.</td>
+                </tr>
+                <tr>
+                  <td><strong>ODAF</strong></td>
+                  <td>Oil Directed to windings</td>
+                  <td>Air Forced radiator banks (>100 MVA).</td>
+                </tr>
+                <tr>
+                  <td><strong>AN / AF</strong></td>
+                  <td>Air Natural convection</td>
+                  <td>Air Forced fans (Cast Resin Dry-Type).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card card-accent-cyan">
+            <h3>Core Protective Devices</h3>
+            <ul style="margin-top: 6px;">
+              <li><strong>Buchholz Relay:</strong> Dual-float gas-actuated relay located between main tank and conservator. Triggers alarm on minor gas accumulation; trips breaker on violent oil surges.</li>
+              <li><strong>Silica Gel Breather:</strong> Dehydrates air entering conservator during thermal breathing (turns from blue to pink when saturated).</li>
+              <li><strong>Pressure Relief Valve (PRV):</strong> Spring-loaded rapid rupture device relieving internal overpressure within milliseconds.</li>
+              <li><strong>WTI / OTI:</strong> Winding &amp; Oil Temperature Indicators with trip/alarm contacts.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Protective Instrumentation</span></div>
+        <div class="slide-number">10 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 11: EQUIVALENT CIRCUIT & IMPEDANCE MODELING                  -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-11">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>11. Equivalent Circuit &amp; Fault Impedance</h2>
+          <p class="slide-subtitle">Mathematical parameter referral to primary winding &amp; short circuit calculation</p>
+        </div>
+        <span class="slide-pill">Circuit Analysis</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-cyan">
+            <h3>Exact Equivalent Circuit Parameters</h3>
+            <ul>
+              <li><strong>Series Branch:</strong> Winding resistance ($R_1, R_2$) and leakage reactance ($X_1, X_2$).</li>
+              <li><strong>Parallel Shunt Branch:</strong> Core-loss conductance $R_c$ (iron losses) and magnetizing susceptance $X_m$ (creates flux $\Phi_m$).</li>
+            </ul>
+            <div class="formula-box glow-cyan" style="margin-top: 10px;">
+              <div class="formula-title">Referred to Primary Side ($a = N_1/N_2$)</div>
+              <div class="math-expr">R_{01} = R_1 + R_2' = R_1 + a^2 R_2</div>
+              <div class="math-expr" style="margin-top: 4px;">X_{01} = X_1 + X_2' = X_1 + a^2 X_2</div>
+              <div class="math-expr" style="margin-top: 4px; color: var(--copper-light);">Z_{01} = \sqrt{R_{01}^2 + X_{01}^2}</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-copper">
+            <h3>Percentage Impedance (%Z) &amp; Fault Current</h3>
+            <p>The percentage of rated primary voltage required to circulate full-load rated current under short circuit.</p>
+            <div class="formula-box glow-copper" style="margin-top: 10px;">
+              <div class="formula-title">Percentage Impedance (%Z)</div>
+              <div class="math-expr">\%Z = \frac{I_{FL} \cdot Z_{01}}{V_1} \times 100\%</div>
+            </div>
+            <div class="formula-box" style="margin-top: 10px;">
+              <div class="formula-title">Short Circuit Symmetrical Fault Current ($I_{sc}$)</div>
+              <div class="math-expr" style="font-size: 19px;">I_{sc} = \frac{I_{FL}}{\%Z / 100} = I_{FL} \times \left(\frac{100}{\%Z}\right)</div>
+              <div class="math-desc">If $\%Z = 5\%$, short circuit current is <strong>20x rated full-load current</strong>!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Circuit Theory</span></div>
+        <div class="slide-number">11 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 12: LOSSES, EFFICIENCY & MAXIMUM CONDITION                   -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-12">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>12. Losses, Efficiency &amp; Maximum Derivation</h2>
+          <p class="slide-subtitle">Iron vs copper losses and mathematical condition for peak efficiency</p>
+        </div>
+        <span class="slide-pill">Efficiency Analysis</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-copper">
+            <h3>Loss Components</h3>
+            <div class="formula-box" style="margin-bottom: 8px;">
+              <div class="formula-title">1. Core Loss (Constant with load)</div>
+              <div class="math-expr" style="font-size: 14.5px;">P_i = P_{hysteresis} + P_{eddy}</div>
+              <div class="math-desc">Hysteresis: $P_h = k_h f B_m^{1.6}$ | Eddy: $P_e = k_e f^2 B_m^2 t^2$</div>
+            </div>
+            <div class="formula-box">
+              <div class="formula-title">2. Copper Loss (Variable with load factor $x$)</div>
+              <div class="math-expr" style="font-size: 15px;">P_{cu}(x) = x^2 \cdot P_{cu,FL} = x^2 \cdot I_{2,FL}^2 R_{02}</div>
+              <div class="math-desc">At 50% load ($x = 0.5$), copper losses drop to <strong>25%</strong> of full load!</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-teal">
+            <h3>Efficiency Formulation &amp; Peak Condition</h3>
+            <div class="formula-box glow-teal">
+              <div class="formula-title">Commercial Efficiency Equation</div>
+              <div class="math-expr" style="font-size: 16px;">\eta = \frac{x \cdot S \cdot \cos\phi}{x \cdot S \cdot \cos\phi + P_i + x^2 P_{cu,FL}} \times 100\%</div>
+              <div class="math-desc">Where $S$ = Rated kVA, $\cos\phi$ = Load power factor.</div>
+            </div>
+
+            <div class="formula-box glow-copper" style="margin-top: 10px;">
+              <div class="formula-title">Condition for Maximum Efficiency ($\frac{d\eta}{dx} = 0$)</div>
+              <div class="math-expr" style="font-size: 18px; color: #fbbf24;">\text{Variable Copper Loss} = \text{Constant Iron Loss}</div>
+              <div class="math-expr" style="font-size: 16px; margin-top: 4px;">x^2 \cdot P_{cu,FL} = P_i \implies x = \sqrt{\frac{P_i}{P_{cu,FL}}}</div>
+              <div class="math-desc">Load for max $\eta$: $\text{kVA}_{\max\eta} = \text{Rated kVA} \times \sqrt{\frac{P_i}{P_{cu,FL}}}$</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Efficiency Engineering</span></div>
+        <div class="slide-number">12 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 13: VOLTAGE REGULATION & TESTING METHODS                     -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-13">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>13. Voltage Regulation &amp; Testing Procedures</h2>
+          <p class="slide-subtitle">Formulas for regulation and standard OC/SC bench testing</p>
+        </div>
+        <span class="slide-pill">Bench Testing &amp; VR</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-cyan">
+            <h3>Voltage Regulation (VR)</h3>
+            <p>The fractional change in secondary terminal voltage from no-load to full-load expressed as percentage of full-load voltage.</p>
+            <div class="formula-box glow-cyan" style="margin-top: 8px;">
+              <div class="formula-title">Approximate Regulation Equation</div>
+              <div class="math-expr" style="font-size: 17px;">VR \approx \frac{I_2 (R_{02}\cos\phi \pm X_{02}\sin\phi)}{V_{2,FL}} \times 100\%</div>
+              <div class="math-desc">
+                <strong>+</strong> sign for <strong>Lagging PF</strong> (Inductive load $\implies$ voltage drops)<br>
+                <strong>–</strong> sign for <strong>Leading PF</strong> (Capacitive load $\implies$ voltage rises - Ferranti effect)
+              </div>
+            </div>
+            <div class="formula-box" style="margin-top: 8px;">
+              <div class="formula-title">Zero Voltage Regulation Condition (Leading PF)</div>
+              <div class="math-expr">\tan\phi = -\frac{R_{02}}{X_{02}} \implies \cos\phi = \frac{X_{02}}{Z_{02}} \text{ (leading)}</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-copper">
+            <h3>Factory Testing Benchmarks</h3>
+            <ul style="margin-top: 6px;">
+              <li><strong>Open-Circuit (OC) Test:</strong>
+                Conducted on <strong>Low-Voltage (LV) side</strong> at rated voltage with HV side open.
+                Wattmeter measures pure <strong>Iron Losses ($P_i$)</strong>. Determines shunt parameters: $R_c$ and $X_m$.
+              </li>
+              <li style="margin-top: 10px;"><strong>Short-Circuit (SC) Test:</strong>
+                Conducted on <strong>High-Voltage (HV) side</strong> at rated current with LV side shorted.
+                Voltage applied is only 5% to 10% of rated $V$. Wattmeter measures pure <strong>Full-Load Copper Losses ($P_{cu,FL}$)</strong>. Determines series parameters: $R_{01}$, $X_{01}$, and $Z_{01}$.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left"><span>Testing &amp; Regulation</span></div>
+        <div class="slide-number">13 / 14</div>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- SLIDE 14: THREE-PHASE VECTOR GROUPS & MASTER CHEATSHEET           -->
+    <!-- ================================================================== -->
+    <section class="slide" id="slide-14">
+      <div class="slide-header">
+        <div class="slide-title-group">
+          <h2>14. Three-Phase Systems &amp; Master Formula Sheet</h2>
+          <p class="slide-subtitle">Vector groups, 3-Φ power formulas, and universal quick reference</p>
+        </div>
+        <span class="slide-pill">Cheatsheet Summary</span>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card card-accent-teal">
+            <h3>Three-Phase Configurations &amp; Vector Groups</h3>
+            <table class="slide-table" style="margin-top: 6px;">
+              <thead>
+                <tr>
+                  <th>Connection</th>
+                  <th>Primary / Sec</th>
+                  <th>Standard Application</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Dyn11</strong></td>
+                  <td>Delta / Star neutral</td>
+                  <td>Standard Indian/European distribution (LV neutral).</td>
+                </tr>
+                <tr>
+                  <td><strong>Yd1</strong></td>
+                  <td>Star / Delta</td>
+                  <td>Generator step-up transmission unit.</td>
+                </tr>
+                <tr>
+                  <td><strong>Yy0</strong></td>
+                  <td>Star / Star</td>
+                  <td>High-voltage tie lines with tertiary delta.</td>
+                </tr>
+                <tr>
+                  <td><strong>Dd0</strong></td>
+                  <td>Delta / Delta</td>
+                  <td>Heavy low-voltage industrial plant systems.</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="formula-box glow-teal" style="margin-top: 10px;">
+              <div class="formula-title">Three-Phase Apparent &amp; Active Power</div>
+              <div class="math-expr">S = \sqrt{3} \cdot V_L \cdot I_L \quad (\text{kVA})</div>
+              <div class="math-expr" style="margin-top: 2px;">P = \sqrt{3} \cdot V_L \cdot I_L \cdot \cos\phi \quad (\text{kW})</div>
+            </div>
+          </div>
+
+          <div class="card card-accent-copper">
+            <h3>Universal Engineering Cheatsheet</h3>
+            <ul style="font-size: 11.5px; line-height: 1.8;">
+              <li><strong>EMF:</strong> $E = 4.44 \cdot f \cdot N \cdot B_m \cdot A$</li>
+              <li><strong>Ratio:</strong> $\frac{V_1}{V_2} = \frac{N_1}{N_2} = \frac{I_2}{I_1} = a$</li>
+              <li><strong>Referred R:</strong> $R_{01} = R_1 + a^2 R_2$</li>
+              <li><strong>Max $\eta$ Load:</strong> $kVA_{\max} = kVA_{FL} \times \sqrt{P_i / P_{cu,FL}}$</li>
+              <li><strong>Fault Current:</strong> $I_{sc} = I_{FL} / (\%Z / 100)$</li>
+              <li><strong>All-Day $\eta$:</strong> $\sum \text{kWh}_{out} / (\sum \text{kWh}_{out} + 24P_i + \sum x^2 P_{cu})$</li>
+              <li><strong>Autotransformer Cu Saving:</strong> $\text{Saving} = k \times \text{Cu}_{2-winding}$</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div class="slide-footer-left">
+          <span>End of Masterclass Presentation • Ready for PDF Export</span>
+        </div>
+        <div class="slide-number">14 / 14</div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Slide Navigation Controller
+    const slides = document.querySelectorAll('.slide');
+    let currentSlide = 0;
+    const indicator = document.getElementById('slideIndicator');
+
+    function updateIndicator() {
+      indicator.textContent = `${String(currentSlide + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+    }
+
+    function scrollToSlide(index) {
+      if (index >= 0 && index < slides.length) {
+        currentSlide = index;
+        slides[currentSlide].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        updateIndicator();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        scrollToSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        scrollToSlide(currentSlide - 1);
+      }
+    }
+
+    // Keyboard Shortcuts (Arrow Left/Right, PageUp/Down)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        scrollToSlide(0);
+      } else if (e.key === 'End') {
+        scrollToSlide(slides.length - 1);
+      }
+    });
+
+    // Observer to update indicator on manual scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = Array.from(slides).indexOf(entry.target);
+          if (index !== -1) {
+            currentSlide = index;
+            updateIndicator();
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+
+    slides.forEach(slide => observer.observe(slide));
+  </script>
+</body>
+</html>
