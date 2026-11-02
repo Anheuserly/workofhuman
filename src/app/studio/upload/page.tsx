@@ -8,22 +8,24 @@ import {
   ArrowRight,
   CheckCircle2,
   Eye,
-  FileText,
-  FileUp,
-  FolderOpen,
   Image as ImageIcon,
-  Link as LinkIcon,
   Loader2,
   Lock,
   Music,
   Sparkles,
-  Tag,
   Trash2,
   UploadCloud,
-  Video,
+  Palette,
+  Film,
+  BookOpen,
+  Building2,
+  Code,
+  Share2,
+  Layers,
+  Check,
+  Star,
 } from "lucide-react";
 import { PageShell } from "@/components/shell";
-import { contentTypes } from "@/lib/platform";
 import { RoleBadge } from "@/components/role-badge";
 
 interface AuthUser {
@@ -34,8 +36,115 @@ interface AuthUser {
   verified?: boolean;
 }
 
+// Creative Archetypes for smart contextual workflow
+interface Archetype {
+  id: "visual_art" | "cinema" | "writing" | "music" | "architecture" | "tech";
+  title: string;
+  subtitle: string;
+  icon: typeof Palette;
+  defaultType: string;
+  subTypes: { value: string; label: string }[];
+  suggestedTags: string[];
+}
+
+const ARCHETYPES: Archetype[] = [
+  {
+    id: "visual_art",
+    title: "Fine Art & Photography",
+    subtitle: "Paintings, drawings, digital art, photography, craft",
+    icon: Palette,
+    defaultType: "paintings",
+    subTypes: [
+      { value: "paintings", label: "Oil, Acrylic & Fine Art" },
+      { value: "digital_art", label: "Digital Illustration" },
+      { value: "photography", label: "Fine Photography" },
+      { value: "graphic_design", label: "Graphic & Poster Art" },
+      { value: "handmade_crafts", label: "Handmade Crafts & Sculpture" },
+    ],
+    suggestedTags: ["fineart", "oilpainting", "canvas", "contemporary", "photography", "digitalart", "exhibition"],
+  },
+  {
+    id: "cinema",
+    title: "Cinema & Video",
+    subtitle: "Films, animations, short movies, cinematic edits",
+    icon: Film,
+    defaultType: "films",
+    subTypes: [
+      { value: "films", label: "Independent Film" },
+      { value: "short_movies", label: "Short Movie" },
+      { value: "animations", label: "3D & 2D Animation" },
+      { value: "cinematic_edits", label: "Cinematic Visual Reel" },
+      { value: "documentaries", label: "Documentary Study" },
+    ],
+    suggestedTags: ["cinema", "shortfilm", "veo", "filmmaking", "animation", "4k", "directorcut"],
+  },
+  {
+    id: "writing",
+    title: "Books & Literature",
+    subtitle: "Books, poetry, articles, essays, short stories",
+    icon: BookOpen,
+    defaultType: "books",
+    subTypes: [
+      { value: "books", label: "Book Manuscript / Novel" },
+      { value: "stories", label: "Short Fiction & Story" },
+      { value: "poetry", label: "Poetry Anthology" },
+      { value: "articles", label: "Longform Essay / Article" },
+      { value: "blogs", label: "Creative Journal & Blog" },
+    ],
+    suggestedTags: ["literature", "fiction", "poetry", "storytelling", "author", "philosophy", "essay"],
+  },
+  {
+    id: "music",
+    title: "Music & Audio",
+    subtitle: "Original tracks, soundscapes, audio art, podcasts",
+    icon: Music,
+    defaultType: "music",
+    subTypes: [
+      { value: "music", label: "Original Single / Album" },
+      { value: "songs", label: "Vocal Song / Acoustic" },
+      { value: "audio_tracks", label: "Ambient Soundscape / Instrumental" },
+      { value: "podcasts", label: "Podcast / Spoken Audio" },
+      { value: "ai_music", label: "AI Music Experiment" },
+    ],
+    suggestedTags: ["music", "sounddesign", "ambient", "indie", "composer", "synthwave", "mastering"],
+  },
+  {
+    id: "architecture",
+    title: "Architecture & Space",
+    subtitle: "Spatial design, 3D architecture models, structures",
+    icon: Building2,
+    defaultType: "architecture",
+    subTypes: [
+      { value: "architecture", label: "Architectural Design" },
+      { value: "3d_models", label: "3D Spatial Visualization" },
+      { value: "inventions", label: "Spatial & Industrial Design" },
+      { value: "fashion_design", label: "Structural Fashion" },
+    ],
+    suggestedTags: ["architecture", "spatialdesign", "3drender", "minimalism", "blueprint", "concrete", "interior"],
+  },
+  {
+    id: "tech",
+    title: "Code & Inventions",
+    subtitle: "Apps, games, websites, tech innovations",
+    icon: Code,
+    defaultType: "apps",
+    subTypes: [
+      { value: "apps", label: "Mobile or Desktop App" },
+      { value: "websites", label: "Web Application / Design" },
+      { value: "coding_projects", label: "Open Source Code / Engine" },
+      { value: "indie_games", label: "Indie Game" },
+      { value: "inventions", label: "Physical Hardware Invention" },
+    ],
+    suggestedTags: ["opensource", "nextjs", "flutter", "creativecoding", "indiedev", "developer", "innovation"],
+  },
+];
+
+const DRAFT_KEY = "woh_studio_draft_v3";
+
 export default function UploadStudioPage() {
   const router = useRouter();
+
+  // Cached User State
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -47,6 +156,7 @@ export default function UploadStudioPage() {
     }
     return null;
   });
+
   const [authLoading, setAuthLoading] = useState(() => {
     if (typeof window !== "undefined") {
       try {
@@ -58,38 +168,31 @@ export default function UploadStudioPage() {
     return true;
   });
 
-  // Active studio section tab
-  const [activeSection, setActiveSection] = useState<"media" | "details" | "ai" | "tags" | "preview">("media");
+  // Archetype selection
+  const [selectedArchetypeId, setSelectedArchetypeId] = useState<Archetype["id"]>("visual_art");
+  const activeArchetype = ARCHETYPES.find((a) => a.id === selectedArchetypeId) || ARCHETYPES[0];
+
+  // Studio Mode: "edit" | "preview"
+  const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
+  const [previewSubTab, setPreviewSubTab] = useState<"feed" | "project" | "share">("feed");
 
   // Form State
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [type, setType] = useState<string>("digital_art");
+  const [type, setType] = useState<string>("paintings");
   const [description, setDescription] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [aiGenerated, setAiGenerated] = useState(false);
+  const [aiProvenance, setAiProvenance] = useState<"human" | "assisted" | "generated">("human");
   const [aiModel, setAiModel] = useState("");
 
-  // Thumbnail mode: "upload" | "link"
-  const [thumbMode, setThumbMode] = useState<"upload" | "link">("upload");
-
   // Drag and Drop States
-  const [isDraggingThumb, setIsDraggingThumb] = useState(false);
-  const [isDraggingMedia, setIsDraggingMedia] = useState(false);
+  const [isDraggingMaster, setIsDraggingMaster] = useState(false);
 
   // Upload progress states
-  const [uploadingThumb, setUploadingThumb] = useState(false);
-  const [thumbProgress, setThumbProgress] = useState<{
-    filename: string;
-    percent: number;
-    loadedFormatted: string;
-    totalFormatted: string;
-  } | null>(null);
-
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaProgress, setMediaProgress] = useState<{
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
     filename: string;
     percent: number;
     loadedFormatted: string;
@@ -101,14 +204,19 @@ export default function UploadStudioPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Hidden file inputs
-  const thumbFileInputRef = useRef<HTMLInputElement>(null);
-  const mediaFileInputRef = useRef<HTMLInputElement>(null);
+  const masterFileInputRef = useRef<HTMLInputElement>(null);
+  const posterFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Submit states
+  // Submission States
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Draft indicator
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftSavedTime, setDraftSavedTime] = useState<string | null>(null);
+
+  // Auth Verification
   const checkAuth = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/me", {
@@ -126,22 +234,14 @@ export default function UploadStudioPage() {
           }
         } else {
           setCurrentUser(null);
-          try {
-            localStorage.removeItem("woh_cached_user");
-          } catch {
-            // ignore
-          }
-        }
-      } else if (res.status === 401) {
-        setCurrentUser(null);
-        try {
           localStorage.removeItem("woh_cached_user");
-        } catch {
-          // ignore
         }
+      } else {
+        setCurrentUser(null);
+        localStorage.removeItem("woh_cached_user");
       }
-    } catch (err) {
-      console.warn("[Upload Studio Auth]: retaining cached session:", err);
+    } catch {
+      // offline or network issue
     } finally {
       setAuthLoading(false);
     }
@@ -149,33 +249,106 @@ export default function UploadStudioPage() {
 
   useEffect(() => {
     checkAuth();
-
-    function onAuthChange() {
-      checkAuth();
-    }
-    window.addEventListener("woh_auth_change", onAuthChange);
-    return () => window.removeEventListener("woh_auth_change", onAuthChange);
   }, [checkAuth]);
 
-  // Protect upload studio: redirect to login if unauthenticated
+  // Restore Draft on Initial Mount
   useEffect(() => {
-    if (!authLoading && !currentUser) {
-      router.replace("/login?redirect=/studio/upload");
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.title || parsed.description || (parsed.mediaUrls && parsed.mediaUrls.length > 0)) {
+            setTitle(parsed.title || "");
+            setSlug(parsed.slug || "");
+            setType(parsed.type || "paintings");
+            setDescription(parsed.description || "");
+            setThumbnailUrl(parsed.thumbnailUrl || "");
+            setMediaUrls(parsed.mediaUrls || []);
+            setTagInput(parsed.tagInput || "");
+            setAiProvenance(parsed.aiProvenance || "human");
+            setAiModel(parsed.aiModel || "");
+            if (parsed.selectedArchetypeId) setSelectedArchetypeId(parsed.selectedArchetypeId);
+            setDraftRestored(true);
+            setDraftSavedTime(parsed.savedAt ? new Date(parsed.savedAt).toLocaleTimeString() : null);
+          }
+        }
+      } catch {
+        // ignore
+      }
     }
-  }, [authLoading, currentUser, router]);
+  }, []);
 
-  function formatBytes(bytes: number) {
+  // Auto-Save Draft to LocalStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const timeout = setTimeout(() => {
+        if (title || description || mediaUrls.length > 0 || thumbnailUrl) {
+          const payload = {
+            title,
+            slug,
+            type,
+            description,
+            thumbnailUrl,
+            mediaUrls,
+            tagInput,
+            aiProvenance,
+            aiModel,
+            selectedArchetypeId,
+            savedAt: new Date().toISOString(),
+          };
+          try {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+            setDraftSavedTime(new Date().toLocaleTimeString());
+          } catch {
+            // quota exceeded
+          }
+        }
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [title, slug, type, description, thumbnailUrl, mediaUrls, tagInput, aiProvenance, aiModel, selectedArchetypeId]);
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    setTitle("");
+    setSlug("");
+    setDescription("");
+    setThumbnailUrl("");
+    setMediaUrls([]);
+    setTagInput("");
+    setAiProvenance("human");
+    setAiModel("");
+    setDraftRestored(false);
+    setDraftSavedTime(null);
+  }
+
+  // Format Bytes helper
+  function formatBytes(bytes: number): string {
     if (bytes === 0) return "0 B";
     const k = 1024;
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+    return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
   }
 
+  function isImage(url: string) {
+    return /\.(jpe?g|png|webp|gif|svg|avif)($|\?)/i.test(url) || url.includes("-thumb.");
+  }
+
+  function isVideo(url: string) {
+    return /\.(mp4|webm|mov|mkv)($|\?)/i.test(url);
+  }
+
+  function isAudio(url: string) {
+    return /\.(mp3|wav|ogg|m4a|aac|flac)($|\?)/i.test(url);
+  }
+
+  // XHR file upload with accurate progress percentage
   function uploadFileWithProgress(
     file: File,
-    onProgress: (percent: number, loadedFormatted: string, totalFormatted: string) => void
-  ): Promise<{ url: string; filename: string }> {
+    onProgress: (percent: number, loaded: string, total: string) => void
+  ): Promise<{ url: string; size: number }> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
@@ -213,95 +386,134 @@ export default function UploadStudioPage() {
     });
   }
 
-  // Upload helper for single or multiple files with accurate progress %
-  async function handleFileUpload(files: FileList | File[], target: "thumbnail" | "media") {
+  // Master Unified File Upload Handler
+  async function handleMasterUpload(files: FileList | File[]) {
     setUploadError(null);
     const fileList = Array.from(files);
     if (fileList.length === 0) return;
 
-    if (target === "thumbnail") {
-      setUploadingThumb(true);
-      const file = fileList[0];
-      setThumbProgress({
-        filename: file.name,
-        percent: 0,
-        loadedFormatted: "0 B",
-        totalFormatted: formatBytes(file.size),
-      });
+    setUploading(true);
+    try {
+      const newUrls: string[] = [];
 
-      try {
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        setUploadProgress({
+          filename: file.name,
+          percent: 0,
+          loadedFormatted: "0 B",
+          totalFormatted: formatBytes(file.size),
+          index: i + 1,
+          totalFiles: fileList.length,
+        });
+
         const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
-          setThumbProgress({
+          setUploadProgress({
             filename: file.name,
             percent,
             loadedFormatted,
             totalFormatted,
-          });
-        });
-        setThumbnailUrl(data.url);
-      } catch (err: unknown) {
-        setUploadError(err instanceof Error ? err.message : "Cover upload failed.");
-      } finally {
-        setUploadingThumb(false);
-        setThumbProgress(null);
-      }
-    } else {
-      setUploadingMedia(true);
-      try {
-        for (let i = 0; i < fileList.length; i++) {
-          const file = fileList[i];
-          setMediaProgress({
-            filename: file.name,
-            percent: 0,
-            loadedFormatted: "0 B",
-            totalFormatted: formatBytes(file.size),
             index: i + 1,
             totalFiles: fileList.length,
           });
+        });
 
-          const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
-            setMediaProgress({
-              filename: file.name,
-              percent,
-              loadedFormatted,
-              totalFormatted,
-              index: i + 1,
-              totalFiles: fileList.length,
-            });
-          });
-
-          setMediaUrls((prev) => [...prev, data.url]);
-        }
-      } catch (err: unknown) {
-        setUploadError(err instanceof Error ? err.message : "Media upload failed.");
-      } finally {
-        setUploadingMedia(false);
-        setMediaProgress(null);
+        newUrls.push(data.url);
       }
+
+      setMediaUrls((prev) => {
+        const combined = [...prev, ...newUrls];
+        // Auto-assign first image as thumbnail if none set
+        if (!thumbnailUrl) {
+          const firstImg = combined.find((u) => isImage(u));
+          if (firstImg) setThumbnailUrl(firstImg);
+        }
+        return combined;
+      });
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "File upload failed.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(null);
     }
   }
 
-  function handleAddMediaUrl() {
-    setMediaUrls([...mediaUrls, ""]);
+  // Dedicated Poster / Cover Upload for Video or Audio
+  async function handlePosterUpload(files: FileList | File[]) {
+    const fileList = Array.from(files);
+    if (fileList.length === 0) return;
+    const file = fileList[0];
+
+    setUploading(true);
+    try {
+      const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
+        setUploadProgress({
+          filename: file.name,
+          percent,
+          loadedFormatted,
+          totalFormatted,
+          index: 1,
+          totalFiles: 1,
+        });
+      });
+      setThumbnailUrl(data.url);
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Cover poster upload failed.");
+    } finally {
+      setUploading(false);
+      setUploadProgress(null);
+    }
   }
 
-  function handleMediaUrlChange(index: number, val: string) {
-    const updated = [...mediaUrls];
-    updated[index] = val;
+  // Set an image as primary cover & thumbnail with one click
+  function setAsCover(url: string) {
+    setThumbnailUrl(url);
+  }
+
+  // Remove asset from deck
+  function removeMedia(indexToRemove: number) {
+    const removedUrl = mediaUrls[indexToRemove];
+    const updated = mediaUrls.filter((_, idx) => idx !== indexToRemove);
     setMediaUrls(updated);
+
+    // If the removed image was the thumbnail, reassign to the next available image
+    if (thumbnailUrl === removedUrl) {
+      const nextImg = updated.find((u) => isImage(u));
+      setThumbnailUrl(nextImg || "");
+    }
   }
 
-  function handleRemoveMediaUrl(index: number) {
-    setMediaUrls(mediaUrls.filter((_, i) => i !== index));
+  // Add Tag Chip
+  function addTag(tag: string) {
+    const clean = tag.replace(/^#/, "").trim();
+    if (!clean) return;
+    const currentTags = tagInput
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    if (!currentTags.includes(clean.toLowerCase())) {
+      const newTagString = currentTags.length > 0 ? `${currentTags.join(", ")}, ${clean}` : clean;
+      setTagInput(newTagString);
+    }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Publish Creation
+  async function handleSubmit() {
     setError(null);
 
+    if (!currentUser) {
+      router.push("/login?redirect=/studio/upload");
+      return;
+    }
+
     if (!title.trim()) {
-      setError("Please provide a project title.");
-      setActiveSection("details");
+      setError("Please provide a title for your creative work.");
+      return;
+    }
+
+    if (mediaUrls.length === 0 && !thumbnailUrl) {
+      setError("Please attach at least one photo, video, audio file, or artwork.");
       return;
     }
 
@@ -310,19 +522,22 @@ export default function UploadStudioPage() {
     try {
       const tagsArray = tagInput
         .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
+        .map((t) => t.trim().replace(/^#/, ""))
+        .filter((t) => t.length > 0);
+
+      // Auto-fallback: if thumbnail is still empty, pick the first image or media
+      const resolvedThumbnail = thumbnailUrl || mediaUrls.find((u) => isImage(u)) || mediaUrls[0] || "";
 
       const payload = {
         title: title.trim(),
         slug: slug.trim() || undefined,
         type,
         description: description.trim() || undefined,
-        thumbnailUrl: thumbnailUrl.trim() || undefined,
+        thumbnailUrl: resolvedThumbnail.trim() || undefined,
         mediaUrls: mediaUrls.filter((u) => u.trim().length > 0),
         tags: tagsArray,
-        aiGenerated,
-        aiModel: aiGenerated && aiModel.trim() ? aiModel.trim() : undefined,
+        aiGenerated: aiProvenance !== "human",
+        aiModel: aiProvenance !== "human" && aiModel.trim() ? aiModel.trim() : undefined,
       };
 
       const res = await fetch("/api/projects/upload", {
@@ -331,146 +546,152 @@ export default function UploadStudioPage() {
         body: JSON.stringify(payload),
       });
 
-      let data: {
-        success?: boolean;
-        error?: string;
-        slug?: string;
-        redirectUrl?: string;
-        project?: { id?: string; slug?: string; creatorUsername?: string };
-      } | null = null;
-
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        try {
-          data = await res.json();
-        } catch {
-          data = null;
-        }
-      }
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || `Failed to publish project (Server returned ${res.status}).`);
+        throw new Error(data.error || "Failed to publish creation.");
       }
 
       setSuccess(true);
-      const targetSlug = data?.slug || data?.project?.slug;
-      const targetUsername = data?.project?.creatorUsername || currentUser?.username;
-      const targetUrl =
-        data?.redirectUrl ||
-        (targetSlug && targetUsername ? `/@${targetUsername}/${targetSlug}` : `/@${currentUser?.username}`);
+      // Clear draft upon successful publication
+      localStorage.removeItem(DRAFT_KEY);
 
       setTimeout(() => {
-        router.push(targetUrl);
+        const dest = data.url || `/@${currentUser.username}/${data.slug || ""}`;
+        router.push(dest);
       }, 1000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to publish creation.");
-    } finally {
+      setError(err instanceof Error ? err.message : "An unexpected publishing error occurred.");
       setSubmitting(false);
     }
   }
 
-  // Helper media format checkers
-  function isVideo(url: string) {
-    return /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(url);
-  }
-  function isAudio(url: string) {
-    return /\.(mp3|wav|ogg|m4a|aac|flac)(\?.*)?$/i.test(url);
-  }
-  function isImage(url: string) {
-    return /\.(jpg|jpeg|png|webp|gif|svg|avif)(\?.*)?$/i.test(url);
-  }
+  // Active cover preview asset
+  const primaryDisplayAsset = thumbnailUrl || mediaUrls[0] || "";
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-6xl py-4 sm:py-6">
-        {/* Compact, Refined Studio Header Bar */}
-        <header className="surface p-4 sm:p-5 mb-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-lg bg-[#0f766e] text-white">
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#0f766e] bg-[#0f766e]/10 px-2 py-0.5 rounded">
-                  Studio Workspace
+      <div className="max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
+        {/* Top Header & Action Bar */}
+        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#ded9cf] pb-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
+                Creation Studio
+              </span>
+              {draftSavedTime && (
+                <span className="text-[11px] text-[#8c857b] font-mono">
+                  • Draft saved {draftSavedTime}
                 </span>
-                <span className="text-xs font-semibold text-[#8c857b]">• 33 Disciplines</span>
-              </div>
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#151515] mt-0.5">
-                Creator Upload Studio
-              </h1>
+              )}
             </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#151515]">
+              Publish Original Creative Work
+            </h1>
           </div>
 
           <div className="flex items-center gap-3">
             {currentUser ? (
-              <div className="hidden sm:flex items-center gap-2 border border-[#ded9cf] rounded-full px-3 py-1 bg-[#fcfbfa] text-xs">
+              <div className="hidden sm:flex items-center gap-2 border border-[#ded9cf] rounded-full px-3 py-1 bg-white text-xs shadow-2xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="font-semibold text-[#151515]">@{currentUser.username}</span>
                 <RoleBadge role={currentUser.role} verified={currentUser.verified} size="sm" />
               </div>
             ) : (
-              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
-                Guest Mode (Sign in to publish)
+              <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-semibold">
+                Sign in to publish
               </span>
             )}
 
-            <button
-              type="button"
-              onClick={() => setActiveSection(activeSection === "preview" ? "media" : "preview")}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
-                activeSection === "preview"
-                  ? "bg-[#151515] text-white"
-                  : "border border-[#ded9cf] bg-white text-[#151515] hover:bg-[#f6f4ef]"
-              }`}
-            >
-              <Eye size={13} />
-              {activeSection === "preview" ? "Edit Mode" : "Live Preview"}
-            </button>
+            {/* Toggle Edit vs Preview */}
+            <div className="inline-flex rounded-full bg-[#e8e4db] p-0.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setViewMode("edit")}
+                className={`rounded-full px-3 py-1.5 transition cursor-pointer ${
+                  viewMode === "edit"
+                    ? "bg-[#151515] text-white shadow-xs"
+                    : "text-[#6f6a61] hover:text-[#151515]"
+                }`}
+              >
+                Edit Mode
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className={`rounded-full px-3 py-1.5 flex items-center gap-1.5 transition cursor-pointer ${
+                  viewMode === "preview"
+                    ? "bg-[#0f766e] text-white shadow-xs"
+                    : "text-[#6f6a61] hover:text-[#151515]"
+                }`}
+              >
+                <Eye size={13} />
+                Live Preview
+              </button>
+            </div>
 
             <button
               type="button"
               onClick={handleSubmit}
               disabled={submitting || success}
-              className="button-primary !px-4 !py-1.5 text-xs font-bold cursor-pointer disabled:opacity-60"
+              className="button-primary !px-5 !py-2 text-xs font-bold cursor-pointer disabled:opacity-60 flex items-center gap-1.5 shadow-sm"
             >
               {submitting ? (
                 <>
-                  <Loader2 size={13} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin" />
                   Publishing...
                 </>
               ) : (
                 <>
                   Publish Work
-                  <ArrowRight size={13} />
+                  <ArrowRight size={14} />
                 </>
               )}
             </button>
           </div>
         </header>
 
-        {/* Alerts */}
+        {/* Draft Restored Banner */}
+        {draftRestored && (
+          <div className="mb-5 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📝</span>
+              <span>
+                Restored your unsaved draft from {draftSavedTime || "a previous session"}.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={clearDraft}
+              className="text-amber-800 underline font-semibold hover:text-amber-950 cursor-pointer"
+            >
+              Clear Draft
+            </button>
+          </div>
+        )}
+
+        {/* Global Notifications */}
         {error && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+          <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-800">
             <AlertCircle size={15} className="mt-0.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="mb-5 flex items-start gap-2.5 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+          <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
             <CheckCircle2 size={15} className="mt-0.5 shrink-0" />
-            <span>Creation published successfully! Opening your live portfolio showcase...</span>
+            <span>Your work has been published! Redirecting to your live portfolio showcase...</span>
           </div>
         )}
 
         {authLoading ? (
-          <div className="surface p-12 text-center max-w-md mx-auto">
+          <div className="surface p-12 text-center max-w-md mx-auto rounded-2xl">
             <Loader2 className="mx-auto animate-spin text-[#0f766e]" size={28} />
             <p className="mt-3 text-xs font-semibold text-[#6f6a61]">Verifying creator credentials...</p>
           </div>
         ) : !currentUser ? (
-          <div className="surface p-8 sm:p-12 text-center max-w-md mx-auto rounded-2xl border border-[#ded9cf] space-y-5 shadow-xs my-6">
+          <div className="surface p-8 sm:p-12 text-center max-w-md mx-auto rounded-2xl border border-[#ded9cf] space-y-5 shadow-xs my-8">
             <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#0f766e]/10 text-[#0f766e]">
               <Lock size={26} />
             </div>
@@ -478,11 +699,11 @@ export default function UploadStudioPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
                 Creator Studio Access
               </span>
-              <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-[#151515]">
+              <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-[#151515]">
                 Authentication Required
-              </h1>
+              </h2>
               <p className="mt-2 text-xs leading-relaxed text-[#6f6a61]">
-                Only authenticated creators can access the Creative Upload Studio. Please sign in to publish your work.
+                Only authenticated creators can publish to The Work of Human. Sign in to your creator account to continue.
               </p>
             </div>
 
@@ -497,756 +718,731 @@ export default function UploadStudioPage() {
                 href="/register?redirect=/studio/upload"
                 className="button-secondary w-full justify-center !py-2.5 text-xs font-bold"
               >
-                Create New Creator Profile
+                Create New Profile
               </Link>
             </div>
           </div>
-        ) : activeSection === "preview" ? (
-          /* ============================================================ */
-          /* LIVE INSPECTOR & SHOWCASE PREVIEW                            */
-          /* ============================================================ */
-          <div className="surface p-6 sm:p-8 space-y-6 animate-in fade-in">
-            <div className="flex items-center justify-between border-b border-[#ded9cf] pb-4">
-              <div>
-                <span className="text-[11px] font-bold text-[#0f766e] uppercase tracking-wider">
-                  Live Showcase Preview
-                </span>
-                <h2 className="text-xl font-bold text-[#151515] mt-0.5">
-                  {title || "Untitled Creation"}
-                </h2>
+        ) : viewMode === "preview" ? (
+          /* ================================================================= */
+          /* 3-WAY LIVE PREVIEW MODE (FEED CARD, PROJECT PAGE, WHATSAPP SHARE)  */
+          /* ================================================================= */
+          <div className="space-y-6 animate-in fade-in">
+            {/* Preview Tabs */}
+            <div className="flex items-center justify-between border-b border-[#ded9cf] pb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab("feed")}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    previewSubTab === "feed"
+                      ? "bg-[#151515] text-white"
+                      : "text-[#6f6a61] hover:bg-[#f6f4ef]"
+                  }`}
+                >
+                  <Layers size={13} />
+                  Home Feed Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab("project")}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    previewSubTab === "project"
+                      ? "bg-[#151515] text-white"
+                      : "text-[#6f6a61] hover:bg-[#f6f4ef]"
+                  }`}
+                >
+                  <Eye size={13} />
+                  Project Showcase Page
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewSubTab("share")}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                    previewSubTab === "share"
+                      ? "bg-[#151515] text-white"
+                      : "text-[#6f6a61] hover:bg-[#f6f4ef]"
+                  }`}
+                >
+                  <Share2 size={13} />
+                  WhatsApp / Social Share
+                </button>
               </div>
-              <span className="rounded-full bg-[#151515] px-3 py-1 text-xs font-bold text-white capitalize">
-                {type.replaceAll("_", " ")}
+
+              <span className="text-[11px] font-mono text-[#8c857b]">
+                {mediaUrls.length} media attached
               </span>
             </div>
 
-            {/* Primary Media Preview */}
-            <div className="overflow-hidden rounded-lg bg-black/5 border border-[#ded9cf]">
-              {mediaUrls[0] && isVideo(mediaUrls[0]) ? (
-                <video src={mediaUrls[0]} controls className="w-full aspect-video bg-black" />
-              ) : mediaUrls[0] && isAudio(mediaUrls[0]) ? (
-                <div className="p-8 text-center bg-[#151515] text-white">
-                  <Music className="mx-auto text-[#0f766e] mb-3" size={32} />
-                  <p className="font-bold">{title || "Audio Track"}</p>
-                  <audio src={mediaUrls[0]} controls className="mt-4 mx-auto w-full max-w-md" />
-                </div>
-              ) : thumbnailUrl || mediaUrls[0] ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={thumbnailUrl || mediaUrls[0]}
-                  alt="Cover preview"
-                  className="w-full max-h-[500px] object-contain bg-[#e9e4da]"
-                />
-              ) : (
-                <div className="p-12 text-center text-[#8c857b] text-xs">
-                  No visual media or cover uploaded yet. Switch back to Edit Mode to attach assets.
-                </div>
-              )}
-            </div>
-
-            {/* Description Statement */}
-            {description && (
-              <div className="bg-[#fcfbfa] p-5 rounded-lg border border-[#ded9cf]">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61] mb-2">
-                  Project Narrative &amp; Statement
-                </h4>
-                <p className="text-xs text-[#151515] leading-relaxed whitespace-pre-wrap">
-                  {description}
+            {/* TAB 1: FEED CARD PREVIEW */}
+            {previewSubTab === "feed" && (
+              <div className="max-w-md mx-auto py-8">
+                <p className="text-xs font-bold text-[#8c857b] uppercase tracking-wider mb-3 text-center">
+                  How viewers will see your work on the Homepage Feed
                 </p>
+                <div className="surface rounded-2xl overflow-hidden border border-[#ded9cf] shadow-md group">
+                  <div className="relative aspect-[16/9] w-full bg-[#151515] overflow-hidden">
+                    {primaryDisplayAsset && isVideo(primaryDisplayAsset) ? (
+                      <video src={primaryDisplayAsset} className="w-full h-full object-cover" />
+                    ) : primaryDisplayAsset ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={primaryDisplayAsset}
+                        alt="Preview card"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid size-full place-items-center text-[#8c857b] text-xs">
+                        No image uploaded yet
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                      <span className="rounded-full bg-white/95 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-[#151515] uppercase tracking-wider shadow-xs capitalize">
+                        {type.replaceAll("_", " ")}
+                      </span>
+                      {aiProvenance !== "human" && (
+                        <span className="rounded-full bg-[#0f766e]/90 text-white px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                          <Sparkles size={10} />
+                          AI Disclosed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-2 bg-white">
+                    <h3 className="font-bold text-[#151515] text-base line-clamp-1">
+                      {title || "Untitled Creation"}
+                    </h3>
+                    <p className="text-xs text-[#6f6a61] line-clamp-2 leading-relaxed">
+                      {description || "No description provided yet."}
+                    </p>
+                    <div className="pt-2 border-t border-[#ded9cf] flex items-center justify-between text-xs text-[#8c857b]">
+                      <span className="font-mono font-semibold text-[#151515]">
+                        @{currentUser.username}
+                      </span>
+                      <span className="text-[11px] text-[#0f766e] font-semibold">Just now</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Additional Media Reel */}
-            {mediaUrls.length > 1 && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61]">
-                  Additional Media Reel ({mediaUrls.length - 1})
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {mediaUrls.slice(1).map((url, i) => (
-                    <div key={i} className="rounded border border-[#ded9cf] overflow-hidden bg-black/5 p-2">
-                      {isVideo(url) ? (
-                        <video src={url} controls className="w-full aspect-video bg-black rounded" />
-                      ) : isAudio(url) ? (
-                        <audio src={url} controls className="w-full p-2" />
-                      ) : isImage(url) ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={url} alt={`Asset ${i + 2}`} className="w-full h-40 object-cover rounded" />
-                      ) : (
-                        <p className="text-xs font-mono text-[#0f766e] truncate p-2">{url}</p>
-                      )}
+            {/* TAB 2: PROJECT SHOWCASE PAGE PREVIEW */}
+            {previewSubTab === "project" && (
+              <div className="surface p-6 sm:p-8 rounded-2xl border border-[#ded9cf] space-y-6">
+                <div className="flex items-center justify-between border-b border-[#ded9cf] pb-4">
+                  <div>
+                    <span className="text-[11px] font-bold text-[#0f766e] uppercase tracking-wider">
+                      {activeArchetype.title}
+                    </span>
+                    <h2 className="text-2xl font-bold text-[#151515] mt-0.5">
+                      {title || "Untitled Creation"}
+                    </h2>
+                  </div>
+                  <span className="rounded-full bg-[#151515] px-3 py-1 text-xs font-bold text-white capitalize">
+                    {type.replaceAll("_", " ")}
+                  </span>
+                </div>
+
+                {/* Primary Media Display */}
+                <div className="overflow-hidden rounded-xl bg-black/5 border border-[#ded9cf]">
+                  {primaryDisplayAsset && isVideo(primaryDisplayAsset) ? (
+                    <video src={primaryDisplayAsset} controls className="w-full aspect-video bg-black" />
+                  ) : primaryDisplayAsset && isAudio(primaryDisplayAsset) ? (
+                    <div className="p-8 text-center bg-[#151515] text-white">
+                      <Music className="mx-auto text-[#0f766e] mb-3" size={36} />
+                      <p className="font-bold">{title || "Audio Track"}</p>
+                      <audio src={primaryDisplayAsset} controls className="mt-4 mx-auto w-full max-w-md" />
                     </div>
-                  ))}
+                  ) : primaryDisplayAsset ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={primaryDisplayAsset}
+                      alt="Primary showcase"
+                      className="w-full max-h-[600px] object-contain bg-[#f0ede6]"
+                    />
+                  ) : (
+                    <div className="p-16 text-center text-[#8c857b] text-xs">
+                      No media uploaded yet. Return to Edit Mode to drag &amp; drop photos.
+                    </div>
+                  )}
+                </div>
+
+                {/* Narrative Statement */}
+                {description && (
+                  <div className="bg-[#fcfbfa] p-5 rounded-xl border border-[#ded9cf]">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61] mb-2">
+                      Artist Narrative &amp; Statement
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#151515] leading-relaxed whitespace-pre-wrap">
+                      {description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Multi-Photo Carousel / Media Reel */}
+                {mediaUrls.length > 1 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61]">
+                      Additional Exhibition Reel ({mediaUrls.length - 1} more assets)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {mediaUrls.slice(1).map((url, i) => (
+                        <div key={i} className="rounded-lg border border-[#ded9cf] overflow-hidden bg-black/5">
+                          {isImage(url) ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={url} alt={`Asset ${i + 2}`} className="w-full h-36 object-cover" />
+                          ) : isVideo(url) ? (
+                            <video src={url} controls className="w-full h-36 object-cover bg-black" />
+                          ) : (
+                            <div className="p-4 text-xs font-mono text-center truncate">{url}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: WHATSAPP & SOCIAL SHARE PREVIEW */}
+            {previewSubTab === "share" && (
+              <div className="max-w-md mx-auto py-8">
+                <p className="text-xs font-bold text-[#8c857b] uppercase tracking-wider mb-3 text-center">
+                  WhatsApp &amp; Social Message Link Preview
+                </p>
+                {/* WhatsApp Chat Bubble */}
+                <div className="bg-[#1f2c34] text-white p-3.5 rounded-2xl rounded-tl-sm shadow-xl space-y-2 border border-[#2a3942]">
+                  <div className="rounded-xl overflow-hidden bg-black border border-white/10 aspect-[16/9] relative">
+                    {primaryDisplayAsset ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={primaryDisplayAsset}
+                        alt="Share thumbnail"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="grid size-full place-items-center text-xs text-white/50">
+                        Artwork Thumbnail
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-0.5 px-1">
+                    <p className="font-bold text-sm text-white line-clamp-1">
+                      {title || "Untitled Creation"}
+                    </p>
+                    <p className="text-xs text-white/70 line-clamp-2">
+                      {description || "Explore original human & AI creations on The Work of Human."}
+                    </p>
+                    <p className="text-[11px] font-mono text-[#53bdeb] pt-1">
+                      theworkofhuman.com
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          /* ============================================================ */
-          /* SMART STUDIO WORKSPACE: SIDE NAV + EDITOR PANELS             */
-          /* ============================================================ */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Studio Navigation Rail */}
-            <aside className="lg:col-span-3">
-              <nav className="surface p-3 space-y-1 sticky top-6">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#8c857b] px-3 py-2">
-                  Studio Stages
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("media")}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold transition cursor-pointer ${
-                    activeSection === "media"
-                      ? "bg-[#0f766e] text-white shadow-xs"
-                      : "text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515]"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <FolderOpen size={14} />
-                    Media &amp; Files
-                  </span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${activeSection === "media" ? "bg-white/20 text-white" : "bg-[#ded9cf]/50 text-[#151515]"}`}>
-                    {mediaUrls.length + (thumbnailUrl ? 1 : 0)}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("details")}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold transition cursor-pointer ${
-                    activeSection === "details"
-                      ? "bg-[#0f766e] text-white shadow-xs"
-                      : "text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515]"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText size={14} />
-                    Title &amp; Story
-                  </span>
-                  {title.trim() && <span className="size-1.5 rounded-full bg-emerald-400" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("ai")}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold transition cursor-pointer ${
-                    activeSection === "ai"
-                      ? "bg-[#0f766e] text-white shadow-xs"
-                      : "text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515]"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles size={14} />
-                    AI Provenance
-                  </span>
-                  {aiGenerated && (
-                    <span className="text-[10px] font-bold text-emerald-300">
-                      Disclosed
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveSection("tags")}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold transition cursor-pointer ${
-                    activeSection === "tags"
-                      ? "bg-[#0f766e] text-white shadow-xs"
-                      : "text-[#6f6a61] hover:bg-[#f6f4ef] hover:text-[#151515]"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Tag size={14} />
-                    Medium &amp; Tags
-                  </span>
-                  <span className="text-[10px] text-right font-mono truncate max-w-[80px]">
-                    {type.replaceAll("_", " ")}
-                  </span>
-                </button>
-
-                <div className="pt-3 border-t border-[#ded9cf] mt-3">
-                  <div className="px-3 py-2 text-[11px] text-[#8c857b] space-y-1">
-                    <p className="font-semibold text-[#151515]">Self-Hosted Server</p>
-                    <p>Files save directly onto your server disk without external buckets.</p>
-                  </div>
-                </div>
-              </nav>
-            </aside>
-
-            {/* Right Workstation: Content of Selected Stage */}
-            <div className="lg:col-span-9 space-y-6">
-              {/* STAGE 1: MEDIA & FILES (DRAG & DROP) */}
-              {activeSection === "media" && (
-                <div className="surface p-6 sm:p-7 space-y-6 animate-in fade-in">
-                  <div className="border-b border-[#ded9cf] pb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-[#151515]">Media Files &amp; Assets</h3>
-                      <p className="text-xs text-[#6f6a61] mt-0.5">
-                        Drag and drop photos, videos, and music from your device or paste links.
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold text-[#0f766e] bg-[#0f766e]/10 px-2.5 py-1 rounded-full">
-                      Up to 250MB per file
-                    </span>
-                  </div>
-
-                  {uploadError && (
-                    <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
-                      <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                      <span>{uploadError}</span>
-                    </div>
-                  )}
-
-                  {/* 1. COVER THUMBNAIL DRAG & DROP ZONE */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                        1. Cover Artwork / Thumbnail
-                      </label>
-                      <div className="inline-flex rounded-lg bg-[#ded9cf]/40 p-0.5 text-[11px] font-semibold">
-                        <button
-                          type="button"
-                          onClick={() => setThumbMode("upload")}
-                          className={`rounded px-2.5 py-1 cursor-pointer transition ${
-                            thumbMode === "upload"
-                              ? "bg-white text-[#151515] shadow-xs"
-                              : "text-[#6f6a61]"
-                          }`}
-                        >
-                          Drag &amp; Drop
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setThumbMode("link")}
-                          className={`rounded px-2.5 py-1 cursor-pointer transition ${
-                            thumbMode === "link"
-                              ? "bg-white text-[#151515] shadow-xs"
-                              : "text-[#6f6a61]"
-                          }`}
-                        >
-                          Paste Link
-                        </button>
-                      </div>
-                    </div>
-
-                    {thumbMode === "upload" ? (
-                      <div
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setIsDraggingThumb(true);
-                        }}
-                        onDragLeave={() => setIsDraggingThumb(false)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setIsDraggingThumb(false);
-                          if (e.dataTransfer.files) handleFileUpload(e.dataTransfer.files, "thumbnail");
-                        }}
-                        onClick={() => thumbFileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition ${
-                          isDraggingThumb
-                            ? "border-[#0f766e] bg-[#0f766e]/10 scale-[1.01]"
-                            : "border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] hover:bg-[#f6f4ef]"
-                        }`}
-                      >
-                        <input
-                          ref={thumbFileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files) handleFileUpload(e.target.files, "thumbnail");
-                          }}
-                        />
-
-                        {uploadingThumb && thumbProgress ? (
-                          <div className="w-full max-w-sm mx-auto space-y-2 p-2 animate-in fade-in">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-[#151515] truncate max-w-[190px]">
-                                {thumbProgress.filename}
-                              </span>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
-                                {thumbProgress.percent}%
-                              </span>
-                            </div>
-                            <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
-                              <div
-                                className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
-                                style={{ width: `${Math.max(4, thumbProgress.percent)}%` }}
-                              />
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
-                              <span>{thumbProgress.loadedFormatted} of {thumbProgress.totalFormatted}</span>
-                              <span className="font-semibold text-[#0f766e]">
-                                {thumbProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
-                              </span>
-                            </div>
-                          </div>
-                        ) : uploadingThumb ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <Loader2 size={24} className="animate-spin text-[#0f766e]" />
-                            <span className="text-xs font-bold text-[#151515]">
-                              Connecting to server storage...
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="grid size-11 place-items-center rounded-full bg-white shadow-xs text-[#0f766e]">
-                              <UploadCloud size={22} />
-                            </div>
-                            <p className="text-xs font-bold text-[#151515]">
-                              Drag &amp; drop cover artwork here, or <span className="text-[#0f766e] underline">browse</span>
-                            </p>
-                            <p className="text-[11px] text-[#8c857b]">
-                              JPG, PNG, WebP, GIF • Recommended 16:9 or 4:3 ratio
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <input
-                        type="url"
-                        value={thumbnailUrl}
-                        onChange={(e) => setThumbnailUrl(e.target.value)}
-                        placeholder="https://images.unsplash.com/... or paste image URL"
-                        className="w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
-                      />
-                    )}
-
-                    {/* Cover Preview */}
-                    {thumbnailUrl && (
-                      <div className="relative rounded-lg overflow-hidden border border-[#ded9cf] bg-[#e9e4da] p-1 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={thumbnailUrl}
-                            alt="Cover thumbnail"
-                            className="size-16 rounded object-cover border border-[#ded9cf]"
-                          />
-                          <div>
-                            <p className="text-xs font-bold text-[#151515]">Cover Image Attached</p>
-                            <p className="text-[11px] font-mono text-[#8c857b] truncate max-w-sm">{thumbnailUrl}</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setThumbnailUrl("")}
-                          className="rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100 p-2 cursor-pointer transition mr-2"
-                          aria-label="Remove cover"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 2. FULL MEDIA MULTI-DROPZONE (VIDEO, AUDIO, PHOTOS) */}
-                  <div className="pt-4 border-t border-[#ded9cf] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                          2. Full-Resolution Media Assets ({mediaUrls.length})
-                        </label>
-                        <p className="text-[11px] text-[#8c857b]">
-                          Drag videos (.mp4/.mov), songs (.mp3/.wav), high-res photos, or attach links.
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleAddMediaUrl}
-                        className="inline-flex items-center gap-1 rounded-md border border-[#ded9cf] bg-white px-2.5 py-1 text-xs font-bold text-[#151515] hover:bg-[#f6f4ef] cursor-pointer"
-                      >
-                        <LinkIcon size={12} /> Add Link
-                      </button>
-                    </div>
-
-                    {/* Drag & Drop Box */}
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setIsDraggingMedia(true);
+          /* ================================================================= */
+          /* SMART STUDIO EDIT WORKSPACE                                       */
+          /* ================================================================= */
+          <div className="space-y-8 animate-in fade-in">
+            {/* 1. CREATIVE ARCHETYPE SELECTOR CARDS */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                1. Select Creative Discipline
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {ARCHETYPES.map((arch) => {
+                  const Icon = arch.icon;
+                  const isSelected = selectedArchetypeId === arch.id;
+                  return (
+                    <button
+                      key={arch.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedArchetypeId(arch.id);
+                        setType(arch.defaultType);
                       }}
-                      onDragLeave={() => setIsDraggingMedia(false)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setIsDraggingMedia(false);
-                        if (e.dataTransfer.files) handleFileUpload(e.dataTransfer.files, "media");
-                      }}
-                      onClick={() => mediaFileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${
-                        isDraggingMedia
-                          ? "border-[#0f766e] bg-[#0f766e]/10 scale-[1.01]"
-                          : "border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] hover:bg-[#f6f4ef]"
+                      className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between h-32 ${
+                        isSelected
+                          ? "border-[#0f766e] bg-[#0f766e]/8 ring-2 ring-[#0f766e]/20 shadow-xs"
+                          : "border-[#ded9cf] bg-white hover:border-[#0f766e]/60 hover:bg-[#fcfbfa]"
                       }`}
                     >
-                      <input
-                        ref={mediaFileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*,video/*,audio/*,.pdf,.glb,.gltf"
-                        className="hidden"
-                        onChange={(e) => {
-                          if (e.target.files) handleFileUpload(e.target.files, "media");
-                        }}
-                      />
-
-                      {uploadingMedia && mediaProgress ? (
-                        <div className="w-full max-w-md mx-auto space-y-2.5 p-2 animate-in fade-in">
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2 truncate max-w-[240px]">
-                              <span className="rounded bg-[#0f766e]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#0f766e]">
-                                {mediaProgress.index} of {mediaProgress.totalFiles}
-                              </span>
-                              <span className="font-bold text-[#151515] truncate">
-                                {mediaProgress.filename}
-                              </span>
-                            </div>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
-                              {mediaProgress.percent}%
-                            </span>
-                          </div>
-                          <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
-                            <div
-                              className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
-                              style={{ width: `${Math.max(3, mediaProgress.percent)}%` }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
-                            <span>{mediaProgress.loadedFormatted} of {mediaProgress.totalFormatted}</span>
-                            <span className="font-semibold text-[#0f766e]">
-                              {mediaProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
-                            </span>
-                          </div>
-                        </div>
-                      ) : uploadingMedia ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <Loader2 size={26} className="animate-spin text-[#0f766e]" />
-                          <p className="text-xs font-bold text-[#151515]">
-                            Connecting to server storage...
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="grid size-12 place-items-center rounded-full bg-white shadow-xs text-[#0f766e]">
-                            <FileUp size={24} />
-                          </div>
-                          <p className="text-xs font-bold text-[#151515]">
-                            Drag &amp; drop video clips, audio tracks, or images here
-                          </p>
-                          <p className="text-[11px] text-[#8c857b]">
-                            Supports multiple files • MP4, WebM, MP3, WAV, FLAC, PNG, GLB up to 250MB
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Media Assets List */}
-                    {mediaUrls.length > 0 && (
-                      <div className="space-y-3 pt-2">
-                        {mediaUrls.map((url, idx) => {
-                          const isVid = isVideo(url);
-                          const isAud = isAudio(url);
-                          const isImg = isImage(url);
-
-                          return (
-                            <div
-                              key={idx}
-                              className="rounded-lg border border-[#ded9cf] bg-[#fcfbfa] p-3 space-y-2 shadow-xs"
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0f766e] bg-[#0f766e]/10 px-2.5 py-0.5 rounded-full">
-                                  {isVid ? (
-                                    <>
-                                      <Video size={12} /> Video Asset
-                                    </>
-                                  ) : isAud ? (
-                                    <>
-                                      <Music size={12} /> Audio Track
-                                    </>
-                                  ) : isImg ? (
-                                    <>
-                                      <ImageIcon size={12} /> Photo Asset
-                                    </>
-                                  ) : (
-                                    <>
-                                      <LinkIcon size={12} /> External Embed
-                                    </>
-                                  )}
-                                </span>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveMediaUrl(idx)}
-                                  className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                                  aria-label="Remove asset"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-
-                              <input
-                                type="text"
-                                value={url}
-                                onChange={(e) => handleMediaUrlChange(idx, e.target.value)}
-                                placeholder="Media URL or server path..."
-                                className="w-full rounded border border-[#ded9cf] bg-white px-2.5 py-1.5 text-xs text-[#151515] font-mono focus:border-[#0f766e] focus:outline-none"
-                              />
-
-                              {/* Embedded Interactive Preview */}
-                              {url && (
-                                <div className="rounded overflow-hidden bg-black/5 max-h-44 border border-[#ded9cf]/60">
-                                  {isVid ? (
-                                    <video src={url} controls className="w-full max-h-44 bg-black" />
-                                  ) : isAud ? (
-                                    <audio src={url} controls className="w-full p-2" />
-                                  ) : isImg ? (
-                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                    <img
-                                      src={url}
-                                      alt={`Media asset ${idx + 1}`}
-                                      className="w-full max-h-44 object-contain bg-white"
-                                    />
-                                  ) : null}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                      <div
+                        className={`size-9 rounded-xl grid place-items-center ${
+                          isSelected ? "bg-[#0f766e] text-white" : "bg-[#ded9cf]/40 text-[#6f6a61]"
+                        }`}
+                      >
+                        <Icon size={18} />
                       </div>
-                    )}
-                  </div>
-
-                  <div className="pt-4 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("details")}
-                      className="button-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      Next: Title &amp; Story
-                      <ArrowRight size={13} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STAGE 2: DETAILS & STORY */}
-              {activeSection === "details" && (
-                <div className="surface p-6 sm:p-7 space-y-5 animate-in fade-in">
-                  <div className="border-b border-[#ded9cf] pb-3">
-                    <h3 className="text-base font-bold text-[#151515]">Title &amp; Creative Narrative</h3>
-                    <p className="text-xs text-[#6f6a61] mt-0.5">
-                      Define the headline, custom slug, and statement for your creation.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Creation Title <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={title}
-                      onChange={(e) => {
-                        setTitle(e.target.value);
-                        const isVideo =
-                          mediaUrls.some((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
-                          ["films", "short_movies", "cinematic_edits", "animations", "ai_films", "video"].includes(type);
-                        if (!isVideo && (!slug || slug === title.toLowerCase().replace(/[^\w-]/g, "-"))) {
-                          setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, ""));
-                        }
-                      }}
-                      placeholder="e.g. Echoes of the Rust Belt, Algorithmic Flora, or Monolith Engine"
-                      className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Custom URL Slug <span className="text-xs font-normal lowercase text-[#8c857b]">(Leave empty for auto unique ID)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="Leave empty for unique content ID (e.g. 8-char short ID)"
-                      className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-sm text-[#151515] font-mono placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Description &amp; Project Narrative
-                    </label>
-                    <textarea
-                      rows={5}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Discuss inspiration, creative methodologies, acoustic design, code architectures, or philosophical foundations..."
-                      className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none leading-relaxed"
-                    />
-                  </div>
-
-                  <div className="pt-4 flex items-center justify-between border-t border-[#ded9cf]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("media")}
-                      className="button-secondary text-xs cursor-pointer"
-                    >
-                      Back: Media Files
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("ai")}
-                      className="button-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      Next: AI Provenance
-                      <ArrowRight size={13} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* STAGE 3: AI PROVENANCE */}
-              {activeSection === "ai" && (
-                <div className="surface p-6 sm:p-7 space-y-5 animate-in fade-in">
-                  <div className="border-b border-[#ded9cf] pb-3">
-                    <h3 className="text-base font-bold text-[#151515]">Transparent AI Provenance</h3>
-                    <p className="text-xs text-[#6f6a61] mt-0.5">
-                      Maintain integrity across unassisted human craftsmanship and synthetic experimentation.
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-[#ded9cf] bg-[#fbfaf7] p-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="grid size-8 place-items-center rounded-full bg-[#0f766e]/10 text-[#0f766e]">
-                          <Sparkles size={16} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-[#151515]">AI-Assisted or Generated Work</p>
-                          <p className="text-[11px] text-[#6f6a61]">
-                            Declare whether AI models were used in ideation, synthesis, or mastering.
-                          </p>
-                        </div>
-                      </div>
-
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={aiGenerated}
-                          onChange={(e) => setAiGenerated(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0f766e]"></div>
-                      </label>
-                    </div>
-
-                    {aiGenerated ? (
-                      <div className="pt-3 border-t border-[#ded9cf] space-y-2">
-                        <label className="block text-xs font-semibold text-[#4d4942]">
-                          Disclosed AI Models &amp; Generative Stack
-                        </label>
-                        <input
-                          type="text"
-                          value={aiModel}
-                          onChange={(e) => setAiModel(e.target.value)}
-                          placeholder="e.g. Midjourney v6.1, Claude 3.7 Sonnet, Suno v3.5, Stable Diffusion"
-                          className="w-full rounded-md border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
-                        />
-                        <p className="text-[11px] text-[#8c857b]">
-                          This disclosure badge will appear on your project page to preserve provenance.
+                      <div>
+                        <p className="font-bold text-xs text-[#151515] line-clamp-1">{arch.title}</p>
+                        <p className="text-[10px] text-[#8c857b] line-clamp-1 mt-0.5">
+                          {arch.subTypes[0].label}
                         </p>
                       </div>
-                    ) : (
-                      <div className="pt-2 text-[11px] text-emerald-800 bg-emerald-50/70 border border-emerald-200 rounded-md p-3">
-                        ✓ Declared as 100% human-crafted without generative AI assistance.
-                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sub-Medium Pills */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[11px] font-bold text-[#8c857b] mr-1">Specific Medium:</span>
+                {activeArchetype.subTypes.map((sub) => (
+                  <button
+                    key={sub.value}
+                    type="button"
+                    onClick={() => setType(sub.value)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${
+                      type === sub.value
+                        ? "bg-[#151515] text-white shadow-2xs"
+                        : "border border-[#ded9cf] bg-white text-[#555047] hover:bg-[#f6f4ef]"
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. UNIFIED MASTER MEDIA DECK (SMART AUTO-THUMBNAIL) */}
+            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-6">
+              <div className="flex items-center justify-between border-b border-[#ded9cf] pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-[#151515]">
+                    2. Media Assets &amp; Gallery
+                  </h3>
+                  <p className="text-xs text-[#6f6a61] mt-0.5">
+                    {selectedArchetypeId === "visual_art"
+                      ? "Drop your artwork, painting, or photos. Your first photo automatically becomes the showcase cover and thumbnail!"
+                      : selectedArchetypeId === "cinema"
+                      ? "Drop your high-resolution film or animation video file."
+                      : selectedArchetypeId === "music"
+                      ? "Drop your original music track (WAV, MP3, FLAC)."
+                      : "Drag & drop your creative assets."}
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-[#0f766e] bg-[#0f766e]/10 px-3 py-1 rounded-full">
+                  Up to 250MB per file
+                </span>
+              </div>
+
+              {uploadError && (
+                <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
+              {/* Master Dropzone */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingMaster(true);
+                }}
+                onDragLeave={() => setIsDraggingMaster(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingMaster(false);
+                  if (e.dataTransfer.files) handleMasterUpload(e.dataTransfer.files);
+                }}
+                onClick={() => masterFileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
+                  isDraggingMaster
+                    ? "border-[#0f766e] bg-[#0f766e]/10 scale-[1.01]"
+                    : "border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] hover:bg-[#f6f4ef]"
+                }`}
+              >
+                <input
+                  ref={masterFileInputRef}
+                  type="file"
+                  multiple
+                  accept={
+                    selectedArchetypeId === "cinema"
+                      ? "video/*,image/*"
+                      : selectedArchetypeId === "music"
+                      ? "audio/*,image/*"
+                      : "image/*,video/*,audio/*"
+                  }
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) handleMasterUpload(e.target.files);
+                  }}
+                />
+
+                {uploading && uploadProgress ? (
+                  <div className="w-full max-w-sm mx-auto space-y-2 p-2 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-[#151515] truncate max-w-[200px]">
+                        {uploadProgress.filename}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
+                        {uploadProgress.percent}%
+                      </span>
+                    </div>
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
+                        style={{ width: `${Math.max(4, uploadProgress.percent)}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
+                      <span>
+                        File {uploadProgress.index} of {uploadProgress.totalFiles} ({uploadProgress.loadedFormatted} / {uploadProgress.totalFormatted})
+                      </span>
+                      <span className="font-semibold text-[#0f766e]">
+                        {uploadProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2.5">
+                    <div className="grid size-12 place-items-center rounded-2xl bg-white shadow-xs text-[#0f766e] border border-[#ded9cf]">
+                      <UploadCloud size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-[#151515]">
+                      Drag &amp; drop files here, or <span className="text-[#0f766e] underline">browse your device</span>
+                    </p>
+                    <p className="text-xs text-[#8c857b]">
+                      Supports high-resolution PNG, JPG, WebP, MP4, MOV, MP3, WAV
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* UPLOADED PHOTO / MEDIA GALLERY DECK */}
+              {mediaUrls.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                      Uploaded Deck ({mediaUrls.length})
+                    </h4>
+                    <span className="text-[11px] text-[#8c857b]">
+                      Click <strong className="text-amber-800">Set as Cover</strong> on any photo to choose the thumbnail
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {mediaUrls.map((url, idx) => {
+                      const isCover = thumbnailUrl === url || (!thumbnailUrl && idx === 0);
+                      return (
+                        <div
+                          key={idx}
+                          className={`relative rounded-xl overflow-hidden border p-1 bg-white shadow-2xs group transition ${
+                            isCover
+                              ? "border-amber-400 ring-2 ring-amber-400/30"
+                              : "border-[#ded9cf] hover:border-[#0f766e]"
+                          }`}
+                        >
+                          <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#e9e4da]">
+                            {isImage(url) ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img src={url} alt={`Media ${idx + 1}`} className="size-full object-cover" />
+                            ) : isVideo(url) ? (
+                              <video src={url} className="size-full object-cover bg-black" />
+                            ) : (
+                              <div className="grid size-full place-items-center bg-[#151515] text-white">
+                                <Music size={28} className="text-[#0f766e]" />
+                              </div>
+                            )}
+
+                            {/* Cover Badge */}
+                            {isCover && (
+                              <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-amber-500 text-white px-2 py-0.5 text-[10px] font-bold shadow-xs">
+                                <Star size={10} className="fill-current" />
+                                Main Cover
+                              </div>
+                            )}
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => removeMedia(idx)}
+                              className="absolute top-2 right-2 grid size-7 place-items-center rounded-full bg-black/60 text-white hover:bg-rose-600 transition cursor-pointer shadow-xs"
+                              title="Delete file"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+
+                          {/* Footer Action */}
+                          <div className="p-2 flex items-center justify-between text-xs">
+                            <span className="text-[10px] font-mono text-[#8c857b] truncate max-w-[100px]">
+                              Asset {idx + 1}
+                            </span>
+                            {!isCover && (
+                              <button
+                                type="button"
+                                onClick={() => setAsCover(url)}
+                                className="text-[11px] font-bold text-[#0f766e] hover:underline cursor-pointer"
+                              >
+                                Set as Cover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Optional Custom Cover Poster for Video or Audio */}
+              {(selectedArchetypeId === "cinema" || selectedArchetypeId === "music") && (
+                <div className="pt-4 border-t border-[#ded9cf] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                      {selectedArchetypeId === "cinema" ? "Custom Video Poster Cover" : "Album Artwork / Cover"}
+                    </label>
+                    {thumbnailUrl && (
+                      <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                        <Check size={12} /> Attached
+                      </span>
                     )}
                   </div>
 
-                  <div className="pt-4 flex items-center justify-between border-t border-[#ded9cf]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("details")}
-                      className="button-secondary text-xs cursor-pointer"
-                    >
-                      Back: Title &amp; Story
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("tags")}
-                      className="button-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      Next: Medium &amp; Tags
-                      <ArrowRight size={13} />
-                    </button>
+                  <div className="flex items-center gap-4">
+                    {thumbnailUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={thumbnailUrl}
+                        alt="Custom cover"
+                        className="size-16 rounded-xl object-cover border border-[#ded9cf]"
+                      />
+                    ) : (
+                      <div className="size-16 rounded-xl border border-dashed border-[#ded9cf] grid place-items-center text-[#8c857b]">
+                        <ImageIcon size={20} />
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => posterFileInputRef.current?.click()}
+                        className="button-secondary !py-1.5 !px-3 text-xs font-bold cursor-pointer"
+                      >
+                        {thumbnailUrl ? "Replace Poster Artwork" : "Upload Custom Poster Image"}
+                      </button>
+                      <input
+                        ref={posterFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files) handlePosterUpload(e.target.files);
+                        }}
+                      />
+                      <p className="text-[11px] text-[#8c857b]">
+                        Recommended 16:9 for cinema posters, 1:1 for music albums.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* STAGE 4: MEDIUM & TAGS */}
-              {activeSection === "tags" && (
-                <div className="surface p-6 sm:p-7 space-y-6 animate-in fade-in">
-                  <div className="border-b border-[#ded9cf] pb-3">
-                    <h3 className="text-base font-bold text-[#151515]">Medium &amp; Categorization</h3>
-                    <p className="text-xs text-[#6f6a61] mt-0.5">
-                      Select your creative discipline across 33 mediums and specify keyword tags.
+            {/* 3. TITLE, STORY & ARTIST STATEMENT */}
+            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-5">
+              <h3 className="text-base font-bold text-[#151515] border-b border-[#ded9cf] pb-3">
+                3. Title, Narrative &amp; Artist Statement
+              </h3>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                    Creation Title <span className="text-red-500">*</span>
+                  </label>
+                  <span className="text-[11px] text-[#8c857b] font-mono">{title.length}/100</span>
+                </div>
+                <input
+                  type="text"
+                  maxLength={100}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Whispers of the Valley, Urban Echoes #04, Neon Solitude..."
+                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-sm text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                  Artist Narrative &amp; Story Statement
+                </label>
+                <textarea
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Share the inspiration, medium, creative process, or story behind this piece..."
+                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-3 text-xs leading-relaxed text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs resize-y"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                  Custom URL Slug <span className="text-[10px] text-[#8c857b] font-normal">(Optional)</span>
+                </label>
+                <div className="flex items-center rounded-xl border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#6f6a61] shadow-2xs">
+                  <span className="font-mono text-[#8c857b]">theworkofhuman.com/@{currentUser.username}/</span>
+                  <input
+                    type="text"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
+                    placeholder="my-creation-title"
+                    className="flex-1 bg-transparent px-1 font-mono font-bold text-[#151515] focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 4. TRANSPARENT AI PROVENANCE & DISCLOSURE */}
+            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-4">
+              <div className="border-b border-[#ded9cf] pb-3">
+                <h3 className="text-base font-bold text-[#151515]">
+                  4. Transparent Creation Provenance
+                </h3>
+                <p className="text-xs text-[#6f6a61] mt-0.5">
+                  The Work of Human celebrates both traditional craftsmanship and modern AI tooling. We believe in transparent labeling.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAiProvenance("human")}
+                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                    aiProvenance === "human"
+                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
+                  }`}
+                >
+                  <span className="text-lg">🌿</span>
+                  <div className="mt-2">
+                    <p className="font-bold text-xs text-[#151515]">100% Human-Crafted</p>
+                    <p className="text-[10px] text-[#8c857b] mt-0.5">
+                      Handmade, painted, filmed, or performed without generative AI.
                     </p>
                   </div>
+                </button>
 
-                  {/* Discipline / Medium Picker */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942] mb-2">
-                      Primary Creative Medium <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                      className="w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2.5 text-sm text-[#151515] focus:border-[#0f766e] focus:outline-none capitalize"
-                    >
-                      {contentTypes.map((ct) => (
-                        <option key={ct} value={ct}>
-                          {ct.replaceAll("_", " ")}
-                        </option>
-                      ))}
-                    </select>
+                <button
+                  type="button"
+                  onClick={() => setAiProvenance("assisted")}
+                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                    aiProvenance === "assisted"
+                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
+                  }`}
+                >
+                  <span className="text-lg">✨</span>
+                  <div className="mt-2">
+                    <p className="font-bold text-xs text-[#151515]">AI-Assisted Hybrid</p>
+                    <p className="text-[10px] text-[#8c857b] mt-0.5">
+                      Human concept, editing, or composition enhanced with AI tools.
+                    </p>
                   </div>
+                </button>
 
-                  {/* Keyword Tags */}
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-[#4d4942]">
-                      Keyword Tags <span className="text-xs font-normal lowercase text-[#8c857b]">(comma separated)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="ambient, modular, cinematic, rust, typography, open-source"
-                      className="mt-1.5 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none"
-                    />
+                <button
+                  type="button"
+                  onClick={() => setAiProvenance("generated")}
+                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                    aiProvenance === "generated"
+                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
+                  }`}
+                >
+                  <span className="text-lg">🤖</span>
+                  <div className="mt-2">
+                    <p className="font-bold text-xs text-[#151515]">AI-Generated</p>
+                    <p className="text-[10px] text-[#8c857b] mt-0.5">
+                      Created primarily via prompt-to-media generative synthesis.
+                    </p>
                   </div>
+                </button>
+              </div>
 
-                  <div className="pt-4 flex items-center justify-between border-t border-[#ded9cf]">
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("ai")}
-                      className="button-secondary text-xs cursor-pointer"
-                    >
-                      Back: AI Provenance
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveSection("preview")}
-                      className="button-primary text-xs cursor-pointer inline-flex items-center gap-1.5"
-                    >
-                      Inspect Live Preview
-                      <Eye size={13} />
-                    </button>
-                  </div>
+              {aiProvenance !== "human" && (
+                <div className="pt-2 animate-in fade-in space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                    AI Tool / Model Attribution
+                  </label>
+                  <input
+                    type="text"
+                    value={aiModel}
+                    onChange={(e) => setAiModel(e.target.value)}
+                    placeholder="e.g. Google Veo, Midjourney v6, Runway Gen-3, Suno v3.5, ChatGPT..."
+                    className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs font-mono"
+                  />
                 </div>
               )}
+            </div>
+
+            {/* 5. SMART TAGS & DISCOVERY */}
+            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-4">
+              <div className="border-b border-[#ded9cf] pb-3">
+                <h3 className="text-base font-bold text-[#151515]">
+                  5. Tags &amp; Discovery Keywords
+                </h3>
+                <p className="text-xs text-[#6f6a61] mt-0.5">
+                  Click suggested tags to add them instantly, or type custom tags separated by commas.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-[#8c857b] mr-1">One-Click Suggestions:</span>
+                  {activeArchetype.suggestedTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => addTag(tag)}
+                      className="rounded-full px-2.5 py-1 text-xs font-semibold bg-[#ded9cf]/40 text-[#444] hover:bg-[#0f766e] hover:text-white transition cursor-pointer"
+                    >
+                      +{tag}
+                    </button>
+                  ))}
+                </div>
+
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="oilpainting, surrealism, fineart, 4k, portrait (comma-separated)"
+                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Final Action Bar */}
+            <div className="pt-4 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className="button-secondary !py-2.5 !px-5 text-xs font-bold flex items-center gap-2 cursor-pointer"
+              >
+                <Eye size={14} />
+                Preview Before Publishing
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting || success}
+                className="button-primary !py-2.5 !px-8 text-xs font-bold cursor-pointer disabled:opacity-60 flex items-center gap-2 shadow-sm"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Publishing Creation...
+                  </>
+                ) : (
+                  <>
+                    Publish to The Work of Human
+                    <ArrowRight size={15} />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         )}
