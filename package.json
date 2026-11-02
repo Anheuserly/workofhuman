@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node -e \"fs.rmSync('.next/cache', { recursive: true, force: true })\" && opennextjs-cloudflare build --skipBuild",
+    "build": "node scripts/generate-sitemap.mjs && next build && node -e \"fs.rmSync('.next/cache', { recursive: true, force: true })\" && opennextjs-cloudflare build --skipBuild",
     "build:worker": "opennextjs-cloudflare build --skipBuild",
-    "build:local": "next build",
+    "build:local": "node scripts/generate-sitemap.mjs && next build",
+    "sitemap": "node scripts/generate-sitemap.mjs",
     "preview": "opennextjs-cloudflare preview",
     "deploy": "npm run build && wrangler deploy",
     "start": "next start",

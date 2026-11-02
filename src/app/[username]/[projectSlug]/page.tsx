@@ -40,7 +40,7 @@ export async function generateMetadata({
 
   const siteOrigin = "https://theworkofhuman.com";
   const creatorDisplay = project.creatorName || project.creatorUsername || "creator";
-  const title = `${project.title} • by ${creatorDisplay} | The Work of Human`;
+  const formattedTitle = `${project.title} • by ${creatorDisplay} | The Work of Human`;
   
   // Clean description of newlines and whitespace for reliable OpenGraph / Discord / WhatsApp / Twitter parsing
   const rawDescription = (project.description || "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
@@ -67,7 +67,9 @@ export async function generateMetadata({
   const pageUrl = `${siteOrigin}/@${targetCreator}/${project.slug}`;
 
   return {
-    title,
+    title: {
+      absolute: formattedTitle,
+    },
     description,
     authors: [
       {
@@ -81,8 +83,8 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "article",
-      siteName: `The Work of Human • ${creatorDisplay}`,
-      title: project.title,
+      siteName: "The Work of Human",
+      title: `${project.title} • by ${creatorDisplay}`,
       description,
       url: pageUrl,
       authors: [creatorDisplay],
@@ -214,8 +216,72 @@ export default async function ProjectDetailPage({
 
   const isOwner = currentUser?.userId === project.creatorId || currentUser?.role === "admin";
 
+  const siteOrigin = "https://theworkofhuman.com";
+  const canonicalUrl = `${siteOrigin}/@${canonicalCreator}/${project.slug}`;
+  let primaryAssetUrl = primaryImage;
+  if (primaryAssetUrl && primaryAssetUrl.startsWith("/")) {
+    primaryAssetUrl = `${siteOrigin}${primaryAssetUrl}`;
+  }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": videoAsset ? "VideoObject" : "VisualArtwork",
+    name: project.title,
+    headline: project.title,
+    description:
+      project.description ||
+      `Original creation "${project.title}" by ${project.creatorName || effectiveUsername} on The Work of Human.`,
+    url: canonicalUrl,
+    image: primaryAssetUrl ? [primaryAssetUrl] : undefined,
+    thumbnailUrl: primaryAssetUrl,
+    datePublished: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+    dateModified: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+    artform: project.type,
+    genre: project.type,
+    creator: {
+      "@type": "Person",
+      name: project.creatorName || profile?.displayName || effectiveUsername,
+      url: `${siteOrigin}/@${canonicalCreator}`,
+      alternateName: effectiveUsername,
+    },
+    author: {
+      "@type": "Person",
+      name: project.creatorName || profile?.displayName || effectiveUsername,
+      url: `${siteOrigin}/@${canonicalCreator}`,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "The Work of Human",
+      url: siteOrigin,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteOrigin}/logo.svg`,
+      },
+    },
+    ...(project.location
+      ? {
+          contentLocation: {
+            "@type": "Place",
+            name: project.location,
+          },
+        }
+      : {}),
+    ...(videoAsset
+      ? {
+          uploadDate: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+          contentUrl: videoAsset.startsWith("/") ? `${siteOrigin}${videoAsset}` : videoAsset,
+        }
+      : {}),
+    keywords: project.tags?.join(", "),
+  };
+
   return (
     <PageShell>
+      {/* Schema.org Structured Data for Google AI & Image Indexing */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <article className="mx-auto max-w-5xl py-8">
         {/* Back Link & Navigation Bar */}
         <div className="mb-6 flex items-center justify-between gap-4">

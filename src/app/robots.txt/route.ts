@@ -6,6 +6,7 @@ export async function GET() {
   const robots = `# https://theworkofhuman.com robots.txt
 User-agent: *
 Allow: /
+Allow: /api/media/
 Disallow: /admin/
 Disallow: /studio/
 Disallow: /settings/

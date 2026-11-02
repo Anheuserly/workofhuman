@@ -42,6 +42,7 @@ export const platformRoutes = [
   { href: "/ai", label: "AI" },
   { href: "/communities", label: "Communities" },
   { href: "/marketplace", label: "Marketplace" },
+  { href: "/about", label: "About" },
 ] as const;
 
 export const featureMatrix = [

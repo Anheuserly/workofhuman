@@ -15,6 +15,7 @@ import {
   Music,
   Code,
   Users,
+  Info,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
@@ -56,6 +57,7 @@ const disciplineItems: NavItem[] = [
 
 const communityItems: NavItem[] = [
   { href: "/communities", label: "Communities", icon: Users },
+  { href: "/about", label: "About & Mission", icon: Info },
 ];
 
 export function AppSidebar() {
@@ -244,9 +246,17 @@ export function AppSidebar() {
             <PanelLeftOpen size={16} />
           </button>
         ) : (
-          <p className="text-[10px] text-[#8c857b] font-medium tracking-wide">
-            The Work of Human &copy; 2026
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <Link
+              href="/about"
+              className="text-[11px] font-semibold text-[#6f6a61] hover:text-[#0f766e] transition"
+            >
+              About &amp; Manifesto
+            </Link>
+            <p className="text-[10px] text-[#8c857b] font-medium tracking-wide">
+              The Work of Human &copy; 2026
+            </p>
+          </div>
         )}
       </div>
     </aside>

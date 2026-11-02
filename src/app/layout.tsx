@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/api/media/1793308269305-847d0017139c57d757f55ed7-thumb.jpg",
+        url: "/og.png",
         width: 1200,
         height: 630,
         alt: "The Work of Human - The World's Creative Output",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     title: "The Work of Human — The World's Creative Output",
     description:
       "A global creative platform for human and AI-made music, films, paintings, literature, architecture, apps, and design.",
-    images: ["/api/media/1793308269305-847d0017139c57d757f55ed7-thumb.jpg"],
+    images: ["/og.png"],
   },
   robots: {
     index: true,

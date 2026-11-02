@@ -20,6 +20,7 @@ export type Project = {
   likesCount?: number;
   savesCount?: number;
   publishedAt?: string;
+  location?: string;
 };
 
 export type Profile = {
@@ -113,6 +114,7 @@ interface DbProjectRow {
   likes_count?: number | string | null;
   saves_count?: number | string | null;
   published_at?: string | Date | null;
+  location?: string | null;
 }
 
 interface DbProfileRow {
@@ -172,6 +174,7 @@ function mapProject(r: DbProjectRow): Project {
     likesCount: Number(r.likes_count || 0),
     savesCount: Number(r.saves_count || 0),
     publishedAt: r.published_at ? new Date(r.published_at).toISOString() : undefined,
+    location: r.location || undefined,
   };
 }
 
