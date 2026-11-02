@@ -1,0 +1,313 @@
+# ==============================================================================
+# GEMINI SMART MULTIMODAL PROMPT SPECIFICATION
+# Electrical Transformers: Comprehensive 12-Slide Masterclass Deck
+# Optimized for: Gemini 1.5 Pro / Ultra / Gemini Flash Image Generation
+# Format: 16:9 Landscape Widescreen Presentation & Photographic Scene Prompts
+# ==============================================================================
+
+presentation_metadata:
+  title: "Electrical Transformers: Engineering Principles, Types, Properties & Formulas"
+  total_slides: 12
+  aspect_ratio: "16:9"
+  target_audience: "Electrical Engineers, Substation Designers, Technical Students & MEP Professionals"
+  visual_style: "Industrial photorealism, high-end 3D technical cutaways, architectural lighting, Octane render quality"
+  color_palette:
+    primary_base: "Deep Slate / Obsidian Navy (#0a0f1d)"
+    conductor_accent: "Polished Copper Amber (#f59e0b)"
+    magnetic_flux: "Bioluminescent Cyan (#06b6d4)"
+    insulation_safe: "Emerald Teal (#10b981)"
+
+slides:
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 1
+  # ----------------------------------------------------------------------------
+  - slide_number: 1
+    slide_title: "Electrical Transformers: The Backbone of the Modern Power Grid"
+    slide_category: "Title & Executive Overview"
+    core_concepts:
+      - "Role of transformers in bulk electrical power transmission and distribution"
+      - "Voltage stepping for minimum $I^2R$ transmission line losses"
+      - "Static machine operation: Zero mechanical moving parts, near 99% operational efficiency"
+    governing_formula: "P_{loss} = I^2 R = \\left(\\frac{P}{V \\cos\\phi}\\right)^2 R \\implies \\text{Higher } V \\implies \\text{Drastically Lower Losses}"
+    visual_layout:
+      headline: "ELECTRICAL TRANSFORMERS"
+      subheadline: "Classification, Electromagnetic Principles, Materials & Mathematical Formulations"
+      footer: "IEC 60076 / IEEE C57 Standard Reference • 12-Part Technical Monograph"
+    image_generation_prompt: >
+      A cinematic, highly detailed 8K photorealistic photograph of a massive 400kV three-phase electrical
+      substation power transformer at golden hour dusk. Huge ribbed ceramic porcelain high-voltage bushings
+      reach upward against a dramatic sky. Visible oil conservator tank mounted above, heavy corrugated steel
+      radiator cooling banks, and clean industrial pipework. Soft golden sunset light reflects off the dark green
+      industrial enamel paint and copper grounding braids. Subtle electric blue ambient glow in the atmosphere,
+      hyper-detailed textures of bolts, nameplate, pressure relief valve, and gravel substation foundation.
+      16:9 widescreen composition, shot on 35mm lens, f/4 aperture, sharp architectural focus.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 2
+  # ----------------------------------------------------------------------------
+  - slide_number: 2
+    slide_title: "Working Principle: Electromagnetic Induction & Flux Linkage"
+    slide_category: "Physics & Fundamental Operation"
+    core_concepts:
+      - "Faraday's Law of Mutual Induction between primary and secondary circuits"
+      - "Lenz's Law governing the opposing nature of induced electromotive forces"
+      - "Core as a low-reluctance magnetic conduit linking both coils"
+      - "Frequency invariance: Transforming voltage and current while keeping frequency constant ($f_1 = f_2$)"
+    governing_formula: "e = -N \\frac{d\\Phi}{dt} \\quad \\Big| \\quad E_{rms} = 4.44 \\cdot f \\cdot N \\cdot B_m \\cdot A_{core}"
+    visual_layout:
+      key_points:
+        - "Time-varying primary AC current $I_1$ generates alternating magnetic flux $\\Phi(t)$"
+        - "Flux travels through closed ferromagnetic core, cutting secondary turns $N_2$"
+        - "Induced secondary EMF $E_2$ delivers load current $I_2$ with zero galvanic connection"
+    image_generation_prompt: >
+      A clean, photorealistic 3D technical cutaway diagram of a two-winding transformer.
+      A rectangular laminated iron core sits in the center. The left primary copper winding glows with warm
+      amber energy, while the right secondary copper winding glows with cool electric cyan energy.
+      Luminescent, glowing neon-cyan magnetic flux field lines loop smoothly through the closed iron core,
+      illustrating magnetic flux linkage. The dark slate background has faint isometric engineering grid lines.
+      Clean, highly refined industrial rendering, ray-traced ambient occlusion, crisp copper wire coils with
+      translucent insulation film, 8K resolution, 16:9 aspect ratio.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 3
+  # ----------------------------------------------------------------------------
+  - slide_number: 3
+    slide_title: "Core Construction & Metallurgy: CRGO vs. Amorphous Steel"
+    slide_category: "Materials Science & Magnetic Properties"
+    core_concepts:
+      - "Cold-Rolled Grain-Oriented (CRGO) silicon steel (3.2% Si) for oriented magnetic domains"
+      - "Lamination thickness (0.23 mm to 0.35 mm) with Carlite varnish to halt circulating eddy currents"
+      - "Step-lap 45-degree mitered joints reducing air gap reluctance and acoustic hum"
+      - "Amorphous metallic glass (rapidly solidified) achieving 70-80% lower no-load core losses"
+    governing_formula: "A_{net} = k_i \\cdot A_{gross} \\quad (k_i \\approx 0.92-0.96 \\text{ Stacking Factor}) \\quad | \\quad B_{sat} \\approx 1.7-1.8\\text{ T (CRGO)}"
+    visual_layout:
+      comparison_columns:
+        - "CRGO Silicon Steel: High $B_{sat}$ (1.7-1.9 T), mechanically rigid, cost-effective for large power units"
+        - "Amorphous Alloy: Non-crystalline atomic structure, near-zero hysteresis loss, ideal for green distribution grids"
+    image_generation_prompt: >
+      A dramatic extreme macro studio photograph showing the edge cross-section of a high-voltage transformer core.
+      Individual razor-thin laminations of Cold-Rolled Grain-Oriented (CRGO) silicon steel, each coated with a micro-thin
+      iridescent insulating Carlite varnish layer, stacked in a precise step-lap 45-degree mitered configuration.
+      Alongside it, a shiny metallic ribbon of Amorphous alloy catches grazing studio rim light.
+      Crisp metallic reflections, depth of field highlighting the micro-millimeter lamination layers, clean high-tech
+      laboratory environment, dark textured background, professional macro industrial photography, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 4
+  # ----------------------------------------------------------------------------
+  - slide_number: 4
+    slide_title: "Winding Geometries & Thermal Insulation Systems"
+    slide_category: "Electrical Design & Dielectrics"
+    core_concepts:
+      - "Conductor materials: Electrolytic Copper (ETP) vs High-Conductivity EC-grade Aluminum"
+      - "Concentric placement: Low Voltage (LV) winding positioned closest to grounded core to reduce insulation stress"
+      - "Winding forms: Helical (high-current LV), Continuous Disc (high-voltage impulse withstand), and Foil"
+      - "Insulation classes (IEC 60085): Class A (105°C), Class F (155°C), and Class H (180°C)"
+    governing_formula: "R_{winding} = \\rho \\frac{l}{A_{conductor}} \\quad | \\quad \\Delta T = \\frac{P_{loss} \\cdot R_{th}}{A_{surface}}"
+    visual_layout:
+      diagram_focus: "Inner core limb -> Insulation cylinder -> LV winding -> Oil duct -> HV disc winding"
+    image_generation_prompt: >
+      An exploded cutaway 3D engineering render of a heavy high-voltage transformer winding assembly.
+      Shows the central steel core limb, surrounded by a thick tan-colored pressboard insulation barrier,
+      followed by the tightly wound low-voltage copper cylinder winding with clear oil cooling channels.
+      On the outside is the segmented continuous disc high-voltage winding with gleaming enameled copper conductors
+      wrapped in Kraft paper insulation. Spacers made of densified wood and Nomex separate each disc segment.
+      Clear studio lighting, precise technical CAD rendering style, Octane 3D photorealistic materials, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 5
+  # ----------------------------------------------------------------------------
+  - slide_number: 5
+    slide_title: "Step-Up vs. Step-Down Transformers: The Turn Ratio Principle"
+    slide_category: "Transformation Mechanics"
+    core_concepts:
+      - "Step-Up ($N_2 > N_1$): Generator Step-Up (GSU) boosting 11 kV/22 kV to 400 kV/765 kV for long-distance transport"
+      - "Step-Down ($N_1 > N_2$): Substation units reducing transmission voltage down to 33 kV, 11 kV, and 415 V"
+      - "Turns ratio ($a$) and inverse current transformation conserving apparent power ($S_1 \\approx S_2$)"
+    governing_formula: "a = \\frac{N_1}{N_2} = \\frac{V_1}{V_2} = \\frac{I_2}{I_1} \\quad | \\quad Z_{in} = a^2 \\cdot Z_L"
+    visual_layout:
+      split_screen:
+        - "Left Side: High current / Low voltage primary transforming to Low current / High voltage secondary"
+        - "Right Side: Impedance scaling by $a^2$ across the magnetic boundary"
+    image_generation_prompt: >
+      A split-composition 3D technical illustration comparing a Step-Up and Step-Down transformer.
+      On the left, a Generator Step-Up transformer shows thick, heavy copper busbars on its low-voltage intake
+      and giant tall ribbed ceramic bushings on its high-voltage output. On the right, a distribution step-down
+      transformer shows tall bushings on the primary side and a compact 4-terminal low-voltage busbar on the output.
+      Glowing neon flow arrows indicate voltage escalation vs current reduction. Elegant dark industrial backdrop
+      with clean schematics floating subtly in the background, 16:9 aspect ratio, 8K render.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 6
+  # ----------------------------------------------------------------------------
+  - slide_number: 6
+    slide_title: "Distribution Transformers: Pole-Mounted & Pad-Mounted Systems"
+    slide_category: "Commercial & Utility Distribution"
+    core_concepts:
+      - "Voltage step-down to consumer levels: 11 kV to 415 V (Three-Phase) and 240 V (Single-Phase)"
+      - "All-Day Energy Efficiency priority: Minimized no-load core loss for 24/7 continuous operation"
+      - "Hermetically sealed vs. conservator-type tanks with corrugated cooling fin walls"
+      - "Protection package: Drop-out (DO) fuses, lightning surge arresters (LA), and neutral grounding"
+    governing_formula: "\\eta_{all-day} = \\frac{\\text{Total Output (kWh in 24h)}}{\\text{Total Input (kWh in 24h)}} = \\frac{\\sum P_{out} \\cdot t}{\\sum P_{out} \\cdot t + 24 P_i + \\sum I_t^2 R \\cdot t}"
+    visual_layout:
+      key_elements:
+        - "Typical ratings: 25 kVA, 63 kVA, 100 kVA, 250 kVA, up to 2500 kVA"
+        - "Impedance: 4% to 5% (%Z) to preserve stiff voltage regulation under sudden load shifts"
+    image_generation_prompt: >
+      A realistic, crisp outdoor photograph of an 11kV/415V three-phase 250 kVA oil-immersed distribution transformer
+      mounted on a heavy steel H-frame utility pole structure against a clear daylight sky. Corrugated cooling fins on
+      the steel tank body, three brown ceramic HT bushings on top with lightning arresters connected to overhead lines,
+      and four low-voltage insulated copper busbar terminals leading down into an armored distribution cable box.
+      Detailed drop-out fuses mounted above the crossarm. High-end utility photography style, sharp focus, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 7
+  # ----------------------------------------------------------------------------
+  - slide_number: 7
+    slide_title: "Autotransformers: Single-Winding Topology & Copper Economy"
+    slide_category: "Specialty Transformer Engineering"
+    core_concepts:
+      - "Single continuous tapped winding serving as both primary and secondary"
+      - "Hybrid power transfer: Conductive direct electrical transfer + inductive magnetic transfer"
+      - "Dramatic copper mass and size savings when transformation ratio $k \\approx 1$"
+      - "Primary risk: Lack of galvanic isolation between primary and secondary circuits"
+    governing_formula: "\\text{Cu Weight}_{Auto} = (1 - k) \\cdot \\text{Cu Weight}_{2-Winding} \\quad | \\quad S_{conducted} = k \\cdot S_{total}"
+    visual_layout:
+      diagram_focus: "Common winding section carrying difference current ($I_1 - I_2$) vs series section"
+      application_callouts: "Substation inter-ties (400kV / 220kV), motor starters (Korndorfer), laboratory Variacs"
+    image_generation_prompt: >
+      A high-precision 3D engineering render of a large three-phase autotransformer core-and-coil assembly.
+      The single continuous heavy copper winding is exposed on one limb, showing the intermediate tap points
+      with heavy copper bolted terminals. Glowing vector overlays in gold and cyan show the current flow:
+      the series winding section and the common winding section where the currents subtract.
+      Technical callout lines subtly annotate 'Series Winding' and 'Common Winding'. Deep navy blue ambient background,
+      clean metallic reflections, ray-traced shadows, pristine 8K quality, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 8
+  # ----------------------------------------------------------------------------
+  - slide_number: 8
+    slide_title: "Instrument Transformers: Current (CT) & Potential (PT) Transformers"
+    slide_category: "Substation Metering & Protection"
+    core_concepts:
+      - "Current Transformers (CT): Step down massive currents to 1A or 5A for relays and revenue meters"
+      - "Potential Transformers (PT/CVT): Step down transmission voltages to 110V or 110V/√3 for instrumentation"
+      - "Safety imperative: CT secondary must NEVER be open-circuited while energized (risk of explosive overvoltage)"
+      - "Accuracy classes: Class 0.2S for revenue metering vs Class 5P20 for fault protective tripping"
+    governing_formula: "\\text{Burden} = I_s^2 \\cdot Z_{external} \\text{ (VA)} \\quad | \\quad \\text{Ratio Error} = \\frac{k_n I_s - I_p}{I_p} \\times 100\\%"
+    visual_layout:
+      left_card: "Current Transformer (Toroidal core, thick primary conductor passing through window, high turns secondary)"
+      right_card: "Capacitor Voltage Transformer (Capacitive divider stacks + electromagnetic tuning unit)"
+    image_generation_prompt: >
+      A photorealistic close-up view inside a high-voltage electrical switchyard showing an outdoor Current Transformer
+      (CT) and a Potential Transformer (PT) side-by-side on concrete pedestals. The CT features a brown glazed porcelain
+      column with an oil level sight glass at the head and an open terminal junction box showing 1A/5A secondary wiring.
+      Next to it, a tall capacitive voltage transformer reaches toward the high-voltage busbars. Morning dew drops on the
+      porcelain sheds, crisp industrial detail, overcast diffused lighting, sharp 8K documentary photography, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 9
+  # ----------------------------------------------------------------------------
+  - slide_number: 9
+    slide_title: "Dry-Type Cast Resin Transformers: Indoor Fire-Safe Engineering"
+    slide_category: "Modern Indoor Infrastructure"
+    core_concepts:
+      - "Vacuum Pressure Encapsulated (VPI) and Cast Resin (CRT) epoxy technology"
+      - "Zero flammable transformer oil: Safe for hospitals, airports, high-rise basements, and data centers"
+      - "Non-hygroscopic, moisture-resistant Class F (155°C) and Class H (180°C) solid insulation"
+      - "Forced-air (AF) cooling fans offering +40% emergency peak power boost"
+    governing_formula: "P_{rating(AF)} \\approx 1.33 \\text{ to } 1.40 \\times P_{rating(AN)}"
+    visual_layout:
+      key_highlights:
+        - "Environmentally benign: No oil leak risk, zero toxic PCB hazards"
+        - "Minimal maintenance: No oil testing (DGA, breakdown voltage BDV, acidity) required"
+    image_generation_prompt: >
+      A striking, clean industrial photograph of a modern 1500 kVA Cast Resin Dry-Type Transformer installed inside a
+      high-tech electrical switchgear room. The three phase coils are encapsulated in smooth, vibrant crimson-red and
+      deep-blue epoxy resin with visible fiberglass reinforcement texture. Cross-flow cooling fans mounted along the
+      bottom base rail. A digital RTD temperature controller panel displays winding temperatures on the front door.
+      Polished epoxy flooring, stainless steel ventilated IP23 enclosure with safety mesh, architectural LED lighting,
+      16:9 widescreen format, crisp commercial photography.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 10
+  # ----------------------------------------------------------------------------
+  - slide_number: 10
+    slide_title: "Cooling Mechanisms & Substation Protective Auxiliaries"
+    slide_category: "Thermal Management & Substation Protection"
+    core_concepts:
+      - "Cooling codes (IEC 60076): ONAN, ONAF, OFAF, ODAF, AN/AF"
+      - "Buchholz Relay: Gas-actuated dual-float relay trapping minor insulation decomposition gases and tripping on oil surges"
+      - "Silica Gel Breather: Dehydrating atmospheric air intake during thermal expansion/contraction cycles"
+      - "Auxiliaries: Pressure Relief Valve (PRV), Winding (WTI) and Oil (OTI) Temperature Indicators"
+    governing_formula: "\\text{Loss Dissipation} = h \\cdot A \\cdot (T_{oil} - T_{ambient}) + \\epsilon \\cdot \\sigma \\cdot A \\cdot (T_{oil}^4 - T_{amb}^4)"
+    visual_layout:
+      cutaway_highlights:
+        - "Main Tank with core and oil -> Pipe inclined 3°-5° -> Buchholz Relay -> Conservator Tank"
+        - "Conservator pipe -> Silica Gel Breather (Cobalt-free beads turning pink when saturated)"
+    image_generation_prompt: >
+      A detailed 3D cutaway illustration focusing on the protective auxiliary system of an oil-filled transformer.
+      Highlights the glass-windowed Buchholz Relay mounted on the slightly inclined pipe connecting the main tank
+      to the overhead conservator drum. Inside the relay, the upper mercury float switch and lower surge baffle
+      are clearly visible. Attached to the conservator breathing tube is a transparent silica gel breather chamber
+      filled with bright royal blue desiccant beads. Radiator cooling fins with axial fans are visible in the background.
+      Pristine technical rendering, ray-traced glass and oil transparency, labeled components, 16:9.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 11
+  # ----------------------------------------------------------------------------
+  - slide_number: 11
+    slide_title: "Equivalent Circuit, Loss Separation & Maximum Efficiency"
+    slide_category: "Mathematical Analysis & Efficiency Optimization"
+    core_concepts:
+      - "Lumped equivalent circuit: Series resistance ($R_{01}$), leakage reactance ($X_{01}$), shunt branch ($R_c, X_m$)"
+      - "Constant Core Losses ($P_i = P_{hysteresis} + P_{eddy}$) vs. Variable Copper Losses ($P_{cu} = x^2 P_{cu,FL}$)"
+      - "Mathematical derivation: Peak efficiency occurs when variable copper loss equals constant core loss"
+    governing_formula: "\\eta = \\frac{x \\cdot S \\cdot \\cos\\phi}{x \\cdot S \\cdot \\cos\\phi + P_i + x^2 P_{cu,FL}} \\times 100\\% \\quad \\implies \\quad x_{\\max \\eta} = \\sqrt{\\frac{P_i}{P_{cu,FL}}}"
+    visual_layout:
+      formula_cards:
+        - "Hysteresis Loss: $P_h = k_h \\cdot f \\cdot B_m^{1.6} \\text{ (Steinmetz Equation)}$"
+        - "Eddy Current Loss: $P_e = k_e \\cdot f^2 \\cdot B_m^2 \\cdot t^2$"
+        - "Load for Peak Efficiency: $\\text{kVA}_{\\max \\eta} = \\text{Rated kVA} \\times \\sqrt{P_i / P_{cu,FL}}$"
+    image_generation_prompt: >
+      A high-tech composite engineering visual. On the left side, a clean glowing schematic of the transformer equivalent
+      circuit with primary and secondary parameters ($R_1, X_1, R_c, X_m, R_2', X_2'$). On the right side, an authentic
+      thermal infrared (FLIR) false-color heat map rendering of an operating transformer showing temperature distribution:
+      the hottest core center in glowing white-yellow (constant iron losses) and the winding ducts in orange-red
+      (copper $I^2R$ dissipation). A bell-shaped efficiency vs load curve ($d\\eta/dx = 0$) floats gracefully in the center.
+      Sophisticated data visualization aesthetic, dark slate background, 16:9 aspect ratio.
+
+  # ----------------------------------------------------------------------------
+  # SLIDE 12
+  # ----------------------------------------------------------------------------
+  - slide_number: 12
+    slide_title: "Three-Phase Vector Groups, Testing & Master Cheatsheet"
+    slide_category: "System Engineering & Reference Summary"
+    core_concepts:
+      - "Three-Phase connection schemes: Star-Star (Yy), Delta-Delta (Dd), Star-Delta (Yd), Delta-Star (Dyn11)"
+      - "Vector Groups clock code: Dyn11 denotes Delta HV, Star LV with neutral, LV leads HV by 30 degrees (11 o'clock)"
+      - "Factory verification tests: Open-Circuit (OC) test on LV side (core loss) & Short-Circuit (SC) test on HV side (copper loss)"
+    governing_formula: "S_{3\\Phi} = \\sqrt{3} \\cdot V_L \\cdot I_L \\quad | \\quad VR \\approx \\frac{I_2(R_{02}\\cos\\phi \\pm X_{02}\\sin\\phi)}{V_2} \\times 100\\% \\quad | \\quad I_{sc} = \\frac{I_{FL}}{\\%Z / 100}"
+    visual_layout:
+      vector_clock: "Dyn11 vector clock diagram (+30° phase displacement) alongside 3-phase limb wiring"
+      cheatsheet_table:
+        - "Transformation Ratio: $a = N_1/N_2 = V_1/V_2 = I_2/I_1$"
+        - "EMF Formula: $E = 4.44 f N B_m A$"
+        - "Zero Voltage Regulation Condition: $\\tan\\phi = -R_{02}/X_{02}$ (Leading PF)"
+    image_generation_prompt: >
+      A futuristic isometric 3D render of a three-phase transformer core assembly with three upright wound limbs.
+      Above the assembly hovers a glowing holographic vector clock dial indicating the Dyn11 configuration:
+      a primary Delta triangle connected to high-voltage lines, and an inner Star with an earthed neutral point,
+      with the clock minute hand pointing at 11 o'clock (+30 degree phase advance).
+      Subtle mathematical formulas ($S = \\sqrt{3} V_L I_L$) glow in fine typography around the pedestal base.
+      High-tech dark theme, electric cyan and copper-gold holographic lighting, ultra-sharp 8K resolution, 16:9.
+
+# ==============================================================================
+# INSTRUCTIONS FOR GEMINI / AI GENERATOR:
+# When rendering each slide image or presentation layout:
+# 1. Use the 'image_generation_prompt' directly as the prompt for Gemini / Imagen 3.
+# 2. Maintain strict 16:9 aspect ratio across all 12 slides.
+# 3. For slide text content, extract the 'governing_formula' and 'core_concepts'
+#    to build clean presentation slides.
+# ==============================================================================
