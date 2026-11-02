@@ -6,13 +6,12 @@ import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   Eye,
-  Image as ImageIcon,
   Loader2,
   Lock,
   Music,
-  Sparkles,
   Trash2,
   UploadCloud,
   Palette,
@@ -24,6 +23,7 @@ import {
   Layers,
   Check,
   Star,
+  MapPin,
 } from "lucide-react";
 import { PageShell } from "@/components/shell";
 import { RoleBadge } from "@/components/role-badge";
@@ -36,7 +36,7 @@ interface AuthUser {
   verified?: boolean;
 }
 
-// Creative Archetypes for smart contextual workflow
+// Creative Archetypes
 interface Archetype {
   id: "visual_art" | "cinema" | "writing" | "music" | "architecture" | "tech";
   title: string;
@@ -51,7 +51,7 @@ const ARCHETYPES: Archetype[] = [
   {
     id: "visual_art",
     title: "Fine Art & Photography",
-    subtitle: "Paintings, drawings, digital art, photography, craft",
+    subtitle: "Paintings, drawings, photos, digital craft",
     icon: Palette,
     defaultType: "paintings",
     subTypes: [
@@ -59,14 +59,14 @@ const ARCHETYPES: Archetype[] = [
       { value: "digital_art", label: "Digital Illustration" },
       { value: "photography", label: "Fine Photography" },
       { value: "graphic_design", label: "Graphic & Poster Art" },
-      { value: "handmade_crafts", label: "Handmade Crafts & Sculpture" },
+      { value: "handmade_crafts", label: "Handmade Crafts" },
     ],
-    suggestedTags: ["fineart", "oilpainting", "canvas", "contemporary", "photography", "digitalart", "exhibition"],
+    suggestedTags: ["fineart", "oilpainting", "canvas", "contemporary", "photography", "digitalart"],
   },
   {
     id: "cinema",
     title: "Cinema & Video",
-    subtitle: "Films, animations, short movies, cinematic edits",
+    subtitle: "Films, animations, short movies, reels",
     icon: Film,
     defaultType: "films",
     subTypes: [
@@ -76,51 +76,48 @@ const ARCHETYPES: Archetype[] = [
       { value: "cinematic_edits", label: "Cinematic Visual Reel" },
       { value: "documentaries", label: "Documentary Study" },
     ],
-    suggestedTags: ["cinema", "shortfilm", "veo", "filmmaking", "animation", "4k", "directorcut"],
+    suggestedTags: ["cinema", "shortfilm", "veo", "filmmaking", "animation", "4k"],
   },
   {
     id: "writing",
     title: "Books & Literature",
-    subtitle: "Books, poetry, articles, essays, short stories",
+    subtitle: "Books, poetry, articles, stories, essays",
     icon: BookOpen,
     defaultType: "books",
     subTypes: [
       { value: "books", label: "Book Manuscript / Novel" },
-      { value: "stories", label: "Short Fiction & Story" },
+      { value: "stories", label: "Short Story" },
       { value: "poetry", label: "Poetry Anthology" },
-      { value: "articles", label: "Longform Essay / Article" },
-      { value: "blogs", label: "Creative Journal & Blog" },
+      { value: "articles", label: "Longform Essay" },
     ],
-    suggestedTags: ["literature", "fiction", "poetry", "storytelling", "author", "philosophy", "essay"],
+    suggestedTags: ["literature", "fiction", "poetry", "storytelling", "author", "philosophy"],
   },
   {
     id: "music",
     title: "Music & Audio",
-    subtitle: "Original tracks, soundscapes, audio art, podcasts",
+    subtitle: "Original tracks, soundscapes, audio art",
     icon: Music,
     defaultType: "music",
     subTypes: [
       { value: "music", label: "Original Single / Album" },
-      { value: "songs", label: "Vocal Song / Acoustic" },
-      { value: "audio_tracks", label: "Ambient Soundscape / Instrumental" },
-      { value: "podcasts", label: "Podcast / Spoken Audio" },
-      { value: "ai_music", label: "AI Music Experiment" },
+      { value: "audio_tracks", label: "Ambient Soundscape" },
+      { value: "songs", label: "Vocal Track" },
+      { value: "podcasts", label: "Podcast / Spoken" },
     ],
-    suggestedTags: ["music", "sounddesign", "ambient", "indie", "composer", "synthwave", "mastering"],
+    suggestedTags: ["music", "sounddesign", "ambient", "indie", "composer", "synthwave"],
   },
   {
     id: "architecture",
     title: "Architecture & Space",
-    subtitle: "Spatial design, 3D architecture models, structures",
+    subtitle: "Spatial design, 3D architecture, blueprints",
     icon: Building2,
     defaultType: "architecture",
     subTypes: [
       { value: "architecture", label: "Architectural Design" },
       { value: "3d_models", label: "3D Spatial Visualization" },
-      { value: "inventions", label: "Spatial & Industrial Design" },
-      { value: "fashion_design", label: "Structural Fashion" },
+      { value: "inventions", label: "Spatial Invention" },
     ],
-    suggestedTags: ["architecture", "spatialdesign", "3drender", "minimalism", "blueprint", "concrete", "interior"],
+    suggestedTags: ["architecture", "spatialdesign", "3drender", "minimalism", "blueprint"],
   },
   {
     id: "tech",
@@ -130,16 +127,28 @@ const ARCHETYPES: Archetype[] = [
     defaultType: "apps",
     subTypes: [
       { value: "apps", label: "Mobile or Desktop App" },
-      { value: "websites", label: "Web Application / Design" },
-      { value: "coding_projects", label: "Open Source Code / Engine" },
+      { value: "websites", label: "Web Platform" },
+      { value: "coding_projects", label: "Open Source Code" },
       { value: "indie_games", label: "Indie Game" },
-      { value: "inventions", label: "Physical Hardware Invention" },
     ],
-    suggestedTags: ["opensource", "nextjs", "flutter", "creativecoding", "indiedev", "developer", "innovation"],
+    suggestedTags: ["opensource", "nextjs", "flutter", "creativecoding", "indiedev"],
   },
 ];
 
-const DRAFT_KEY = "woh_studio_draft_v3";
+const POPULAR_LOCATIONS = [
+  "New York, USA",
+  "London, UK",
+  "Paris, France",
+  "Tokyo, Japan",
+  "Berlin, Germany",
+  "Delhi, India",
+  "Seoul, South Korea",
+  "Toronto, Canada",
+  "Amsterdam, Netherlands",
+  "Sydney, Australia",
+];
+
+const DRAFT_KEY = "woh_studio_draft_v4";
 
 export default function UploadStudioPage() {
   const router = useRouter();
@@ -168,12 +177,15 @@ export default function UploadStudioPage() {
     return true;
   });
 
-  // Archetype selection
+  // Step state: 1 = Media & Discipline, 2 = Story & Studio Location, 3 = Provenance & Discovery
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+
+  // Archetype selection (default is Fine Art & Photography)
   const [selectedArchetypeId, setSelectedArchetypeId] = useState<Archetype["id"]>("visual_art");
   const activeArchetype = ARCHETYPES.find((a) => a.id === selectedArchetypeId) || ARCHETYPES[0];
 
-  // Studio Mode: "edit" | "preview"
-  const [viewMode, setViewMode] = useState<"edit" | "preview">("edit");
+  // Studio Mode: "wizard" | "preview"
+  const [viewMode, setViewMode] = useState<"wizard" | "preview">("wizard");
   const [previewSubTab, setPreviewSubTab] = useState<"feed" | "project" | "share">("feed");
 
   // Form State
@@ -181,16 +193,17 @@ export default function UploadStudioPage() {
   const [slug, setSlug] = useState("");
   const [type, setType] = useState<string>("paintings");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [aiProvenance, setAiProvenance] = useState<"human" | "assisted" | "generated">("human");
   const [aiModel, setAiModel] = useState("");
 
-  // Drag and Drop States
+  // Drag and Drop
   const [isDraggingMaster, setIsDraggingMaster] = useState(false);
 
-  // Upload progress states
+  // Upload progress
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
     filename: string;
@@ -205,7 +218,6 @@ export default function UploadStudioPage() {
 
   // Hidden file inputs
   const masterFileInputRef = useRef<HTMLInputElement>(null);
-  const posterFileInputRef = useRef<HTMLInputElement>(null);
 
   // Submission States
   const [submitting, setSubmitting] = useState(false);
@@ -241,7 +253,7 @@ export default function UploadStudioPage() {
         localStorage.removeItem("woh_cached_user");
       }
     } catch {
-      // offline or network issue
+      // offline
     } finally {
       setAuthLoading(false);
     }
@@ -263,6 +275,7 @@ export default function UploadStudioPage() {
             setSlug(parsed.slug || "");
             setType(parsed.type || "paintings");
             setDescription(parsed.description || "");
+            setLocation(parsed.location || "");
             setThumbnailUrl(parsed.thumbnailUrl || "");
             setMediaUrls(parsed.mediaUrls || []);
             setTagInput(parsed.tagInput || "");
@@ -289,6 +302,7 @@ export default function UploadStudioPage() {
             slug,
             type,
             description,
+            location,
             thumbnailUrl,
             mediaUrls,
             tagInput,
@@ -301,19 +315,20 @@ export default function UploadStudioPage() {
             localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
             setDraftSavedTime(new Date().toLocaleTimeString());
           } catch {
-            // quota exceeded
+            // quota
           }
         }
       }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [title, slug, type, description, thumbnailUrl, mediaUrls, tagInput, aiProvenance, aiModel, selectedArchetypeId]);
+  }, [title, slug, type, description, location, thumbnailUrl, mediaUrls, tagInput, aiProvenance, aiModel, selectedArchetypeId]);
 
   function clearDraft() {
     localStorage.removeItem(DRAFT_KEY);
     setTitle("");
     setSlug("");
     setDescription("");
+    setLocation("");
     setThumbnailUrl("");
     setMediaUrls([]);
     setTagInput("");
@@ -323,7 +338,6 @@ export default function UploadStudioPage() {
     setDraftSavedTime(null);
   }
 
-  // Format Bytes helper
   function formatBytes(bytes: number): string {
     if (bytes === 0) return "0 B";
     const k = 1024;
@@ -340,11 +354,6 @@ export default function UploadStudioPage() {
     return /\.(mp4|webm|mov|mkv)($|\?)/i.test(url);
   }
 
-  function isAudio(url: string) {
-    return /\.(mp3|wav|ogg|m4a|aac|flac)($|\?)/i.test(url);
-  }
-
-  // XHR file upload with accurate progress percentage
   function uploadFileWithProgress(
     file: File,
     onProgress: (percent: number, loaded: string, total: string) => void
@@ -386,7 +395,7 @@ export default function UploadStudioPage() {
     });
   }
 
-  // Master Unified File Upload Handler
+  // Master Unified Upload Handler
   async function handleMasterUpload(files: FileList | File[]) {
     setUploadError(null);
     const fileList = Array.from(files);
@@ -423,7 +432,6 @@ export default function UploadStudioPage() {
 
       setMediaUrls((prev) => {
         const combined = [...prev, ...newUrls];
-        // Auto-assign first image as thumbnail if none set
         if (!thumbnailUrl) {
           const firstImg = combined.find((u) => isImage(u));
           if (firstImg) setThumbnailUrl(firstImg);
@@ -438,52 +446,21 @@ export default function UploadStudioPage() {
     }
   }
 
-  // Dedicated Poster / Cover Upload for Video or Audio
-  async function handlePosterUpload(files: FileList | File[]) {
-    const fileList = Array.from(files);
-    if (fileList.length === 0) return;
-    const file = fileList[0];
-
-    setUploading(true);
-    try {
-      const data = await uploadFileWithProgress(file, (percent, loadedFormatted, totalFormatted) => {
-        setUploadProgress({
-          filename: file.name,
-          percent,
-          loadedFormatted,
-          totalFormatted,
-          index: 1,
-          totalFiles: 1,
-        });
-      });
-      setThumbnailUrl(data.url);
-    } catch (err: unknown) {
-      setUploadError(err instanceof Error ? err.message : "Cover poster upload failed.");
-    } finally {
-      setUploading(false);
-      setUploadProgress(null);
-    }
-  }
-
-  // Set an image as primary cover & thumbnail with one click
   function setAsCover(url: string) {
     setThumbnailUrl(url);
   }
 
-  // Remove asset from deck
   function removeMedia(indexToRemove: number) {
     const removedUrl = mediaUrls[indexToRemove];
     const updated = mediaUrls.filter((_, idx) => idx !== indexToRemove);
     setMediaUrls(updated);
 
-    // If the removed image was the thumbnail, reassign to the next available image
     if (thumbnailUrl === removedUrl) {
       const nextImg = updated.find((u) => isImage(u));
       setThumbnailUrl(nextImg || "");
     }
   }
 
-  // Add Tag Chip
   function addTag(tag: string) {
     const clean = tag.replace(/^#/, "").trim();
     if (!clean) return;
@@ -498,7 +475,7 @@ export default function UploadStudioPage() {
     }
   }
 
-  // Publish Creation
+  // Submit to API
   async function handleSubmit() {
     setError(null);
 
@@ -508,12 +485,14 @@ export default function UploadStudioPage() {
     }
 
     if (!title.trim()) {
-      setError("Please provide a title for your creative work.");
+      setError("Please provide a title for your creative work in Step 2.");
+      setCurrentStep(2);
       return;
     }
 
     if (mediaUrls.length === 0 && !thumbnailUrl) {
-      setError("Please attach at least one photo, video, audio file, or artwork.");
+      setError("Please upload at least one photo, artwork, or video in Step 1.");
+      setCurrentStep(1);
       return;
     }
 
@@ -525,7 +504,6 @@ export default function UploadStudioPage() {
         .map((t) => t.trim().replace(/^#/, ""))
         .filter((t) => t.length > 0);
 
-      // Auto-fallback: if thumbnail is still empty, pick the first image or media
       const resolvedThumbnail = thumbnailUrl || mediaUrls.find((u) => isImage(u)) || mediaUrls[0] || "";
 
       const payload = {
@@ -533,6 +511,7 @@ export default function UploadStudioPage() {
         slug: slug.trim() || undefined,
         type,
         description: description.trim() || undefined,
+        location: location.trim() || undefined,
         thumbnailUrl: resolvedThumbnail.trim() || undefined,
         mediaUrls: mediaUrls.filter((u) => u.trim().length > 0),
         tags: tagsArray,
@@ -553,7 +532,6 @@ export default function UploadStudioPage() {
       }
 
       setSuccess(true);
-      // Clear draft upon successful publication
       localStorage.removeItem(DRAFT_KEY);
 
       setTimeout(() => {
@@ -566,109 +544,52 @@ export default function UploadStudioPage() {
     }
   }
 
-  // Active cover preview asset
   const primaryDisplayAsset = thumbnailUrl || mediaUrls[0] || "";
 
   return (
     <PageShell>
-      <div className="max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
-        {/* Top Header & Action Bar */}
-        <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[#ded9cf] pb-5">
-          <div className="space-y-1">
+      <div className="max-w-4xl mx-auto py-6 sm:py-8 px-4 sm:px-6">
+        {/* Top Header */}
+        <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#ded9cf] pb-4">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#0f766e]">
-                Creation Studio
+                Creative Studio
               </span>
               {draftSavedTime && (
-                <span className="text-[11px] text-[#8c857b] font-mono">
+                <span className="text-[10px] text-[#8c857b] font-mono">
                   • Draft saved {draftSavedTime}
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#151515]">
-              Publish Original Creative Work
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#151515]">
+              Publish Original Work
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {currentUser ? (
+          <div className="flex items-center gap-2.5">
+            {currentUser && (
               <div className="hidden sm:flex items-center gap-2 border border-[#ded9cf] rounded-full px-3 py-1 bg-white text-xs shadow-2xs">
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="font-semibold text-[#151515]">@{currentUser.username}</span>
                 <RoleBadge role={currentUser.role} verified={currentUser.verified} size="sm" />
               </div>
-            ) : (
-              <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full font-semibold">
-                Sign in to publish
-              </span>
             )}
-
-            {/* Toggle Edit vs Preview */}
-            <div className="inline-flex rounded-full bg-[#e8e4db] p-0.5 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setViewMode("edit")}
-                className={`rounded-full px-3 py-1.5 transition cursor-pointer ${
-                  viewMode === "edit"
-                    ? "bg-[#151515] text-white shadow-xs"
-                    : "text-[#6f6a61] hover:text-[#151515]"
-                }`}
-              >
-                Edit Mode
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("preview")}
-                className={`rounded-full px-3 py-1.5 flex items-center gap-1.5 transition cursor-pointer ${
-                  viewMode === "preview"
-                    ? "bg-[#0f766e] text-white shadow-xs"
-                    : "text-[#6f6a61] hover:text-[#151515]"
-                }`}
-              >
-                <Eye size={13} />
-                Live Preview
-              </button>
-            </div>
 
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={submitting || success}
-              className="button-primary !px-5 !py-2 text-xs font-bold cursor-pointer disabled:opacity-60 flex items-center gap-1.5 shadow-sm"
+              onClick={() => setViewMode(viewMode === "preview" ? "wizard" : "preview")}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === "preview"
+                  ? "bg-[#0f766e] text-white shadow-xs"
+                  : "border border-[#ded9cf] bg-white text-[#151515] hover:bg-[#f6f4ef]"
+              }`}
             >
-              {submitting ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Publishing...
-                </>
-              ) : (
-                <>
-                  Publish Work
-                  <ArrowRight size={14} />
-                </>
-              )}
+              <Eye size={13} />
+              {viewMode === "preview" ? "Edit Steps" : "Live Preview"}
             </button>
           </div>
         </header>
-
-        {/* Draft Restored Banner */}
-        {draftRestored && (
-          <div className="mb-5 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <span className="text-base">📝</span>
-              <span>
-                Restored your unsaved draft from {draftSavedTime || "a previous session"}.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={clearDraft}
-              className="text-amber-800 underline font-semibold hover:text-amber-950 cursor-pointer"
-            >
-              Clear Draft
-            </button>
-          </div>
-        )}
 
         {/* Global Notifications */}
         {error && (
@@ -681,7 +602,20 @@ export default function UploadStudioPage() {
         {success && (
           <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
             <CheckCircle2 size={15} className="mt-0.5 shrink-0" />
-            <span>Your work has been published! Redirecting to your live portfolio showcase...</span>
+            <span>Published successfully! Redirecting to your portfolio showcase...</span>
+          </div>
+        )}
+
+        {draftRestored && (
+          <div className="mb-5 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900">
+            <span>📝 Restored your unsaved draft from {draftSavedTime || "earlier"}.</span>
+            <button
+              type="button"
+              onClick={clearDraft}
+              className="text-amber-800 underline font-semibold hover:text-amber-950 cursor-pointer"
+            >
+              Clear
+            </button>
           </div>
         )}
 
@@ -703,7 +637,7 @@ export default function UploadStudioPage() {
                 Authentication Required
               </h2>
               <p className="mt-2 text-xs leading-relaxed text-[#6f6a61]">
-                Only authenticated creators can publish to The Work of Human. Sign in to your creator account to continue.
+                Only authenticated creators can publish to The Work of Human.
               </p>
             </div>
 
@@ -714,20 +648,13 @@ export default function UploadStudioPage() {
               >
                 Sign In to Your Account
               </Link>
-              <Link
-                href="/register?redirect=/studio/upload"
-                className="button-secondary w-full justify-center !py-2.5 text-xs font-bold"
-              >
-                Create New Profile
-              </Link>
             </div>
           </div>
         ) : viewMode === "preview" ? (
           /* ================================================================= */
-          /* 3-WAY LIVE PREVIEW MODE (FEED CARD, PROJECT PAGE, WHATSAPP SHARE)  */
+          /* 3-WAY LIVE PREVIEW MODE                                           */
           /* ================================================================= */
           <div className="space-y-6 animate-in fade-in">
-            {/* Preview Tabs */}
             <div className="flex items-center justify-between border-b border-[#ded9cf] pb-3">
               <div className="flex items-center gap-2">
                 <button
@@ -752,7 +679,7 @@ export default function UploadStudioPage() {
                   }`}
                 >
                   <Eye size={13} />
-                  Project Showcase Page
+                  Project Page
                 </button>
                 <button
                   type="button"
@@ -764,45 +691,39 @@ export default function UploadStudioPage() {
                   }`}
                 >
                   <Share2 size={13} />
-                  WhatsApp / Social Share
+                  WhatsApp Share Card
                 </button>
               </div>
 
-              <span className="text-[11px] font-mono text-[#8c857b]">
-                {mediaUrls.length} media attached
-              </span>
+              <button
+                type="button"
+                onClick={() => setViewMode("wizard")}
+                className="text-xs font-bold text-[#0f766e] hover:underline cursor-pointer"
+              >
+                ← Back to Editing
+              </button>
             </div>
 
-            {/* TAB 1: FEED CARD PREVIEW */}
             {previewSubTab === "feed" && (
-              <div className="max-w-md mx-auto py-8">
-                <p className="text-xs font-bold text-[#8c857b] uppercase tracking-wider mb-3 text-center">
-                  How viewers will see your work on the Homepage Feed
-                </p>
-                <div className="surface rounded-2xl overflow-hidden border border-[#ded9cf] shadow-md group">
+              <div className="max-w-md mx-auto py-6">
+                <div className="surface rounded-2xl overflow-hidden border border-[#ded9cf] shadow-md">
                   <div className="relative aspect-[16/9] w-full bg-[#151515] overflow-hidden">
-                    {primaryDisplayAsset && isVideo(primaryDisplayAsset) ? (
-                      <video src={primaryDisplayAsset} className="w-full h-full object-cover" />
-                    ) : primaryDisplayAsset ? (
+                    {primaryDisplayAsset ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={primaryDisplayAsset}
-                        alt="Preview card"
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={primaryDisplayAsset} alt="Preview card" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="grid size-full place-items-center text-[#8c857b] text-xs">
-                        No image uploaded yet
+                      <div className="grid size-full place-items-center text-white/50 text-xs">
+                        No image uploaded
                       </div>
                     )}
                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                       <span className="rounded-full bg-white/95 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold text-[#151515] uppercase tracking-wider shadow-xs capitalize">
                         {type.replaceAll("_", " ")}
                       </span>
-                      {aiProvenance !== "human" && (
-                        <span className="rounded-full bg-[#0f766e]/90 text-white px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 shadow-xs">
-                          <Sparkles size={10} />
-                          AI Disclosed
+                      {location && (
+                        <span className="rounded-full bg-black/70 backdrop-blur-md text-white px-2.5 py-0.5 text-[10px] font-semibold flex items-center gap-1 border border-white/20">
+                          <MapPin size={10} className="text-amber-400" />
+                          {location}
                         </span>
                       )}
                     </div>
@@ -813,7 +734,7 @@ export default function UploadStudioPage() {
                       {title || "Untitled Creation"}
                     </h3>
                     <p className="text-xs text-[#6f6a61] line-clamp-2 leading-relaxed">
-                      {description || "No description provided yet."}
+                      {description || "Original work created by @" + currentUser.username}
                     </p>
                     <div className="pt-2 border-t border-[#ded9cf] flex items-center justify-between text-xs text-[#8c857b]">
                       <span className="font-mono font-semibold text-[#151515]">
@@ -826,15 +747,16 @@ export default function UploadStudioPage() {
               </div>
             )}
 
-            {/* TAB 2: PROJECT SHOWCASE PAGE PREVIEW */}
             {previewSubTab === "project" && (
-              <div className="surface p-6 sm:p-8 rounded-2xl border border-[#ded9cf] space-y-6">
+              <div className="surface p-6 sm:p-8 rounded-2xl border border-[#ded9cf] space-y-5">
                 <div className="flex items-center justify-between border-b border-[#ded9cf] pb-4">
                   <div>
-                    <span className="text-[11px] font-bold text-[#0f766e] uppercase tracking-wider">
-                      {activeArchetype.title}
-                    </span>
-                    <h2 className="text-2xl font-bold text-[#151515] mt-0.5">
+                    {location && (
+                      <p className="text-[11px] font-bold text-amber-800 flex items-center gap-1 uppercase tracking-wider mb-1">
+                        <MapPin size={12} /> Origin: {location}
+                      </p>
+                    )}
+                    <h2 className="text-2xl font-bold text-[#151515]">
                       {title || "Untitled Creation"}
                     </h2>
                   </div>
@@ -843,99 +765,48 @@ export default function UploadStudioPage() {
                   </span>
                 </div>
 
-                {/* Primary Media Display */}
                 <div className="overflow-hidden rounded-xl bg-black/5 border border-[#ded9cf]">
-                  {primaryDisplayAsset && isVideo(primaryDisplayAsset) ? (
-                    <video src={primaryDisplayAsset} controls className="w-full aspect-video bg-black" />
-                  ) : primaryDisplayAsset && isAudio(primaryDisplayAsset) ? (
-                    <div className="p-8 text-center bg-[#151515] text-white">
-                      <Music className="mx-auto text-[#0f766e] mb-3" size={36} />
-                      <p className="font-bold">{title || "Audio Track"}</p>
-                      <audio src={primaryDisplayAsset} controls className="mt-4 mx-auto w-full max-w-md" />
-                    </div>
-                  ) : primaryDisplayAsset ? (
+                  {primaryDisplayAsset ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={primaryDisplayAsset}
                       alt="Primary showcase"
-                      className="w-full max-h-[600px] object-contain bg-[#f0ede6]"
+                      className="w-full max-h-[500px] object-contain bg-[#f0ede6]"
                     />
                   ) : (
-                    <div className="p-16 text-center text-[#8c857b] text-xs">
-                      No media uploaded yet. Return to Edit Mode to drag &amp; drop photos.
-                    </div>
+                    <div className="p-16 text-center text-[#8c857b] text-xs">No media uploaded yet.</div>
                   )}
                 </div>
 
-                {/* Narrative Statement */}
                 {description && (
                   <div className="bg-[#fcfbfa] p-5 rounded-xl border border-[#ded9cf]">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61] mb-2">
-                      Artist Narrative &amp; Statement
+                      Artist Narrative
                     </h4>
                     <p className="text-xs sm:text-sm text-[#151515] leading-relaxed whitespace-pre-wrap">
                       {description}
                     </p>
                   </div>
                 )}
-
-                {/* Multi-Photo Carousel / Media Reel */}
-                {mediaUrls.length > 1 && (
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#6f6a61]">
-                      Additional Exhibition Reel ({mediaUrls.length - 1} more assets)
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {mediaUrls.slice(1).map((url, i) => (
-                        <div key={i} className="rounded-lg border border-[#ded9cf] overflow-hidden bg-black/5">
-                          {isImage(url) ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={url} alt={`Asset ${i + 2}`} className="w-full h-36 object-cover" />
-                          ) : isVideo(url) ? (
-                            <video src={url} controls className="w-full h-36 object-cover bg-black" />
-                          ) : (
-                            <div className="p-4 text-xs font-mono text-center truncate">{url}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* TAB 3: WHATSAPP & SOCIAL SHARE PREVIEW */}
             {previewSubTab === "share" && (
-              <div className="max-w-md mx-auto py-8">
-                <p className="text-xs font-bold text-[#8c857b] uppercase tracking-wider mb-3 text-center">
-                  WhatsApp &amp; Social Message Link Preview
-                </p>
-                {/* WhatsApp Chat Bubble */}
+              <div className="max-w-md mx-auto py-6">
                 <div className="bg-[#1f2c34] text-white p-3.5 rounded-2xl rounded-tl-sm shadow-xl space-y-2 border border-[#2a3942]">
                   <div className="rounded-xl overflow-hidden bg-black border border-white/10 aspect-[16/9] relative">
-                    {primaryDisplayAsset ? (
+                    {primaryDisplayAsset && (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={primaryDisplayAsset}
-                        alt="Share thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="grid size-full place-items-center text-xs text-white/50">
-                        Artwork Thumbnail
-                      </div>
+                      <img src={primaryDisplayAsset} alt="Share thumbnail" className="w-full h-full object-cover" />
                     )}
                   </div>
                   <div className="space-y-0.5 px-1">
-                    <p className="font-bold text-sm text-white line-clamp-1">
-                      {title || "Untitled Creation"}
-                    </p>
+                    <p className="font-bold text-sm text-white line-clamp-1">{title || "Untitled Creation"}</p>
                     <p className="text-xs text-white/70 line-clamp-2">
-                      {description || "Explore original human & AI creations on The Work of Human."}
+                      {location ? `[${location}] ` : ""}
+                      {description || "Explore original human creations on The Work of Human."}
                     </p>
-                    <p className="text-[11px] font-mono text-[#53bdeb] pt-1">
-                      theworkofhuman.com
-                    </p>
+                    <p className="text-[11px] font-mono text-[#53bdeb] pt-1">theworkofhuman.com</p>
                   </div>
                 </div>
               </div>
@@ -943,507 +814,538 @@ export default function UploadStudioPage() {
           </div>
         ) : (
           /* ================================================================= */
-          /* SMART STUDIO EDIT WORKSPACE                                       */
+          /* GUIDED STEPPER WIZARD (CLEAN 3-STEP FLOW)                         */
           /* ================================================================= */
-          <div className="space-y-8 animate-in fade-in">
-            {/* 1. CREATIVE ARCHETYPE SELECTOR CARDS */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                1. Select Creative Discipline
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {ARCHETYPES.map((arch) => {
-                  const Icon = arch.icon;
-                  const isSelected = selectedArchetypeId === arch.id;
-                  return (
-                    <button
-                      key={arch.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedArchetypeId(arch.id);
-                        setType(arch.defaultType);
-                      }}
-                      className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between h-32 ${
-                        isSelected
-                          ? "border-[#0f766e] bg-[#0f766e]/8 ring-2 ring-[#0f766e]/20 shadow-xs"
-                          : "border-[#ded9cf] bg-white hover:border-[#0f766e]/60 hover:bg-[#fcfbfa]"
-                      }`}
-                    >
-                      <div
-                        className={`size-9 rounded-xl grid place-items-center ${
-                          isSelected ? "bg-[#0f766e] text-white" : "bg-[#ded9cf]/40 text-[#6f6a61]"
-                        }`}
-                      >
-                        <Icon size={18} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs text-[#151515] line-clamp-1">{arch.title}</p>
-                        <p className="text-[10px] text-[#8c857b] line-clamp-1 mt-0.5">
-                          {arch.subTypes[0].label}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Sub-Medium Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[11px] font-bold text-[#8c857b] mr-1">Specific Medium:</span>
-                {activeArchetype.subTypes.map((sub) => (
-                  <button
-                    key={sub.value}
-                    type="button"
-                    onClick={() => setType(sub.value)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition cursor-pointer ${
-                      type === sub.value
-                        ? "bg-[#151515] text-white shadow-2xs"
-                        : "border border-[#ded9cf] bg-white text-[#555047] hover:bg-[#f6f4ef]"
-                    }`}
-                  >
-                    {sub.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. UNIFIED MASTER MEDIA DECK (SMART AUTO-THUMBNAIL) */}
-            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-6">
-              <div className="flex items-center justify-between border-b border-[#ded9cf] pb-3">
-                <div>
-                  <h3 className="text-base font-bold text-[#151515]">
-                    2. Media Assets &amp; Gallery
-                  </h3>
-                  <p className="text-xs text-[#6f6a61] mt-0.5">
-                    {selectedArchetypeId === "visual_art"
-                      ? "Drop your artwork, painting, or photos. Your first photo automatically becomes the showcase cover and thumbnail!"
-                      : selectedArchetypeId === "cinema"
-                      ? "Drop your high-resolution film or animation video file."
-                      : selectedArchetypeId === "music"
-                      ? "Drop your original music track (WAV, MP3, FLAC)."
-                      : "Drag & drop your creative assets."}
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-[#0f766e] bg-[#0f766e]/10 px-3 py-1 rounded-full">
-                  Up to 250MB per file
-                </span>
-              </div>
-
-              {uploadError && (
-                <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
-                  <span>{uploadError}</span>
-                </div>
-              )}
-
-              {/* Master Dropzone */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDraggingMaster(true);
-                }}
-                onDragLeave={() => setIsDraggingMaster(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDraggingMaster(false);
-                  if (e.dataTransfer.files) handleMasterUpload(e.dataTransfer.files);
-                }}
-                onClick={() => masterFileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
-                  isDraggingMaster
-                    ? "border-[#0f766e] bg-[#0f766e]/10 scale-[1.01]"
-                    : "border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] hover:bg-[#f6f4ef]"
+          <div className="space-y-6 animate-in fade-in">
+            {/* Stepper Progress Bar */}
+            <div className="grid grid-cols-3 gap-2 bg-[#e9e4da]/60 p-1.5 rounded-2xl border border-[#ded9cf]">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  currentStep === 1
+                    ? "bg-white text-[#151515] shadow-xs"
+                    : currentStep > 1
+                    ? "text-[#0f766e] hover:bg-white/50"
+                    : "text-[#8c857b]"
                 }`}
               >
-                <input
-                  ref={masterFileInputRef}
-                  type="file"
-                  multiple
-                  accept={
-                    selectedArchetypeId === "cinema"
-                      ? "video/*,image/*"
-                      : selectedArchetypeId === "music"
-                      ? "audio/*,image/*"
-                      : "image/*,video/*,audio/*"
-                  }
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files) handleMasterUpload(e.target.files);
-                  }}
-                />
+                <span className={`size-5 rounded-full grid place-items-center text-[10px] ${
+                  currentStep > 1 ? "bg-[#0f766e] text-white" : currentStep === 1 ? "bg-[#151515] text-white" : "bg-[#ded9cf] text-[#6f6a61]"
+                }`}>
+                  {currentStep > 1 ? <Check size={11} /> : "1"}
+                </span>
+                <span className="hidden sm:inline">1. Media &amp; Art</span>
+              </button>
 
-                {uploading && uploadProgress ? (
-                  <div className="w-full max-w-sm mx-auto space-y-2 p-2 animate-in fade-in">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-[#151515] truncate max-w-[200px]">
-                        {uploadProgress.filename}
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#0f766e]/10 px-2.5 py-0.5 text-xs font-mono font-bold text-[#0f766e]">
-                        {uploadProgress.percent}%
-                      </span>
-                    </div>
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-[#ded9cf]/50 p-0.5">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#0f766e] to-teal-400 transition-all duration-150 ease-out rounded-full shadow-xs"
-                        style={{ width: `${Math.max(4, uploadProgress.percent)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#8c857b]">
-                      <span>
-                        File {uploadProgress.index} of {uploadProgress.totalFiles} ({uploadProgress.loadedFormatted} / {uploadProgress.totalFormatted})
-                      </span>
-                      <span className="font-semibold text-[#0f766e]">
-                        {uploadProgress.percent === 100 ? "Processing on VPS..." : "Uploading..."}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2.5">
-                    <div className="grid size-12 place-items-center rounded-2xl bg-white shadow-xs text-[#0f766e] border border-[#ded9cf]">
-                      <UploadCloud size={24} />
-                    </div>
-                    <p className="text-sm font-bold text-[#151515]">
-                      Drag &amp; drop files here, or <span className="text-[#0f766e] underline">browse your device</span>
-                    </p>
-                    <p className="text-xs text-[#8c857b]">
-                      Supports high-resolution PNG, JPG, WebP, MP4, MOV, MP3, WAV
-                    </p>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  currentStep === 2
+                    ? "bg-white text-[#151515] shadow-xs"
+                    : currentStep > 2
+                    ? "text-[#0f766e] hover:bg-white/50"
+                    : "text-[#8c857b]"
+                }`}
+              >
+                <span className={`size-5 rounded-full grid place-items-center text-[10px] ${
+                  currentStep > 2 ? "bg-[#0f766e] text-white" : currentStep === 2 ? "bg-[#151515] text-white" : "bg-[#ded9cf] text-[#6f6a61]"
+                }`}>
+                  {currentStep > 2 ? <Check size={11} /> : "2"}
+                </span>
+                <span className="hidden sm:inline">2. Story &amp; Location</span>
+              </button>
 
-              {/* UPLOADED PHOTO / MEDIA GALLERY DECK */}
-              {mediaUrls.length > 0 && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                      Uploaded Deck ({mediaUrls.length})
-                    </h4>
-                    <span className="text-[11px] text-[#8c857b]">
-                      Click <strong className="text-amber-800">Set as Cover</strong> on any photo to choose the thumbnail
-                    </span>
-                  </div>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(3)}
+                className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                  currentStep === 3
+                    ? "bg-white text-[#151515] shadow-xs"
+                    : "text-[#8c857b]"
+                }`}
+              >
+                <span className={`size-5 rounded-full grid place-items-center text-[10px] ${
+                  currentStep === 3 ? "bg-[#151515] text-white" : "bg-[#ded9cf] text-[#6f6a61]"
+                }`}>
+                  3
+                </span>
+                <span className="hidden sm:inline">3. Review &amp; Publish</span>
+              </button>
+            </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {mediaUrls.map((url, idx) => {
-                      const isCover = thumbnailUrl === url || (!thumbnailUrl && idx === 0);
+            {/* STEP 1: MEDIA & DISCIPLINE (SIMPLIFIED & CLEAN) */}
+            {currentStep === 1 && (
+              <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-[#151515]">Step 1: Upload Your Creative Work</h2>
+                  <p className="text-xs text-[#6f6a61] mt-0.5">
+                    Drag and drop your photos, paintings, video, or audio. Your first photo automatically becomes the showcase cover and thumbnail!
+                  </p>
+                </div>
+
+                {/* Simplified Discipline Chips */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                    Discipline / Category
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {ARCHETYPES.map((arch) => {
+                      const Icon = arch.icon;
+                      const isSelected = selectedArchetypeId === arch.id;
                       return (
-                        <div
-                          key={idx}
-                          className={`relative rounded-xl overflow-hidden border p-1 bg-white shadow-2xs group transition ${
-                            isCover
-                              ? "border-amber-400 ring-2 ring-amber-400/30"
-                              : "border-[#ded9cf] hover:border-[#0f766e]"
+                        <button
+                          key={arch.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedArchetypeId(arch.id);
+                            setType(arch.defaultType);
+                          }}
+                          className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center gap-1.5 ${
+                            isSelected
+                              ? "border-[#0f766e] bg-[#0f766e]/10 text-[#0f766e] font-bold"
+                              : "border-[#ded9cf] bg-white text-[#6f6a61] hover:bg-[#fcfbfa]"
                           }`}
                         >
-                          <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#e9e4da]">
-                            {isImage(url) ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img src={url} alt={`Media ${idx + 1}`} className="size-full object-cover" />
-                            ) : isVideo(url) ? (
-                              <video src={url} className="size-full object-cover bg-black" />
-                            ) : (
-                              <div className="grid size-full place-items-center bg-[#151515] text-white">
-                                <Music size={28} className="text-[#0f766e]" />
-                              </div>
-                            )}
+                          <Icon size={16} />
+                          <span className="text-[11px] leading-tight">{arch.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                            {/* Cover Badge */}
-                            {isCover && (
-                              <div className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-amber-500 text-white px-2 py-0.5 text-[10px] font-bold shadow-xs">
-                                <Star size={10} className="fill-current" />
-                                Main Cover
-                              </div>
-                            )}
+                {uploadError && (
+                  <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                    <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
 
-                            {/* Delete Button */}
-                            <button
-                              type="button"
-                              onClick={() => removeMedia(idx)}
-                              className="absolute top-2 right-2 grid size-7 place-items-center rounded-full bg-black/60 text-white hover:bg-rose-600 transition cursor-pointer shadow-xs"
-                              title="Delete file"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
+                {/* Unified Master Dropzone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDraggingMaster(true);
+                  }}
+                  onDragLeave={() => setIsDraggingMaster(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDraggingMaster(false);
+                    if (e.dataTransfer.files) handleMasterUpload(e.dataTransfer.files);
+                  }}
+                  onClick={() => masterFileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition ${
+                    isDraggingMaster
+                      ? "border-[#0f766e] bg-[#0f766e]/10 scale-[1.01]"
+                      : "border-[#ded9cf] hover:border-[#0f766e] bg-[#fbfaf7] hover:bg-[#f6f4ef]"
+                  }`}
+                >
+                  <input
+                    ref={masterFileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*,audio/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) handleMasterUpload(e.target.files);
+                    }}
+                  />
 
-                          {/* Footer Action */}
-                          <div className="p-2 flex items-center justify-between text-xs">
-                            <span className="text-[10px] font-mono text-[#8c857b] truncate max-w-[100px]">
-                              Asset {idx + 1}
-                            </span>
+                  {uploading && uploadProgress ? (
+                    <div className="w-full max-w-sm mx-auto space-y-2 p-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-[#151515] truncate max-w-[200px]">
+                          {uploadProgress.filename}
+                        </span>
+                        <span className="font-mono font-bold text-[#0f766e]">
+                          {uploadProgress.percent}%
+                        </span>
+                      </div>
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#ded9cf]/50">
+                        <div
+                          className="h-full bg-[#0f766e] transition-all duration-150 ease-out rounded-full"
+                          style={{ width: `${Math.max(4, uploadProgress.percent)}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-[#8c857b]">
+                        Uploading file {uploadProgress.index} of {uploadProgress.totalFiles}...
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="grid size-12 place-items-center rounded-2xl bg-white shadow-xs text-[#0f766e] border border-[#ded9cf]">
+                        <UploadCloud size={24} />
+                      </div>
+                      <p className="text-sm font-bold text-[#151515]">
+                        Drag &amp; drop your artwork, photo, or video here
+                      </p>
+                      <p className="text-xs text-[#8c857b]">
+                        Supports PNG, JPG, WebP, MP4, MOV, MP3 (Up to 250MB)
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Uploaded Gallery Deck */}
+                {mediaUrls.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                        Attached Media ({mediaUrls.length})
+                      </h4>
+                      <span className="text-[11px] text-[#8c857b]">
+                        Click <strong className="text-amber-800">Set as Cover</strong> to change the thumbnail
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {mediaUrls.map((url, idx) => {
+                        const isCover = thumbnailUrl === url || (!thumbnailUrl && idx === 0);
+                        return (
+                          <div
+                            key={idx}
+                            className={`relative rounded-xl overflow-hidden border p-1 bg-white transition ${
+                              isCover ? "border-amber-400 ring-2 ring-amber-400/30" : "border-[#ded9cf]"
+                            }`}
+                          >
+                            <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#e9e4da]">
+                              {isImage(url) ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={url} alt={`Media ${idx + 1}`} className="size-full object-cover" />
+                              ) : isVideo(url) ? (
+                                <video src={url} className="size-full object-cover bg-black" />
+                              ) : (
+                                <div className="grid size-full place-items-center bg-[#151515] text-white">
+                                  <Music size={24} className="text-[#0f766e]" />
+                                </div>
+                              )}
+
+                              {isCover && (
+                                <div className="absolute top-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-amber-500 text-white px-2 py-0.5 text-[9px] font-bold shadow-xs">
+                                  <Star size={9} className="fill-current" /> Cover
+                                </div>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => removeMedia(idx)}
+                                className="absolute top-1.5 right-1.5 grid size-6 place-items-center rounded-full bg-black/60 text-white hover:bg-rose-600 transition cursor-pointer"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            </div>
+
                             {!isCover && (
                               <button
                                 type="button"
                                 onClick={() => setAsCover(url)}
-                                className="text-[11px] font-bold text-[#0f766e] hover:underline cursor-pointer"
+                                className="w-full text-center text-[10px] font-bold text-[#0f766e] hover:underline pt-1.5 cursor-pointer"
                               >
                                 Set as Cover
                               </button>
                             )}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Optional Custom Cover Poster for Video or Audio */}
-              {(selectedArchetypeId === "cinema" || selectedArchetypeId === "music") && (
-                <div className="pt-4 border-t border-[#ded9cf] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                      {selectedArchetypeId === "cinema" ? "Custom Video Poster Cover" : "Album Artwork / Cover"}
-                    </label>
-                    {thumbnailUrl && (
-                      <span className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
-                        <Check size={12} /> Attached
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    {thumbnailUrl ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={thumbnailUrl}
-                        alt="Custom cover"
-                        className="size-16 rounded-xl object-cover border border-[#ded9cf]"
-                      />
-                    ) : (
-                      <div className="size-16 rounded-xl border border-dashed border-[#ded9cf] grid place-items-center text-[#8c857b]">
-                        <ImageIcon size={20} />
-                      </div>
-                    )}
-                    <div className="flex-1 space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => posterFileInputRef.current?.click()}
-                        className="button-secondary !py-1.5 !px-3 text-xs font-bold cursor-pointer"
-                      >
-                        {thumbnailUrl ? "Replace Poster Artwork" : "Upload Custom Poster Image"}
-                      </button>
-                      <input
-                        ref={posterFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          if (e.target.files) handlePosterUpload(e.target.files);
-                        }}
-                      />
-                      <p className="text-[11px] text-[#8c857b]">
-                        Recommended 16:9 for cinema posters, 1:1 for music albums.
-                      </p>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3. TITLE, STORY & ARTIST STATEMENT */}
-            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-5">
-              <h3 className="text-base font-bold text-[#151515] border-b border-[#ded9cf] pb-3">
-                3. Title, Narrative &amp; Artist Statement
-              </h3>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                    Creation Title <span className="text-red-500">*</span>
-                  </label>
-                  <span className="text-[11px] text-[#8c857b] font-mono">{title.length}/100</span>
-                </div>
-                <input
-                  type="text"
-                  maxLength={100}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Whispers of the Valley, Urban Echoes #04, Neon Solitude..."
-                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-sm text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                  Artist Narrative &amp; Story Statement
-                </label>
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Share the inspiration, medium, creative process, or story behind this piece..."
-                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-3 text-xs leading-relaxed text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs resize-y"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                  Custom URL Slug <span className="text-[10px] text-[#8c857b] font-normal">(Optional)</span>
-                </label>
-                <div className="flex items-center rounded-xl border border-[#ded9cf] bg-white px-3 py-2 text-xs text-[#6f6a61] shadow-2xs">
-                  <span className="font-mono text-[#8c857b]">theworkofhuman.com/@{currentUser.username}/</span>
-                  <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ""))}
-                    placeholder="my-creation-title"
-                    className="flex-1 bg-transparent px-1 font-mono font-bold text-[#151515] focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 4. TRANSPARENT AI PROVENANCE & DISCLOSURE */}
-            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-4">
-              <div className="border-b border-[#ded9cf] pb-3">
-                <h3 className="text-base font-bold text-[#151515]">
-                  4. Transparent Creation Provenance
-                </h3>
-                <p className="text-xs text-[#6f6a61] mt-0.5">
-                  The Work of Human celebrates both traditional craftsmanship and modern AI tooling. We believe in transparent labeling.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setAiProvenance("human")}
-                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                    aiProvenance === "human"
-                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
-                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
-                  }`}
-                >
-                  <span className="text-lg">🌿</span>
-                  <div className="mt-2">
-                    <p className="font-bold text-xs text-[#151515]">100% Human-Crafted</p>
-                    <p className="text-[10px] text-[#8c857b] mt-0.5">
-                      Handmade, painted, filmed, or performed without generative AI.
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAiProvenance("assisted")}
-                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                    aiProvenance === "assisted"
-                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
-                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
-                  }`}
-                >
-                  <span className="text-lg">✨</span>
-                  <div className="mt-2">
-                    <p className="font-bold text-xs text-[#151515]">AI-Assisted Hybrid</p>
-                    <p className="text-[10px] text-[#8c857b] mt-0.5">
-                      Human concept, editing, or composition enhanced with AI tools.
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAiProvenance("generated")}
-                  className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                    aiProvenance === "generated"
-                      ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
-                      : "border-[#ded9cf] bg-white hover:border-[#ded9cf]/80"
-                  }`}
-                >
-                  <span className="text-lg">🤖</span>
-                  <div className="mt-2">
-                    <p className="font-bold text-xs text-[#151515]">AI-Generated</p>
-                    <p className="text-[10px] text-[#8c857b] mt-0.5">
-                      Created primarily via prompt-to-media generative synthesis.
-                    </p>
-                  </div>
-                </button>
-              </div>
-
-              {aiProvenance !== "human" && (
-                <div className="pt-2 animate-in fade-in space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
-                    AI Tool / Model Attribution
-                  </label>
-                  <input
-                    type="text"
-                    value={aiModel}
-                    onChange={(e) => setAiModel(e.target.value)}
-                    placeholder="e.g. Google Veo, Midjourney v6, Runway Gen-3, Suno v3.5, ChatGPT..."
-                    className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs font-mono"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* 5. SMART TAGS & DISCOVERY */}
-            <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-4">
-              <div className="border-b border-[#ded9cf] pb-3">
-                <h3 className="text-base font-bold text-[#151515]">
-                  5. Tags &amp; Discovery Keywords
-                </h3>
-                <p className="text-xs text-[#6f6a61] mt-0.5">
-                  Click suggested tags to add them instantly, or type custom tags separated by commas.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-[#8c857b] mr-1">One-Click Suggestions:</span>
-                  {activeArchetype.suggestedTags.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => addTag(tag)}
-                      className="rounded-full px-2.5 py-1 text-xs font-semibold bg-[#ded9cf]/40 text-[#444] hover:bg-[#0f766e] hover:text-white transition cursor-pointer"
-                    >
-                      +{tag}
-                    </button>
-                  ))}
-                </div>
-
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  placeholder="oilpainting, surrealism, fineart, 4k, portrait (comma-separated)"
-                  className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs"
-                />
-              </div>
-            </div>
-
-            {/* Bottom Final Action Bar */}
-            <div className="pt-4 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setViewMode("preview")}
-                className="button-secondary !py-2.5 !px-5 text-xs font-bold flex items-center gap-2 cursor-pointer"
-              >
-                <Eye size={14} />
-                Preview Before Publishing
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting || success}
-                className="button-primary !py-2.5 !px-8 text-xs font-bold cursor-pointer disabled:opacity-60 flex items-center gap-2 shadow-sm"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" />
-                    Publishing Creation...
-                  </>
-                ) : (
-                  <>
-                    Publish to The Work of Human
-                    <ArrowRight size={15} />
-                  </>
                 )}
-              </button>
-            </div>
+
+                {/* Next Step Button */}
+                <div className="pt-4 border-t border-[#ded9cf] flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (mediaUrls.length === 0 && !thumbnailUrl) {
+                        setError("Please drop or browse at least one photo or media file.");
+                        return;
+                      }
+                      setError(null);
+                      setCurrentStep(2);
+                    }}
+                    className="button-primary !py-2.5 !px-6 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    Next: Story &amp; Studio Location
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: STORY, TITLE & LOCATION (WHERE YOU ARE POSTING FROM) */}
+            {currentStep === 2 && (
+              <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-[#151515]">Step 2: Story &amp; Studio Location</h2>
+                  <p className="text-xs text-[#6f6a61] mt-0.5">
+                    Give your creation a title, narrative, and specify where this work was created.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                      Creation Title <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-[#8c857b] font-mono">{title.length}/100</span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={100}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Whispers of the Valley, Morning Light #03, Architectural Study..."
+                    className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-sm text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs font-semibold"
+                  />
+                </div>
+
+                {/* WHERE ARE YOU POSTING FROM? */}
+                <div className="space-y-2 pt-2 border-t border-[#ded9cf]/60">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942] flex items-center gap-1.5">
+                      <MapPin size={14} className="text-[#0f766e]" />
+                      Where are you creating / posting from?
+                    </label>
+                    <span className="text-[11px] text-[#8c857b]">Studio Location</span>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="e.g. Paris, France • Tokyo, Japan • New York, USA • Delhi, India..."
+                      className="w-full rounded-xl border border-[#ded9cf] bg-white pl-9 pr-4 py-2.5 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs"
+                    />
+                    <MapPin size={14} className="absolute left-3 top-3 text-[#8c857b]" />
+                  </div>
+
+                  {/* Quick City Presets */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-bold text-[#8c857b]">Quick presets:</span>
+                    {POPULAR_LOCATIONS.map((loc) => (
+                      <button
+                        key={loc}
+                        type="button"
+                        onClick={() => setLocation(loc)}
+                        className={`text-[11px] px-2.5 py-0.5 rounded-full border transition cursor-pointer ${
+                          location === loc
+                            ? "border-[#0f766e] bg-[#0f766e]/10 text-[#0f766e] font-bold"
+                            : "border-[#ded9cf] bg-white text-[#6f6a61] hover:bg-[#f6f4ef]"
+                        }`}
+                      >
+                        {loc}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-[#8c857b]">
+                    Specifying your studio city/country gives global viewers and collectors geographic identity for your work.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 pt-2 border-t border-[#ded9cf]/60">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                    Artist Narrative &amp; Statement
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe your inspiration, materials used, technique, or the meaning behind this piece..."
+                    className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs resize-y leading-relaxed"
+                  />
+                </div>
+
+                <div className="pt-4 border-t border-[#ded9cf] flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    className="button-secondary !py-2 !px-4 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft size={13} />
+                    Back to Media
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!title.trim()) {
+                        setError("Please enter a title for your creation.");
+                        return;
+                      }
+                      setError(null);
+                      setCurrentStep(3);
+                    }}
+                    className="button-primary !py-2.5 !px-6 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    Next: Provenance &amp; Discovery
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: PROVENANCE, DISCOVERY & PUBLISH */}
+            {currentStep === 3 && (
+              <div className="surface p-6 sm:p-7 rounded-2xl border border-[#ded9cf] space-y-6">
+                <div>
+                  <h2 className="text-lg font-bold text-[#151515]">Step 3: Provenance &amp; Final Review</h2>
+                  <p className="text-xs text-[#6f6a61] mt-0.5">
+                    Transparent creation disclosure, searchable tags, and 1-click publishing.
+                  </p>
+                </div>
+
+                {/* 3-State Provenance */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                    Creation Provenance
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAiProvenance("human")}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                        aiProvenance === "human"
+                          ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                          : "border-[#ded9cf] bg-white hover:bg-[#fcfbfa]"
+                      }`}
+                    >
+                      <span className="text-lg">🌿</span>
+                      <div className="mt-1">
+                        <p className="font-bold text-xs text-[#151515]">100% Human-Made</p>
+                        <p className="text-[10px] text-[#8c857b]">Made by hand, brush, camera, or mind.</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAiProvenance("assisted")}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                        aiProvenance === "assisted"
+                          ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                          : "border-[#ded9cf] bg-white hover:bg-[#fcfbfa]"
+                      }`}
+                    >
+                      <span className="text-lg">✨</span>
+                      <div className="mt-1">
+                        <p className="font-bold text-xs text-[#151515]">AI-Assisted</p>
+                        <p className="text-[10px] text-[#8c857b]">Human idea refined with AI tools.</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAiProvenance("generated")}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                        aiProvenance === "generated"
+                          ? "border-[#0f766e] bg-[#0f766e]/10 ring-2 ring-[#0f766e]/20"
+                          : "border-[#ded9cf] bg-white hover:bg-[#fcfbfa]"
+                      }`}
+                    >
+                      <span className="text-lg">🤖</span>
+                      <div className="mt-1">
+                        <p className="font-bold text-xs text-[#151515]">AI-Generated</p>
+                        <p className="text-[10px] text-[#8c857b]">Prompt synthesis output.</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-2 pt-2 border-t border-[#ded9cf]/60">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#4d4942]">
+                      Search Tags &amp; Keywords
+                    </label>
+                    <span className="text-[10px] text-[#8c857b]">Comma separated</span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                    {activeArchetype.suggestedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => addTag(tag)}
+                        className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#ded9cf]/40 text-[#444] hover:bg-[#0f766e] hover:text-white transition cursor-pointer"
+                      >
+                        +{tag}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    placeholder="oilpainting, portrait, exhibition, contemporary (comma-separated)"
+                    className="w-full rounded-xl border border-[#ded9cf] bg-white px-4 py-2.5 text-xs text-[#151515] placeholder:text-[#a09a90] focus:border-[#0f766e] focus:outline-none shadow-2xs"
+                  />
+                </div>
+
+                {/* Final Summary Card Mini-Preview */}
+                <div className="bg-[#fcfbfa] p-4 rounded-xl border border-[#ded9cf] flex items-center gap-4">
+                  <div className="size-16 rounded-lg overflow-hidden bg-black shrink-0 border border-[#ded9cf]">
+                    {primaryDisplayAsset ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={primaryDisplayAsset} alt="Cover preview" className="size-full object-cover" />
+                    ) : (
+                      <div className="size-full grid place-items-center text-[10px] text-white/50">No art</div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <p className="text-xs font-bold text-[#151515] truncate">{title || "Untitled Creation"}</p>
+                    <p className="text-[11px] text-[#6f6a61] capitalize">
+                      {type.replaceAll("_", " ")} • {aiProvenance === "human" ? "100% Human" : "AI"}
+                    </p>
+                    {location && (
+                      <p className="text-[10px] font-semibold text-amber-800 flex items-center gap-1">
+                        <MapPin size={10} /> {location}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("preview")}
+                    className="text-xs font-bold text-[#0f766e] hover:underline shrink-0"
+                  >
+                    Full Preview
+                  </button>
+                </div>
+
+                {/* Final Action Bar */}
+                <div className="pt-4 border-t border-[#ded9cf] flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="button-secondary !py-2 !px-4 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft size={13} />
+                    Back to Story
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={submitting || success}
+                    className="button-primary !py-2.5 !px-8 text-xs font-bold cursor-pointer disabled:opacity-60 flex items-center gap-2 shadow-sm"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" />
+                        Publishing Creation...
+                      </>
+                    ) : (
+                      <>
+                        Publish to The Work of Human
+                        <ArrowRight size={15} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

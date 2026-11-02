@@ -16,6 +16,7 @@ const UploadProjectSchema = z.object({
   slug: z.string().trim().max(180).optional(),
   type: z.enum(contentTypes as unknown as [string, ...string[]]),
   description: z.string().max(10000).optional(),
+  location: z.string().trim().max(150).optional(),
   thumbnailUrl: z.string().trim().refine(isValidMediaUrl, "Invalid thumbnail URL or file path.").optional().or(z.literal("")),
   mediaUrls: z.array(z.string().trim().refine(isValidMediaUrl, "Invalid media URL or file path.")).default([]),
   tags: z.array(z.string().trim().max(50)).default([]),
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
       slug: customSlug,
       type,
       description,
+      location,
       thumbnailUrl,
       mediaUrls,
       tags,
@@ -93,6 +95,14 @@ export async function POST(request: Request) {
     const projectId = generateId("proj");
     const cleanMediaUrls = mediaUrls.filter((url) => Boolean(url && url.length > 0));
     const cleanTags = tags.filter((t) => Boolean(t && t.length > 0));
+
+    // If location is provided, also attach it as a tag if not already present
+    if (location && location.trim().length > 0) {
+      const locTag = location.trim();
+      if (!cleanTags.includes(locTag)) {
+        cleanTags.push(locTag);
+      }
+    }
 
     const isVideoProject =
       cleanMediaUrls.some((u) => /\.(mp4|webm|mov|m4v|mkv)(\?.*)?$/i.test(u)) ||
@@ -123,11 +133,11 @@ export async function POST(request: Request) {
       `INSERT INTO workofhuman.projects (
         id, title, slug, description, creator_id, creator_name,
         type, media_urls, thumbnail_url, tags, ai_generated, ai_model,
-        views, likes_count, saves_count, published_at, created_at, updated_at
+        location, views, likes_count, saves_count, published_at, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8::jsonb, $9, $10::jsonb, $11, $12,
-        0, 0, 0, NOW(), NOW(), NOW()
+        $13, 0, 0, 0, NOW(), NOW(), NOW()
       )`,
       [
         projectId,
@@ -142,8 +152,21 @@ export async function POST(request: Request) {
         JSON.stringify(cleanTags),
         aiGenerated,
         aiGenerated ? aiModel || "AI Assisted" : null,
+        location || null,
       ]
     );
+
+    // If user provided a location and their profile doesn't have one, update profile location
+    if (location && location.trim().length > 0) {
+      try {
+        await query(
+          `UPDATE workofhuman.profiles SET location = $1, updated_at = NOW() WHERE user_id = $2 AND (location IS NULL OR location = '')`,
+          [location.trim(), user.userId]
+        );
+      } catch {
+        // non-critical
+      }
+    }
 
     const redirectPath = `/@${user.username}/${finalSlug}`;
 
