@@ -39,14 +39,20 @@ export function ProjectCard({
       <Link href={projectHref} className="block overflow-hidden focus:outline-none" aria-label={project.title}>
         <figure className="relative h-56 overflow-hidden bg-[#e9e4da] m-0">
           {project.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt={`${project.title} • by @${creatorHandle}`}
-              title={`${project.title} • by @${creatorHandle} | The Work of Human`}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              src={project.thumbnailUrl}
-              loading="lazy"
-            />
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt={`${project.title} • by @${creatorHandle}`}
+                title={`${project.title} • by @${creatorHandle} | The Work of Human`}
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                src={project.thumbnailUrl}
+                loading="lazy"
+              />
+              <figcaption className="sr-only">
+                <h3>{project.title}</h3>
+                <p>Created by @{creatorHandle} on The Work of Human</p>
+              </figcaption>
+            </>
           ) : (
             <div className="grid h-full place-items-center text-white/60">
               <ImageIcon size={34} />

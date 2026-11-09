@@ -299,6 +299,36 @@ export default async function ProjectDetailPage({
             },
           ]
         : []),
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${canonicalUrl}#breadcrumbs`,
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "The Work of Human",
+            "item": siteOrigin,
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": project.type.replaceAll("_", " "),
+            "item": `${siteOrigin}/categories/${project.type}`,
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": `@${effectiveUsername}`,
+            "item": `${siteOrigin}/@${canonicalCreator}`,
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": project.title,
+            "item": canonicalUrl,
+          },
+        ],
+      },
     ],
   };
 

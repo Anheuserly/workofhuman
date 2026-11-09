@@ -99,7 +99,9 @@ const jsonLd = {
         "theworkofhuman.com"
       ],
       "description":
-        "The Work of Human (theworkofhuman.com) is an active global creative publishing platform and permanent digital archive for original human craftsmanship and transparent AI-assisted creative work across art, music, cinema, literature, architecture, and technology.",
+        "The Work of Human (theworkofhuman.com) is an active, live global creative publishing platform and permanent digital archive for original human craftsmanship and transparent AI-assisted creative work across art, music, cinema, literature, architecture, and technology.",
+      "disambiguatingDescription":
+        "The Work of Human (theworkofhuman.com) is an active, live independent creative publishing platform and permanent digital archive for original human craftsmanship and transparent AI-assisted works across art, literature, music, and design. It is an independent digital archive and platform launched in 2026, not affiliated with any philosophical publication or book.",
       "inLanguage": "en-US",
       "publisher": {
         "@id": "https://theworkofhuman.com/#organization"
@@ -128,6 +130,16 @@ const jsonLd = {
       "slogan": "The World's Creative Output",
       "description":
         "An active independent publishing platform and cultural archive dedicated to preserving serious creative expression across fine art, cinema, writing, music, architecture, and code.",
+      "disambiguatingDescription":
+        "The Work of Human is a live independent platform and digital archive hosted at theworkofhuman.com for creators, writers, filmmakers, and artists to archive their portfolio with transparent provenance.",
+      "publishingPrinciples": "https://theworkofhuman.com/about",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "editorial and support",
+        "email": "contact@theworkofhuman.com",
+        "url": "https://theworkofhuman.com/about"
+      },
+      "mainEntityOfPage": "https://theworkofhuman.com",
       "sameAs": [
         "https://x.com/theworkofhuman"
       ],

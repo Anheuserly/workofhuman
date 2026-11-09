@@ -35,7 +35,9 @@ export async function generateMetadata({
       if (ogImage && ogImage.startsWith("/")) ogImage = `${siteOrigin}${ogImage}`;
 
       return {
-        title,
+        title: {
+          absolute: title,
+        },
         description: directProject.description?.slice(0, 200) || `Experience ${directProject.title} on The Work of Human.`,
         openGraph: {
           siteName: "The Work of Human",
@@ -60,7 +62,9 @@ export async function generateMetadata({
   const pageUrl = `${siteOrigin}/@${profile.shortId || profile.username}`;
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     alternates: {
       canonical: pageUrl,

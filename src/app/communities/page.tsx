@@ -1,9 +1,27 @@
+import type { Metadata } from "next";
 import { UsersRound } from "lucide-react";
 import Link from "next/link";
 import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
 import { getHomeData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Creative Communities & Guilds | The Work of Human",
+  description:
+    "Creative neighborhoods and disciplinary collectives for filmmakers, painters, writers, musicians, architects, and programmers.",
+  alternates: {
+    canonical: "https://theworkofhuman.com/communities",
+  },
+  openGraph: {
+    title: "Creative Communities & Guilds — The Work of Human",
+    description:
+      "Curated creative hubs with active member communities, featured showcases, and collaborative studios.",
+    url: "https://theworkofhuman.com/communities",
+    siteName: "The Work of Human",
+    type: "website",
+  },
+};
 
 export default async function CommunitiesPage() {
   const homeData = await getHomeData();

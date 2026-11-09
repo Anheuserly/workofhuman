@@ -85,12 +85,19 @@ export function HomeProjectFeed({ projects }: HomeProjectFeedProps) {
             className="block relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden bg-[#151515]"
           >
             {featuredProject.thumbnailUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt={featuredProject.title}
-                src={featuredProject.thumbnailUrl}
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
+              <figure className="m-0 h-full w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  alt={`${featuredProject.title} • by ${featuredProject.creatorName || featuredCreator}`}
+                  title={`${featuredProject.title} • by ${featuredProject.creatorName || featuredCreator} | The Work of Human`}
+                  src={featuredProject.thumbnailUrl}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                <figcaption className="sr-only">
+                  <h3>{featuredProject.title}</h3>
+                  <p>By {featuredProject.creatorName || featuredCreator} on The Work of Human</p>
+                </figcaption>
+              </figure>
             ) : (
               <div className="flex h-full items-center justify-center bg-[#151515] text-white/50 text-xs font-mono">
                 Featured Creation

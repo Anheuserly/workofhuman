@@ -1,8 +1,26 @@
+import type { Metadata } from "next";
 import { Flame } from "lucide-react";
 import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
 import { getHomeData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Trending Creative Works | The Work of Human",
+  description:
+    "Real-time trending creations tracking audience appreciation, views, and engagement across cinema, fine art, writing, music, architecture, and technology.",
+  alternates: {
+    canonical: "https://theworkofhuman.com/trending",
+  },
+  openGraph: {
+    title: "Trending Creative Works — The Work of Human",
+    description:
+      "Signals from the creative pulse across all creative mediums.",
+    url: "https://theworkofhuman.com/trending",
+    siteName: "The Work of Human",
+    type: "website",
+  },
+};
 
 export default async function TrendingPage() {
   const homeData = await getHomeData();

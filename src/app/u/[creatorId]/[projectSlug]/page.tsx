@@ -51,7 +51,9 @@ export async function generateMetadata({
   const pageUrl = `${siteOrigin}/@${targetCreator}/${project.slug}`;
 
   return {
-    title,
+    title: {
+      absolute: title,
+    },
     description,
     authors: [
       {

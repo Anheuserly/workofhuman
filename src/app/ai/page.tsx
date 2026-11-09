@@ -1,8 +1,26 @@
+import type { Metadata } from "next";
 import { ProjectCard } from "@/components/project-card";
 import { EmptyState, PageShell, SectionIntro } from "@/components/shell";
 import { getHomeData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "AI Creations & Transparent Process | The Work of Human",
+  description:
+    "AI creations, clearly labeled and discoverable with full provenance, tools disclosure, and human involvement breakdown.",
+  alternates: {
+    canonical: "https://theworkofhuman.com/ai",
+  },
+  openGraph: {
+    title: "Transparent AI Creations & Process — The Work of Human",
+    description:
+      "The AI hub surfaces generated and AI-assisted projects without hiding provenance from viewers.",
+    url: "https://theworkofhuman.com/ai",
+    siteName: "The Work of Human",
+    type: "website",
+  },
+};
 
 export default async function AiPage() {
   const homeData = await getHomeData();
