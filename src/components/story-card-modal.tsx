@@ -32,7 +32,6 @@ export function StoryCardModal({
   title,
   creatorName,
   creatorUsername,
-  creatorAvatar: _creatorAvatar,
   discipline,
   location,
   thumbnailUrl,

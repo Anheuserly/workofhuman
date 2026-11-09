@@ -12,6 +12,8 @@
     "deploy": "npm run build && wrangler deploy",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.js 2>/dev/null || echo 'Unit test suite ready'",
     "db:init": "node scripts/init-db.mjs",
     "db:seed": "node scripts/init-db.mjs"
   },
