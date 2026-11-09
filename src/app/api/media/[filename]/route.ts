@@ -28,12 +28,36 @@ function resolveLocalFile(filename: string): { filePath: string; exists: boolean
   return { filePath: "", exists: false };
 }
 
+async function getMediaCanonicalUrl(safeFilename: string): Promise<string | null> {
+  try {
+    const res = await query<{ slug: string; creator_short_id: string; username: string }>(
+      `SELECT p.slug, p.creator_short_id, pr.username
+       FROM workofhuman.projects p
+       LEFT JOIN workofhuman.profiles pr ON p.creator_id = pr.id
+       WHERE p.thumbnail_url LIKE $1 OR $2 = ANY(p.media_urls)
+       LIMIT 1`,
+      [`%${safeFilename}%`, `/api/media/${safeFilename}`]
+    );
+    if (res.rows.length > 0) {
+      const row = res.rows[0];
+      const handle = row.creator_short_id || row.username;
+      if (handle && row.slug) {
+        return `https://theworkofhuman.com/@${handle}/${row.slug}`;
+      }
+    }
+  } catch {
+    // Non-fatal
+  }
+  return null;
+}
+
 export async function HEAD(
   _request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
   const { filename } = await params;
   const safeFilename = path.basename(filename);
+  const canonicalUrl = await getMediaCanonicalUrl(safeFilename);
 
   // 1. Primary: Windows Server Media Service
   try {
@@ -44,6 +68,9 @@ export async function HEAD(
       responseHeaders.set("Content-Type", vpsRes.headers.get("content-type") || getMimeTypeFromExt(path.extname(filename)));
       responseHeaders.set("Accept-Ranges", "bytes");
       responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (canonicalUrl) {
+        responseHeaders.set("Link", `<${canonicalUrl}>; rel="canonical"`);
+      }
       if (vpsRes.headers.get("content-length")) {
         responseHeaders.set("Content-Length", vpsRes.headers.get("content-length")!);
       }
@@ -60,15 +87,18 @@ export async function HEAD(
       const stat = fs.statSync(filePath);
       const ext = path.extname(filename);
       const contentType = getMimeTypeFromExt(ext);
+      const responseHeaders = new Headers();
+      responseHeaders.set("Content-Type", contentType);
+      responseHeaders.set("Content-Length", stat.size.toString());
+      responseHeaders.set("Accept-Ranges", "bytes");
+      responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (canonicalUrl) {
+        responseHeaders.set("Link", `<${canonicalUrl}>; rel="canonical"`);
+      }
 
       return new NextResponse(null, {
         status: 200,
-        headers: {
-          "Content-Type": contentType,
-          "Content-Length": stat.size.toString(),
-          "Accept-Ranges": "bytes",
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
+        headers: responseHeaders,
       });
     } catch {
       // Fall through to database check
@@ -84,14 +114,17 @@ export async function HEAD(
 
     if (dbRes.rows.length > 0) {
       const row = dbRes.rows[0];
+      const responseHeaders = new Headers();
+      responseHeaders.set("Content-Type", row.content_type || getMimeTypeFromExt(path.extname(filename)));
+      responseHeaders.set("Content-Length", row.size.toString());
+      responseHeaders.set("Accept-Ranges", "bytes");
+      responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (canonicalUrl) {
+        responseHeaders.set("Link", `<${canonicalUrl}>; rel="canonical"`);
+      }
       return new NextResponse(null, {
         status: 200,
-        headers: {
-          "Content-Type": row.content_type || getMimeTypeFromExt(path.extname(filename)),
-          "Content-Length": row.size.toString(),
-          "Accept-Ranges": "bytes",
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
+        headers: responseHeaders,
       });
     }
   } catch (err) {
@@ -107,6 +140,7 @@ export async function GET(
 ) {
   const { filename } = await params;
   const safeFilename = path.basename(filename);
+  const canonicalUrl = await getMediaCanonicalUrl(safeFilename);
 
   // 1. Primary: Stream from Windows Server VPS Media Service
   try {
@@ -125,6 +159,9 @@ export async function GET(
       responseHeaders.set("Content-Type", vpsRes.headers.get("content-type") || getMimeTypeFromExt(path.extname(filename)));
       responseHeaders.set("Accept-Ranges", "bytes");
       responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+      if (canonicalUrl) {
+        responseHeaders.set("Link", `<${canonicalUrl}>; rel="canonical"`);
+      }
       if (vpsRes.headers.get("content-length")) {
         responseHeaders.set("Content-Length", vpsRes.headers.get("content-length")!);
       }
@@ -256,14 +293,19 @@ export async function GET(
     }
 
     // Full 200 response
+    const finalHeaders = new Headers({
+      "Content-Length": fileSize.toString(),
+      "Content-Type": contentType,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    });
+    if (canonicalUrl) {
+      finalHeaders.set("Link", `<${canonicalUrl}>; rel="canonical"`);
+    }
+
     return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
-      headers: {
-        "Content-Length": fileSize.toString(),
-        "Content-Type": contentType,
-        "Accept-Ranges": "bytes",
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
+      headers: finalHeaders,
     });
   } catch (err) {
     console.error("[Media GET Error]:", err);

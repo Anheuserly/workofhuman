@@ -9,6 +9,7 @@ import { Users, Eye, Sparkles, Globe, Link2, ExternalLink } from "lucide-react";
 import { RoleBadge } from "@/components/role-badge";
 import { MessageCreatorModal } from "@/components/message-creator-modal";
 import { FollowButton } from "@/components/follow-button";
+import { CreatorSupportModal } from "@/components/creator-support-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -251,8 +252,8 @@ export default async function CreatorProfilePage({
                 </div>
               </div>
 
-              {/* Direct Communication & Follow Actions */}
-              <div className="flex flex-wrap items-center gap-3 shrink-0 pt-2 sm:pt-0">
+              {/* Direct Communication, Support & Follow Actions */}
+              <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-2 sm:pt-0">
                 <FollowButton
                   username={cleanHandle}
                   initialFollowers={profile?.followersCount || 0}
@@ -261,6 +262,15 @@ export default async function CreatorProfilePage({
                   recipientUsername={cleanHandle}
                   recipientName={profile?.displayName}
                 />
+                {profile && (
+                  <CreatorSupportModal
+                    creatorId={profile.userId}
+                    creatorUsername={cleanHandle}
+                    creatorName={profile.displayName}
+                    creatorAvatar={profile.avatarUrl}
+                    socialLinks={profile.socialLinks}
+                  />
+                )}
               </div>
             </div>
 

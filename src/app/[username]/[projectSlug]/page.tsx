@@ -20,6 +20,9 @@ import { ProjectManageMenu } from "@/components/project-manage-menu";
 import { CreationActionsMenu } from "@/components/creation-actions-menu";
 import { MediaLightbox } from "@/components/media-lightbox";
 import { AudioTrackPlayer } from "@/components/audio-track-player";
+import { StoryCardModal } from "@/components/story-card-modal";
+import { ProcessCompareSlider } from "@/components/process-compare-slider";
+import { CreatorSupportModal } from "@/components/creator-support-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -223,56 +226,80 @@ export default async function ProjectDetailPage({
     primaryAssetUrl = `${siteOrigin}${primaryAssetUrl}`;
   }
 
+  const creatorEntity = {
+    "@type": "Person",
+    name: project.creatorName || profile?.displayName || effectiveUsername,
+    url: `${siteOrigin}/@${canonicalCreator}`,
+    alternateName: effectiveUsername,
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": videoAsset ? "VideoObject" : "VisualArtwork",
-    name: project.title,
-    headline: project.title,
-    description:
-      project.description ||
-      `Original creation "${project.title}" by ${project.creatorName || effectiveUsername} on The Work of Human.`,
-    url: canonicalUrl,
-    image: primaryAssetUrl ? [primaryAssetUrl] : undefined,
-    thumbnailUrl: primaryAssetUrl,
-    datePublished: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
-    dateModified: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
-    artform: project.type,
-    genre: project.type,
-    creator: {
-      "@type": "Person",
-      name: project.creatorName || profile?.displayName || effectiveUsername,
-      url: `${siteOrigin}/@${canonicalCreator}`,
-      alternateName: effectiveUsername,
-    },
-    author: {
-      "@type": "Person",
-      name: project.creatorName || profile?.displayName || effectiveUsername,
-      url: `${siteOrigin}/@${canonicalCreator}`,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "The Work of Human",
-      url: siteOrigin,
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteOrigin}/logo.svg`,
-      },
-    },
-    ...(project.location
-      ? {
-          contentLocation: {
-            "@type": "Place",
-            name: project.location,
+    "@graph": [
+      {
+        "@type": videoAsset ? "VideoObject" : "VisualArtwork",
+        "@id": `${canonicalUrl}#creation`,
+        name: project.title,
+        headline: project.title,
+        description:
+          project.description ||
+          `Original creation "${project.title}" by ${project.creatorName || effectiveUsername} on The Work of Human.`,
+        url: canonicalUrl,
+        image: primaryAssetUrl ? [primaryAssetUrl] : undefined,
+        thumbnailUrl: primaryAssetUrl,
+        datePublished: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+        dateModified: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+        artform: project.type,
+        genre: project.type,
+        creator: creatorEntity,
+        author: creatorEntity,
+        publisher: {
+          "@type": "Organization",
+          name: "The Work of Human",
+          url: siteOrigin,
+          logo: {
+            "@type": "ImageObject",
+            url: `${siteOrigin}/icon.svg`,
           },
-        }
-      : {}),
-    ...(videoAsset
-      ? {
-          uploadDate: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
-          contentUrl: videoAsset.startsWith("/") ? `${siteOrigin}${videoAsset}` : videoAsset,
-        }
-      : {}),
-    keywords: project.tags?.join(", "),
+        },
+        ...(project.location
+          ? {
+              contentLocation: {
+                "@type": "Place",
+                name: project.location,
+              },
+            }
+          : {}),
+        ...(videoAsset
+          ? {
+              uploadDate: project.publishedAt ? new Date(project.publishedAt).toISOString() : undefined,
+              contentUrl: videoAsset.startsWith("/") ? `${siteOrigin}${videoAsset}` : videoAsset,
+            }
+          : {}),
+        keywords: project.tags?.join(", "),
+      },
+      ...(primaryAssetUrl
+        ? [
+            {
+              "@type": "ImageObject",
+              "@id": `${canonicalUrl}#primaryimage`,
+              name: `${project.title} • by ${project.creatorName || effectiveUsername}`,
+              headline: `${project.title} • by ${project.creatorName || effectiveUsername} | The Work of Human`,
+              caption: project.description || `${project.title} by ${project.creatorName || effectiveUsername}`,
+              contentUrl: primaryAssetUrl,
+              thumbnailUrl: primaryAssetUrl,
+              url: canonicalUrl,
+              representativeOfPage: true,
+              creator: creatorEntity,
+              author: creatorEntity,
+              creditText: `${project.creatorName || effectiveUsername} • The Work of Human`,
+              copyrightNotice: `© ${new Date().getFullYear()} ${project.creatorName || effectiveUsername}. All rights reserved.`,
+              acquireLicensePage: canonicalUrl,
+              license: `${siteOrigin}/about`,
+            },
+          ]
+        : []),
+    ],
   };
 
   return (
@@ -294,6 +321,18 @@ export default async function ProjectDetailPage({
           </Link>
 
           <div className="flex items-center gap-2">
+            <StoryCardModal
+              title={project.title}
+              creatorName={project.creatorName || profile?.displayName}
+              creatorUsername={effectiveUsername}
+              creatorAvatar={profile?.avatarUrl}
+              discipline={project.type}
+              location={project.location}
+              thumbnailUrl={primaryImage}
+              projectSlug={project.slug}
+              creatorShortId={project.creatorShortId}
+              verified={profile?.verified}
+            />
             <CreationActionsMenu
               projectId={project.id}
               projectSlug={project.slug}
@@ -381,6 +420,13 @@ export default async function ProjectDetailPage({
                 recipientUsername={effectiveUsername}
                 recipientName={profile?.displayName || project.creatorName}
               />
+              <CreatorSupportModal
+                creatorId={project.creatorId}
+                creatorUsername={effectiveUsername}
+                creatorName={project.creatorName || profile?.displayName}
+                creatorAvatar={profile?.avatarUrl}
+                socialLinks={profile?.socialLinks}
+              />
             </div>
 
             {/* Metrics & Appreciate Button */}
@@ -432,13 +478,17 @@ export default async function ProjectDetailPage({
                 subtitle={`${project.type.replaceAll("_", " ")} • by ${project.creatorName || `@${cleanUsername}`}`}
               />
             ) : primaryImage ? (
-              <div className="relative w-full max-h-[720px] bg-[#e9e4da] flex items-center justify-center">
+              <figure className="relative w-full max-h-[720px] bg-[#e9e4da] flex flex-col items-center justify-center m-0">
                 <MediaLightbox
                   src={primaryImage}
-                  alt={project.title}
+                  alt={`${project.title} • by ${project.creatorName || effectiveUsername}`}
+                  title={`${project.title} • by ${project.creatorName || effectiveUsername} | The Work of Human`}
                   className="h-auto max-h-[720px] w-full object-contain"
                 />
-              </div>
+                <figcaption className="sr-only">
+                  {project.title} by {project.creatorName || effectiveUsername} — {project.type.replaceAll("_", " ")} published on The Work of Human. {project.description}
+                </figcaption>
+              </figure>
             ) : (
               <div className="surface p-12 text-center text-[#6f6a61]">
                 <p className="text-sm font-semibold">No visual media uploaded for this creation.</p>
@@ -446,6 +496,21 @@ export default async function ProjectDetailPage({
             )}
           </div>
         </section>
+
+        {/* Interactive Process Comparison Slider if secondary visual image exists */}
+        {primaryImage &&
+          !videoAsset &&
+          !audioAsset &&
+          additionalAssets.some((u) => !isVideo(u) && !isAudio(u)) && (
+            <section className="mb-10">
+              <ProcessCompareSlider
+                beforeImage={additionalAssets.find((u) => !isVideo(u) && !isAudio(u))!}
+                afterImage={primaryImage}
+                beforeLabel="Process / In-Progress"
+                afterLabel="Final Craft"
+              />
+            </section>
+          )}
 
         {/* Additional Assets / Media Reel Gallery with Lightbox */}
         {additionalAssets.length > 0 && (

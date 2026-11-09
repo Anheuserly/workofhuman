@@ -22,6 +22,10 @@ interface SocialLinks {
   github?: string;
   instagram?: string;
   youtube?: string;
+  upi?: string;
+  buymeacoffee?: string;
+  kofi?: string;
+  paypal?: string;
 }
 
 interface ProfileSettingsData {
@@ -60,6 +64,10 @@ export default function SettingsPage() {
     github: "",
     instagram: "",
     youtube: "",
+    upi: "",
+    buymeacoffee: "",
+    kofi: "",
+    paypal: "",
   });
 
   // Upload state
@@ -154,6 +162,10 @@ export default function SettingsPage() {
           github: p.socialLinks?.github || "",
           instagram: p.socialLinks?.instagram || "",
           youtube: p.socialLinks?.youtube || "",
+          upi: p.socialLinks?.upi || "",
+          buymeacoffee: p.socialLinks?.buymeacoffee || "",
+          kofi: p.socialLinks?.kofi || "",
+          paypal: p.socialLinks?.paypal || "",
         });
       } catch (err) {
         console.error("Failed to load profile settings:", err);
@@ -660,6 +672,78 @@ export default function SettingsPage() {
                     value={socials.youtube || ""}
                     onChange={(e) => setSocials({ ...socials, youtube: e.target.value })}
                     placeholder="https://youtube.com/@channel"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Patronage & Tip Jar */}
+            <div className="surface p-6 sm:p-8 space-y-4">
+              <div className="border-b border-[#ded9cf] pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-[#151515]">Direct Patronage &amp; Tip Jar</h3>
+                    <p className="text-xs text-[#6f6a61] mt-0.5">
+                      Enable direct, 0% platform commission patron tips on your portfolio and creation pages.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 border border-emerald-200">
+                    0% Fee Direct Pay
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold text-[#4d4942]">
+                    UPI ID <span className="text-[11px] font-normal text-[#8c857b]">(GPay, PhonePe, Paytm, BHIM)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={socials.upi || ""}
+                    onChange={(e) => setSocials({ ...socials, upi: e.target.value })}
+                    placeholder="username@okhdfcbank or yourname@upi"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none font-mono"
+                  />
+                  <p className="mt-1 text-[10px] text-[#8c857b]">Instant zero-fee peer-to-peer transfers inside India &amp; UPI global apps.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#4d4942]">
+                    Buy Me a Coffee <span className="text-[11px] font-normal text-[#8c857b]">(Username or URL)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={socials.buymeacoffee || ""}
+                    onChange={(e) => setSocials({ ...socials, buymeacoffee: e.target.value })}
+                    placeholder="username or buymeacoffee.com/username"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#4d4942]">
+                    Ko-fi <span className="text-[11px] font-normal text-[#8c857b]">(Username or URL)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={socials.kofi || ""}
+                    onChange={(e) => setSocials({ ...socials, kofi: e.target.value })}
+                    placeholder="username or ko-fi.com/username"
+                    className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#4d4942]">
+                    PayPal.me <span className="text-[11px] font-normal text-[#8c857b]">(Handle or URL)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={socials.paypal || ""}
+                    onChange={(e) => setSocials({ ...socials, paypal: e.target.value })}
+                    placeholder="paypal.me/yourname or username"
                     className="mt-1 w-full rounded-md border border-[#ded9cf] bg-white px-3.5 py-2 text-xs text-[#151515] focus:border-[#0f766e] focus:outline-none"
                   />
                 </div>

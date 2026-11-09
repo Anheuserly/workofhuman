@@ -7,6 +7,7 @@ import { HeaderUserNav } from "@/components/user-nav";
 import { Logo } from "@/components/logo";
 import { MobileMenu } from "@/components/mobile-menu";
 import { AppSidebar, MobileBottomBar } from "@/components/app-sidebar";
+import { GlobalAudioBar } from "@/components/global-audio-bar";
 
 interface SidebarContextType {
   collapsed: boolean;
@@ -132,6 +133,9 @@ export function PageShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Bottom App Navigation */}
         <MobileBottomBar />
+
+        {/* Persistent Global Background Audio Player */}
+        <GlobalAudioBar />
       </div>
     </SidebarContext.Provider>
   );

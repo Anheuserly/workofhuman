@@ -6,10 +6,12 @@ import { Maximize2, X, ZoomIn, ZoomOut } from "lucide-react";
 export function MediaLightbox({
   src,
   alt,
+  title,
   className,
 }: {
   src: string;
   alt: string;
+  title?: string;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -35,7 +37,7 @@ export function MediaLightbox({
     <>
       <div className="relative group cursor-zoom-in" onClick={() => setOpen(true)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className={className} />
+        <img src={src} alt={alt} title={title || alt} className={className} />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
           <div className="grid size-10 place-items-center rounded-full bg-black/70 text-white backdrop-blur-sm border border-white/20 shadow-lg">
             <Maximize2 size={16} />
@@ -80,6 +82,7 @@ export function MediaLightbox({
             <img
               src={src}
               alt={alt}
+              title={title || alt}
               className={`transition-all duration-200 select-none ${
                 zoomed
                   ? "max-h-none max-w-none cursor-zoom-out scale-125"

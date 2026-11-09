@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Music } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Music, Radio } from "lucide-react";
+import { useAudioPlayerStore } from "@/lib/audio-player-store";
 
 export function AudioTrackPlayer({
   src,
@@ -141,13 +142,32 @@ export function AudioTrackPlayer({
       </div>
 
       {/* Primary Action Button */}
-      <div className="flex justify-center pt-1">
+      <div className="flex flex-col items-center gap-3 pt-1">
         <button
           type="button"
           onClick={togglePlay}
           className="grid size-14 place-items-center rounded-full bg-white text-[#151515] hover:bg-[#0f766e] hover:text-white transition duration-200 cursor-pointer shadow-lg hover:scale-105"
         >
           {playing ? <Pause size={24} className="fill-current" /> : <Play size={24} className="ml-1 fill-current" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.pause();
+              setPlaying(false);
+            }
+            useAudioPlayerStore.getState().playTrack({
+              src,
+              title,
+              artist: subtitle || "The Work of Human",
+            });
+          }}
+          className="inline-flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition font-medium cursor-pointer"
+        >
+          <Radio size={13} className="text-teal-400" />
+          <span>Keep Playing in Background</span>
         </button>
       </div>
     </div>

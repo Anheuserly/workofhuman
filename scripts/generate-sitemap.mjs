@@ -78,6 +78,7 @@ async function generate() {
 
   let creatorUrls = [];
   let projectUrls = [];
+  let communityUrls = [];
 
   const connectionString =
     process.env.DATABASE_URL ||
@@ -148,12 +149,23 @@ async function generate() {
       };
     });
 
+    const communitiesRes = await client.query(
+      `SELECT slug, updated_at FROM workofhuman.communities ORDER BY created_at DESC LIMIT 100`
+    );
+
+    communityUrls = communitiesRes.rows.map((c) => ({
+      loc: `${baseUrl}/communities/${c.slug}`,
+      priority: "0.8",
+      changefreq: "weekly",
+      lastmod: c.updated_at ? new Date(c.updated_at).toISOString() : now,
+    }));
+
     await client.end();
   } catch (err) {
     console.warn("[Sitemap Generator] DB fetch warning:", err.message);
   }
 
-  const allUrls = [...staticPages, ...categoryPages, ...creatorUrls, ...projectUrls];
+  const allUrls = [...staticPages, ...categoryPages, ...creatorUrls, ...(communityUrls || []), ...projectUrls];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">

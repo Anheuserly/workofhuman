@@ -37,13 +37,15 @@ export function ProjectCard({
       </div>
 
       <Link href={projectHref} className="block overflow-hidden focus:outline-none" aria-label={project.title}>
-        <div className="relative h-56 overflow-hidden bg-[#e9e4da]">
+        <figure className="relative h-56 overflow-hidden bg-[#e9e4da] m-0">
           {project.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              alt={project.title}
+              alt={`${project.title} • by @${creatorHandle}`}
+              title={`${project.title} • by @${creatorHandle} | The Work of Human`}
               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
               src={project.thumbnailUrl}
+              loading="lazy"
             />
           ) : (
             <div className="grid h-full place-items-center text-white/60">
@@ -72,7 +74,7 @@ export function ProjectCard({
               </span>
             )}
           </div>
-        </div>
+        </figure>
       </Link>
 
       <div className="flex flex-1 flex-col justify-between p-5">

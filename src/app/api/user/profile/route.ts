@@ -19,7 +19,12 @@ const UpdateProfileSchema = z.object({
       github: z.string().optional(),
       instagram: z.string().optional(),
       youtube: z.string().optional(),
+      upi: z.string().optional(),
+      buymeacoffee: z.string().optional(),
+      kofi: z.string().optional(),
+      paypal: z.string().optional(),
     })
+    .passthrough()
     .default({}),
 });
 

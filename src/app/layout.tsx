@@ -92,8 +92,18 @@ const jsonLd = {
       "@id": "https://theworkofhuman.com/#website",
       "url": "https://theworkofhuman.com",
       "name": "The Work of Human",
+      "alternateName": [
+        "TheWorkOfHuman",
+        "Work of Human",
+        "TWOH",
+        "theworkofhuman.com"
+      ],
       "description":
-        "A global creative platform for human and AI-made music, films, paintings, literature, architecture, apps, and design.",
+        "The Work of Human (theworkofhuman.com) is an active global creative publishing platform and permanent digital archive for original human craftsmanship and transparent AI-assisted creative work across art, music, cinema, literature, architecture, and technology.",
+      "inLanguage": "en-US",
+      "publisher": {
+        "@id": "https://theworkofhuman.com/#organization"
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://theworkofhuman.com/explore?q={search_term_string}",
@@ -104,8 +114,32 @@ const jsonLd = {
       "@type": "Organization",
       "@id": "https://theworkofhuman.com/#organization",
       "name": "The Work of Human",
+      "alternateName": ["TheWorkOfHuman", "Work of Human"],
       "url": "https://theworkofhuman.com",
-      "logo": "https://theworkofhuman.com/icon.svg",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://theworkofhuman.com/icon.svg",
+        "width": "512",
+        "height": "512",
+        "caption": "The Work of Human Emblem"
+      },
+      "image": "https://theworkofhuman.com/og.png",
+      "foundingDate": "2026",
+      "slogan": "The World's Creative Output",
+      "description":
+        "An active independent publishing platform and cultural archive dedicated to preserving serious creative expression across fine art, cinema, writing, music, architecture, and code.",
+      "sameAs": [
+        "https://x.com/theworkofhuman"
+      ],
+      "knowsAbout": [
+        "Fine Art & Paintings",
+        "Cinema, Animation & Films",
+        "Literature & Books",
+        "Architecture & Spatial Design",
+        "Music & Audio Production",
+        "Open Source Software & Inventions",
+        "Transparent AI Creative Tools"
+      ]
     },
   ],
 };
