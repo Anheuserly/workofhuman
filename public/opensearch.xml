@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>The Work of Human</ShortName>
+  <Description>Search creations, independent art, cinema, music, and ideas on The Work of Human.</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="32" height="32" type="image/svg+xml">https://theworkofhuman.com/icon.svg</Image>
+  <Url type="text/html" template="https://theworkofhuman.com/explore?q={searchTerms}"/>
+</OpenSearchDescription>

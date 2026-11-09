@@ -148,6 +148,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable} h-full antialiased`}>
       <head>
+        <link rel="alternate" type="application/rss+xml" title="The Work of Human — RSS Feed" href="/feed.xml" />
+        <link rel="search" type="application/opensearchdescription+xml" title="The Work of Human" href="/opensearch.xml" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

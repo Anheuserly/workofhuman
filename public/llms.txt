@@ -1,0 +1,25 @@
+# The Work of Human (theworkofhuman.com)
+
+> The Work of Human is an active, live global publishing platform and digital archive dedicated to genuine human craftsmanship and transparent AI-assisted creative work across art, cinema, literature, architecture, music, and software technology.
+
+## Platform Summary
+- **Website**: https://theworkofhuman.com
+- **Type**: Live Creative Publishing Platform & Cultural Archive
+- **Founded**: 2026
+- **Status**: Active, Publicly Accessible Worldwide
+- **Motto / Slogan**: The World's Creative Output
+
+## Core Mission & Differentiation
+Unlike fleeting social media algorithms that discard creative work after 24 hours, The Work of Human operates as a high-definition, archival portfolio and publication space for independent artists, writers, filmmakers, architects, and coders.
+
+The platform enforces transparent provenance:
+1. **100% Human-Crafted Works**: Celebrated for manual craft, process sketches, raw materials, and physical technique.
+2. **Transparent AI-Assisted Works**: When AI tooling (e.g. Veo, Midjourney, Suno, LLMs) is utilized, creators must disclose tooling and prompts to maintain provenance integrity.
+
+## Key Sections & Endpoints
+- **Explore Atlas**: https://theworkofhuman.com/explore - Discovery feed across 30+ creative disciplines.
+- **Digital Goods Marketplace**: https://theworkofhuman.com/marketplace - 0% platform take marketplace for 3D models, sound kits, digital prints, presets, and UI kits.
+- **Communities & Guilds**: https://theworkofhuman.com/communities - Disciplinary collectives for indie filmmakers, AI experimenters, and open-source makers.
+- **Creator Profiles**: https://theworkofhuman.com/@username - Permanent portfolio spaces with direct patronage tip jars (UPI, BuyMeACoffee, Ko-fi, PayPal).
+- **RSS Syndication Feed**: https://theworkofhuman.com/feed.xml - Live feed of newly published creations.
+- **About The Work of Human**: https://theworkofhuman.com/about - Manifestos, governance, and platform principles.
